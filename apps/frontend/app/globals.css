@@ -1,26 +1,227 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    --background: #ffffff;
+    --foreground: #171717;
+    --color-primary: #a491d3;
+    --color-secondary: #ff9a8b;
+    --color-success: #c5dca0;
+    --color-warning: #f5f2b8;
+    --color-error: #f9dad0;
+
+    /* Flower-inspired accent colors */
+    --color-accent-coral: #ffab91;
+    --color-accent-peach: #ffd4a3;
+    --color-accent-rose: #f8bbd9;
+    --color-accent-lavender: #c8a2c8;
+    --color-accent-sunset: #ffcc80;
+
+    /* Additional modern variables */
+    --shadow-primary: rgba(164, 145, 211, 0.25);
+    --shadow-secondary: rgba(255, 154, 139, 0.2);
+    --shadow-accent: rgba(255, 171, 145, 0.15);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-accent: rgba(255, 204, 128, 0.1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+    --color-primary: var(--color-primary);
+    --color-secondary: var(--color-secondary);
+    --color-success: var(--color-success);
+    --color-warning: var(--color-warning);
+    --color-error: var(--color-error);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+    :root {
+        --background: #171717;
+        --foreground: #ededed;
+        --color-secondary: #ffab91;
+        --glass-bg: rgba(10, 10, 10, 0.8);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --shadow-secondary: rgba(255, 171, 145, 0.25);
+        --shadow-accent: rgba(255, 204, 128, 0.2);
+        --glass-accent: rgba(255, 171, 145, 0.08);
+
+        /* Enhanced dark mode accent colors */
+        --color-accent-coral: #ff8a65;
+        --color-accent-peach: #ffb74d;
+        --color-accent-rose: #f06292;
+        --color-accent-lavender: #ba68c8;
+        --color-accent-sunset: #ffb74d;
+    }
+}
+
+/* Smooth transitions for theme changes */
+* {
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        border-color 0.3s ease;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family:
+        var(--font-sans),
+        system-ui,
+        -apple-system,
+        sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
+}
+
+/* Glass morphism utility */
+.glass {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+}
+
+/* Gradient text utility */
+.gradient-text {
+    background: linear-gradient(
+        135deg,
+        var(--color-primary),
+        var(--color-secondary)
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Flower-inspired gradient utilities */
+.gradient-sunset {
+    background: linear-gradient(
+        135deg,
+        var(--color-accent-coral),
+        var(--color-accent-sunset)
+    );
+}
+
+.gradient-bloom {
+    background: linear-gradient(
+        135deg,
+        var(--color-primary),
+        var(--color-accent-rose)
+    );
+}
+
+.gradient-peach {
+    background: linear-gradient(
+        135deg,
+        var(--color-accent-peach),
+        var(--color-secondary)
+    );
+}
+
+/* Floating animation keyframes */
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-10px) rotate(90deg);
+    }
+    50% {
+        transform: translateY(0px) rotate(180deg);
+    }
+    75% {
+        transform: translateY(10px) rotate(270deg);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+/* Animation utility classes */
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-slideInRight {
+    animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-pulse-subtle {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Enhanced focus styles */
+*:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Selection styles */
+::selection {
+    background: var(--color-primary);
+    color: var(--background);
+}
+
+::-moz-selection {
+    background: var(--color-primary);
+    color: var(--background);
 }
