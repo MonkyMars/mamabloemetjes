@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 interface FloatingElementsProps {
   count?: number;
@@ -9,7 +9,7 @@ interface FloatingElementsProps {
 
 const FloatingElements: React.FC<FloatingElementsProps> = ({
   count = 6,
-  className = "",
+  className = '',
 }) => {
   const [elements, setElements] = useState<
     Array<{
@@ -42,12 +42,12 @@ const FloatingElements: React.FC<FloatingElementsProps> = ({
     >
       {elements.map((element) => {
         const gradients = [
-          "bg-gradient-to-br from-primary/20 to-secondary/20",
-          "bg-gradient-to-br from-secondary/25 to-primary/15",
-          "bg-gradient-to-br from-[color:var(--color-accent-coral)]/20 to-[color:var(--color-accent-peach)]/15",
-          "bg-gradient-to-br from-[color:var(--color-accent-rose)]/15 to-[color:var(--color-accent-lavender)]/20",
-          "bg-gradient-to-br from-[color:var(--color-accent-sunset)]/20 to-secondary/15",
-          "bg-gradient-to-br from-primary/15 to-[color:var(--color-accent-coral)]/20",
+          'bg-gradient-to-br from-primary/20 to-secondary/20',
+          'bg-gradient-to-br from-secondary/25 to-primary/15',
+          'bg-gradient-to-br from-[color:var(--color-accent-coral)]/20 to-[color:var(--color-accent-peach)]/15',
+          'bg-gradient-to-br from-[color:var(--color-accent-rose)]/15 to-[color:var(--color-accent-lavender)]/20',
+          'bg-gradient-to-br from-[color:var(--color-accent-sunset)]/20 to-secondary/15',
+          'bg-gradient-to-br from-primary/15 to-[color:var(--color-accent-coral)]/20',
         ];
 
         return (
@@ -62,7 +62,7 @@ const FloatingElements: React.FC<FloatingElementsProps> = ({
               animationDelay: `${element.delay}s`,
               animationDuration: `${element.duration}s`,
               opacity: element.opacity,
-              filter: "blur(0.5px)",
+              filter: 'blur(0.5px)',
             }}
           />
         );
