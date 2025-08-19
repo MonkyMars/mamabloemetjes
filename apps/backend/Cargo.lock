@@ -138,6 +138,7 @@ name = "backend"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "bytes",
  "chrono",
  "dotenv",
  "http-body-util",
@@ -150,6 +151,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tower",
+ "tracing",
  "tracing-subscriber",
  "uuid",
  "validator",

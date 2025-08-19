@@ -76,7 +76,7 @@ pub async fn get_order_by_id(id: Uuid) -> Result<Option<Order>, SqlxError> {
         };
         Ok(Some(order))
     } else {
-        Err(SqlxError::RowNotFound)
+        Ok(None)
     }
 }
 
@@ -212,7 +212,7 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
 
         Ok(Some(product))
     } else {
-        Err(SqlxError::RowNotFound)
+        Ok(None)
     }
 }
 

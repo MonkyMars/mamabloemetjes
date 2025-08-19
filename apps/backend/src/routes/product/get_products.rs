@@ -9,15 +9,24 @@ use crate::structs::product::Product;
 pub async fn get_products() -> ApiResponse<Vec<Product>> {
     match get_all_products().await {
         Ok(products) => success(products),
-        Err(db_error) => AppResponse::Error(AppError::DatabaseError(db_error.to_string())),
+        Err(db_error) => AppResponse::Error(AppError::DatabaseError(format!(
+            "Failed to retrieve products due to a database error: {}. Please try again later or contact support if the problem persists.",
+            db_error
+        ))),
     }
 }
 
-// GET /product/:id - Get order by ID
+// GET /product/:id - Get product by ID
 pub async fn get_product(Path(id): Path<Uuid>) -> ApiResponse<Product> {
     match get_product_by_id(id).await {
-        Ok(Some(order)) => success(order),
-        Ok(_) => AppResponse::Error(AppError::NotFound("Order not found".to_string())),
-        Err(db_error) => AppResponse::Error(AppError::DatabaseError(db_error.to_string())),
+        Ok(Some(product)) => success(product),
+        Ok(None) => AppResponse::Error(AppError::NotFound(format!(
+            "Product with ID {} not found. Please check the product ID and try again.",
+            id
+        ))),
+        Err(db_error) => AppResponse::Error(AppError::DatabaseError(format!(
+            "Failed to retrieve product with ID {} due to a database error: {}. Please try again later or contact support if the problem persists.",
+            id, db_error
+        ))),
     }
 }

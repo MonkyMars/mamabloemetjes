@@ -9,7 +9,10 @@ use crate::structs::order::Order;
 pub async fn get_orders() -> ApiResponse<Vec<Order>> {
     match get_all_orders().await {
         Ok(orders) => success(orders),
-        Err(db_error) => AppResponse::Error(AppError::DatabaseError(db_error.to_string())),
+        Err(db_error) => AppResponse::Error(AppError::DatabaseError(format!(
+            "Failed to retrieve orders due to a database error: {}. Please try again later or contact support if the problem persists.",
+            db_error
+        ))),
     }
 }
 
@@ -17,7 +20,13 @@ pub async fn get_orders() -> ApiResponse<Vec<Order>> {
 pub async fn get_order(Path(id): Path<Uuid>) -> ApiResponse<Order> {
     match get_order_by_id(id).await {
         Ok(Some(order)) => success(order),
-        Ok(_) => AppResponse::Error(AppError::NotFound("Order not found".to_string())),
-        Err(db_error) => AppResponse::Error(AppError::DatabaseError(db_error.to_string())),
+        Ok(None) => AppResponse::Error(AppError::NotFound(format!(
+            "Order with ID {} not found. Please check the order ID and try again.",
+            id
+        ))),
+        Err(db_error) => AppResponse::Error(AppError::DatabaseError(format!(
+            "Failed to retrieve order with ID {} due to a database error: {}. Please try again later or contact support if the problem persists.",
+            id, db_error
+        ))),
     }
 }
