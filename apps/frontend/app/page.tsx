@@ -1,116 +1,331 @@
-import Image from 'next/image';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import FloatingElements from '@/components/FloatingElements';
-import { Button } from '@/components/Button';
-import { FaArrowRight, FaQuestion } from 'react-icons/fa6';
+import Image from 'next/image';
+import { Button } from '../components/Button';
+import ProductCard from '../components/ProductCard';
+import { mockProducts } from '../data/products';
+import { Product } from '../types';
+import {
+  FiArrowRight,
+  FiStar,
+  FiHeart,
+  FiShoppingBag,
+  FiCheckCircle,
+  FiTruck,
+  FiGift,
+  FiAward,
+} from 'react-icons/fi';
 
-export default function Home() {
+const HomePage: React.FC = () => {
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+
+  useEffect(() => {
+    // Get featured products (first 8 products for the homepage)
+    setFeaturedProducts(mockProducts.slice(0, 8));
+  }, []);
+
+  // Testimonials data
+  const testimonials = [
+    {
+      name: 'Emma van der Berg',
+      text: 'The velvet roses for my wedding were absolutely stunning. Every guest asked where I got them!',
+      rating: 5,
+      occasion: 'Wedding',
+    },
+    {
+      name: 'Lisa Janssen',
+      text: 'Beautiful craftsmanship and attention to detail. My mother loved the Mother&apos;s Day arrangement.',
+      rating: 5,
+      occasion: 'Mother&apos;s Day',
+    },
+    {
+      name: 'Sophie de Wit',
+      text: 'These flowers never wilt! Perfect for my home office. The quality is exceptional.',
+      rating: 5,
+      occasion: 'Home Decor',
+    },
+  ];
+
+  // Auto-rotate testimonials
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTestimonialIndex((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [testimonials.length]);
+
+  const features = [
+    {
+      icon: <FiHeart className='w-6 h-6' />,
+      title: 'Handcrafted with Love',
+      description:
+        'Each flower is carefully made by hand with premium velvet materials',
+    },
+    {
+      icon: <FiCheckCircle className='w-6 h-6' />,
+      title: 'Lasting Beauty',
+      description:
+        'Our velvet flowers maintain their beauty for years without wilting',
+    },
+    {
+      icon: <FiGift className='w-6 h-6' />,
+      title: 'Custom Designs',
+      description: 'Personalize your arrangements for any special occasion',
+    },
+    {
+      icon: <FiTruck className='w-6 h-6' />,
+      title: 'Free Delivery',
+      description: 'Free delivery on orders over €75 within Amsterdam',
+    },
+  ];
+
   return (
-    <main className='min-h-screen relative overflow-hidden'>
-      {/* Enhanced background with multiple gradients */}
-      <div className='absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5'></div>
-      <div className='absolute inset-0 bg-gradient-to-tr from-transparent via-accent-peach/5 to-accent-coral/10'></div>
-
-      {/* Subtle grid pattern overlay */}
-      <div className='absolute inset-0 opacity-[0.02] bg-[radial-gradient(circle_at_1px_1px,_var(--foreground)_1px,_transparent_0)] bg-[length:24px_24px]'></div>
-
-      <FloatingElements />
-
+    <div className='min-h-screen'>
       {/* Hero Section */}
-      <section className='relative z-10 py-20 px-4'>
-        <div className='max-w-7xl mx-auto'>
-          <div className='flex flex-col lg:grid lg:grid-cols-2 gap-12 px-2 items-center'>
-            {/* Image section - first on mobile, left on desktop */}
-            <div className='relative group order-1 lg:order-none flex justify-center'>
-              <div className='absolute -inset-4 bg-gradient-sunset rounded-2xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500'></div>
-              <div className='relative'>
-                <div className='absolute inset-0 bg-gradient-bloom rounded-xl opacity-10'></div>
-                <Image
-                  src='/file.jpg'
-                  alt='Mama Bloemetjes Hero Image'
-                  width={500}
-                  height={500}
-                  className='w-[25em] h-auto rounded-xl shadow-2xl transition-transform duration-500 group-hover:scale-[1.02] glass border-2 border-glass-border'
-                />
-                {/* Decorative corner accents */}
-                <div className='absolute -top-3 -left-3 w-6 h-6 bg-gradient-sunset rounded-full animate-pulse-subtle'></div>
-                <div className='absolute -bottom-3 -right-3 w-8 h-8 bg-gradient-bloom rounded-full animate-float'></div>
-              </div>
+      <section className='relative min-h-screen flex items-center justify-center overflow-hidden'>
+        {/* Background Image */}
+        <div className='absolute inset-0 z-0'>
+          <Image
+            src='https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&h=1080&fit=crop&crop=center'
+            alt='Beautiful velvet flowers'
+            fill
+            className='object-cover'
+            priority
+          />
+          <div className='absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-transparent'></div>
+        </div>
+
+        {/* Hero Content */}
+        <div className='container relative z-10 text-center'>
+          <div className='max-w-4xl mx-auto'>
+            <h1 className='heading-1 text-white mb-6 animate-fade-in'>
+              Handcrafted Velvet Flowers
+              <span className='block text-[#e8c4a0] mt-2'>
+                That Last Forever
+              </span>
+            </h1>
+            <p className='text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed'>
+              Discover our collection of beautiful, custom-made velvet flower
+              arrangements. Perfect for weddings, home décor, and special
+              occasions.
+            </p>
+            <div className='flex flex-col sm:flex-row gap-4 justify-center items-center'>
+              <Link href='/shop'>
+                <Button
+                  variant='primary'
+                  size='lg'
+                  rightIcon={<FiArrowRight className='w-5 h-5' />}
+                  className='min-w-[200px]'
+                >
+                  Shop Collection
+                </Button>
+              </Link>
+              <Link href='/custom'>
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='min-w-[200px] border-white text-white hover:bg-white hover:text-[#2d2820]'
+                >
+                  Custom Order
+                </Button>
+              </Link>
             </div>
+          </div>
+        </div>
 
-            {/* Content section - second on mobile, right on desktop */}
-            <div className='relative order-2 lg:order-none w-full flex justify-center'>
-              {/* Background glow effect */}
-              <div className='absolute -inset-8 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 rounded-3xl blur-3xl'></div>
+        {/* Scroll Indicator */}
+        <div className='absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce'>
+          <div className='w-6 h-10 border-2 border-white rounded-full flex justify-center'>
+            <div className='w-1 h-3 bg-white rounded-full mt-2 animate-pulse'></div>
+          </div>
+        </div>
+      </section>
 
-              <header className='relative glass rounded-2xl p-10 border border-glass-border shadow-2xl backdrop-blur-xl max-w-lg lg:max-w-none'>
-                {/* Decorative top accent */}
-                <div className='absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-                  <div className='w-16 h-1 bg-gradient-sunset rounded-full'></div>
+      {/* Features Section */}
+      <section className='section bg-[#f5f2ee]'>
+        <div className='container'>
+          <div className='text-center mb-16'>
+            <h2 className='heading-2 mb-4'>Why Choose Mama Bloemetjes?</h2>
+            <p className='text-lg text-[#7d6b55] max-w-2xl mx-auto'>
+              We create lasting memories with flowers that stay beautiful
+              forever
+            </p>
+          </div>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
+            {features.map((feature, index) => (
+              <div key={index} className='text-center group'>
+                <div className='w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-[#d4a574] mx-auto mb-6 shadow-lg group-hover:shadow-xl transform group-hover:-translate-y-2 transition-all duration-300'>
+                  {feature.icon}
+                </div>
+                <h3 className='heading-4 mb-3 text-[#2d2820]'>
+                  {feature.title}
+                </h3>
+                <p className='text-[#7d6b55] leading-relaxed'>
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products Section */}
+      <section className='section'>
+        <div className='container'>
+          <div className='flex items-center justify-between mb-12'>
+            <div>
+              <h2 className='heading-2 mb-4'>Featured Collection</h2>
+              <p className='text-lg text-[#7d6b55]'>
+                Discover our most popular handcrafted arrangements
+              </p>
+            </div>
+            <Link href='/shop'>
+              <Button
+                variant='outline'
+                rightIcon={<FiArrowRight className='w-4 h-4' />}
+              >
+                View All
+              </Button>
+            </Link>
+          </div>
+
+          <div className='product-grid'>
+            {featuredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={(product) => {
+                  console.log('Added to cart:', product.name);
+                  // TODO: Implement cart functionality
+                }}
+                onToggleWishlist={(product) => {
+                  console.log('Toggled wishlist:', product.name);
+                  // TODO: Implement wishlist functionality
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className='section section-alt'>
+        <div className='container'>
+          <div className='text-center mb-16'>
+            <h2 className='heading-2 mb-4'>What Our Customers Say</h2>
+            <p className='text-lg text-[#7d6b55]'>
+              Read about the experiences of our satisfied customers
+            </p>
+          </div>
+
+          <div className='max-w-4xl mx-auto'>
+            <div className='bg-white rounded-3xl p-8 md:p-12 shadow-xl'>
+              <div className='text-center'>
+                {/* Star Rating */}
+                <div className='flex justify-center space-x-1 mb-6'>
+                  {[...Array(5)].map((_, i) => (
+                    <FiStar
+                      key={i}
+                      className='w-6 h-6 fill-current text-yellow-400'
+                    />
+                  ))}
                 </div>
 
-                <div className='text-center space-y-6'>
-                  <div className='space-y-4'>
-                    <h1 className='text-4xl lg:text-5xl font-bold gradient-text animate-fadeInUp leading-tight'>
-                      Mama Bloemetjes
-                    </h1>
+                {/* Testimonial Text */}
+                <blockquote className='text-xl md:text-2xl font-serif text-[#2d2820] mb-6 leading-relaxed'>
+                  &ldquo;{testimonials[testimonialIndex].text}&rdquo;
+                </blockquote>
 
-                    {/* Subtitle */}
-                    <div className='relative'>
-                      <p className='text-xl inline lg:text-2xl text-foreground/70 leading-relaxed animate-slideInRight font-light max-w-md mx-auto'>
-                        Zelf gemaakte bloemen van stof en papier,
-                        <span className='block text-secondary font-medium'>
-                          met liefde en zorg
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Button section */}
-                  <div className='pt-6'>
-                    <div className='flex flex-col sm:flex-row justify-center gap-4 sm:gap-6'>
-                      <Button variant='default' size='lg'>
-                        <span className='relative z-10'>
-                          <Link
-                            href='/shop'
-                            className='flex items-center gap-2'
-                          >
-                            Bekijk assortiment
-                            <FaArrowRight className='w-4 h-4' />
-                          </Link>
-                        </span>
-                      </Button>
-
-                      <Button variant='primaryOutline' size='lg'>
-                        <Link href='/about' className='flex items-center gap-2'>
-                          Lees meer
-                          <FaQuestion className='w-4 h-4' />
-                        </Link>
-                      </Button>
-                    </div>
-
-                    {/* Small decorative elements */}
-                    <div className='flex justify-center mt-8 space-x-2'>
-                      <div className='w-2 h-2 bg-primary rounded-full animate-pulse'></div>
-                      <div className='w-2 h-2 bg-secondary rounded-full animate-pulse delay-100'></div>
-                      <div className='w-2 h-2 bg-accent-coral rounded-full animate-pulse delay-200'></div>
-                    </div>
-                  </div>
+                {/* Customer Info */}
+                <div className='mb-4'>
+                  <p className='font-semibold text-[#2d2820] text-lg'>
+                    {testimonials[testimonialIndex].name}
+                  </p>
+                  <p className='text-[#7d6b55]'>
+                    {testimonials[testimonialIndex].occasion}
+                  </p>
                 </div>
 
-                {/* Bottom decorative accent */}
-                <div className='absolute bottom-0 right-6 transform translate-y-1/2'>
-                  <div className='w-12 h-12 bg-gradient-peach rounded-full opacity-20 animate-float'></div>
+                {/* Testimonial Indicators */}
+                <div className='flex justify-center space-x-2'>
+                  {testimonials.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setTestimonialIndex(index)}
+                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                        index === testimonialIndex
+                          ? 'bg-[#d4a574]'
+                          : 'bg-[#e8e2d9] hover:bg-[#d6ccc0]'
+                      }`}
+                    />
+                  ))}
                 </div>
-              </header>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Additional decorative elements */}
-      <div className='absolute top-1/4 right-10 w-20 h-20 bg-gradient-to-br from-accent-lavender/20 to-accent-rose/20 rounded-full blur-xl animate-pulse-subtle' />
-      <div className='absolute bottom-1/3 left-10 w-16 h-16 bg-gradient-to-tr from-accent-sunset/20 to-accent-peach/20 rounded-full blur-lg animate-float' />
-    </main>
+      {/* Call to Action Section */}
+      <section className='section bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] text-white'>
+        <div className='container text-center'>
+          <div className='max-w-3xl mx-auto'>
+            <h2 className='text-4xl md:text-5xl font-serif font-bold mb-6'>
+              Ready to Create Something Beautiful?
+            </h2>
+            <p className='text-xl mb-8 text-white/90 leading-relaxed'>
+              Let us help you create the perfect velvet flower arrangement for
+              your special moment. Whether it&qout;s a wedding, anniversary, or
+              just because – we&qout;re here to make it memorable.
+            </p>
+            <div className='flex flex-col sm:flex-row gap-4 justify-center'>
+              <Link href='/contact'>
+                <Button
+                  variant='secondary'
+                  size='lg'
+                  className='min-w-[200px] bg-white text-[#d4a574] hover:bg-white/90'
+                >
+                  Get in Touch
+                </Button>
+              </Link>
+              <Link href='/shop'>
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='min-w-[200px] border-white text-white hover:bg-white hover:text-[#d4a574]'
+                  rightIcon={<FiShoppingBag className='w-5 h-5' />}
+                >
+                  Start Shopping
+                </Button>
+              </Link>
+            </div>
+
+            {/* Trust Badges */}
+            <div className='mt-12 pt-8 border-t border-white/20'>
+              <div className='flex flex-wrap justify-center items-center gap-8 text-white/80'>
+                <div className='flex items-center space-x-2'>
+                  <FiAward className='w-5 h-5' />
+                  <span className='text-sm'>Handcrafted Quality</span>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <FiTruck className='w-5 h-5' />
+                  <span className='text-sm'>Free Delivery €75+</span>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <FiCheckCircle className='w-5 h-5' />
+                  <span className='text-sm'>Satisfaction Guaranteed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
-}
+};
+
+export default HomePage;

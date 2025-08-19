@@ -1,23 +1,226 @@
+'use client';
+
 import Link from 'next/link';
+import {
+  FiMapPin,
+  FiPhone,
+  FiMail,
+  FiInstagram,
+  FiFacebook,
+  FiHeart,
+} from 'react-icons/fi';
 
 const Footer: React.FC = () => {
+  const currentYear = new Date().getFullYear();
+
+  const footerLinks = {
+    shop: [
+      { label: 'All Products', href: '/shop' },
+      { label: 'Bouquets', href: '/shop/bouquets' },
+      { label: 'Arrangements', href: '/shop/arrangements' },
+      { label: 'Seasonal', href: '/shop/seasonal' },
+      { label: 'Custom Orders', href: '/custom' },
+    ],
+    info: [
+      { label: 'About Us', href: '/about' },
+      { label: 'Our Story', href: '/story' },
+      { label: 'Care Instructions', href: '/care' },
+      { label: 'Shipping Info', href: '/shipping' },
+      { label: 'Returns', href: '/returns' },
+    ],
+    support: [
+      { label: 'Contact Us', href: '/contact' },
+      { label: 'FAQ', href: '/faq' },
+      { label: 'Size Guide', href: '/size-guide' },
+      { label: 'Track Order', href: '/track' },
+      { label: 'Gift Cards', href: '/gift-cards' },
+    ],
+  };
+
   return (
-    <footer>
-      <div className='container mx-auto px-4 py-8 text-center'>
-        <p className='text-sm text-gray-600'>
-          &copy; {new Date().getFullYear()} Mama Bloemetjes. All rights
-          reserved.
-        </p>
-        <p className='text-sm text-gray-500 mt-2'>
-          Made with ❤️ by{' '}
-          <Link
-            href={'https://github.com/MonkyMars'}
-            className='underline text-primary'
-          >
-            Levi Noppers
-          </Link>
-          .
-        </p>
+    <footer className='bg-[#2d2820] text-[#f5f2ee]'>
+      {/* Newsletter Section */}
+      <div className='border-b border-[#453d30]'>
+        <div className='container py-12'>
+          <div className='max-w-2xl mx-auto text-center'>
+            <h3 className='text-2xl font-serif font-semibold mb-4 text-[#e8c4a0]'>
+              Stay in Bloom
+            </h3>
+            <p className='text-[#d6ccc0] mb-6'>
+              Subscribe to our newsletter for exclusive offers, care tips, and
+              first access to new collections.
+            </p>
+            <form className='flex flex-col sm:flex-row gap-4 max-w-md mx-auto'>
+              <input
+                type='email'
+                placeholder='Your email address'
+                className='flex-1 px-4 py-3 bg-[#453d30] border border-[#615340] rounded-xl text-white placeholder-[#9a8470] focus:border-[#d4a574] focus:outline-none focus:ring-4 focus:ring-[#d4a574]/20 transition-all duration-300'
+                required
+              />
+              <button
+                type='submit'
+                className='px-6 py-3 bg-[#d4a574] hover:bg-[#b8956a] text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1'
+              >
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Content */}
+      <div className='container py-16'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12'>
+          {/* Brand Section */}
+          <div className='lg:col-span-2'>
+            <div className='flex items-center space-x-3 mb-6'>
+              <div className='w-12 h-12 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center'>
+                <span className='text-white font-serif font-bold text-xl'>
+                  M
+                </span>
+              </div>
+              <div>
+                <h2 className='text-xl font-serif font-bold text-[#e8c4a0]'>
+                  Mama Bloemetjes
+                </h2>
+                <p className='text-sm text-[#9a8470] -mt-1'>
+                  Handcrafted Velvet Flowers
+                </p>
+              </div>
+            </div>
+            <p className='text-[#d6ccc0] mb-6 leading-relaxed'>
+              Creating beautiful, lasting memories with handcrafted velvet
+              flowers. Each piece is lovingly made to bring warmth and elegance
+              to your special moments.
+            </p>
+
+            {/* Contact Information */}
+            <div className='space-y-3'>
+              <div className='flex items-center space-x-3 text-[#d6ccc0]'>
+                <FiMapPin className='w-5 h-5 text-[#ddb7ab] flex-shrink-0' />
+                <span>Bloemenstraat 123, 1234 AB Amsterdam</span>
+              </div>
+              <div className='flex items-center space-x-3 text-[#d6ccc0]'>
+                <FiPhone className='w-5 h-5 text-[#ddb7ab] flex-shrink-0' />
+                <span>+31 6 12 34 56 78</span>
+              </div>
+              <div className='flex items-center space-x-3 text-[#d6ccc0]'>
+                <FiMail className='w-5 h-5 text-[#ddb7ab] flex-shrink-0' />
+                <span>hello@mamabloemetjes.nl</span>
+              </div>
+            </div>
+
+            {/* Social Media */}
+            <div className='flex space-x-4 mt-6'>
+              <a
+                href='https://instagram.com/mamabloemetjes'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='w-10 h-10 bg-[#453d30] hover:bg-[#d4a574] text-[#d6ccc0] hover:text-white rounded-lg flex items-center justify-center transition-all duration-300 hover:-translate-y-1'
+                aria-label='Follow us on Instagram'
+              >
+                <FiInstagram className='w-5 h-5' />
+              </a>
+              <a
+                href='https://facebook.com/mamabloemetjes'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='w-10 h-10 bg-[#453d30] hover:bg-[#d4a574] text-[#d6ccc0] hover:text-white rounded-lg flex items-center justify-center transition-all duration-300 hover:-translate-y-1'
+                aria-label='Follow us on Facebook'
+              >
+                <FiFacebook className='w-5 h-5' />
+              </a>
+            </div>
+          </div>
+
+          {/* Shop Links */}
+          <div>
+            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
+              Shop
+            </h3>
+            <ul className='space-y-3'>
+              {footerLinks.shop.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className='text-[#d6ccc0] hover:text-[#ddb7ab] transition-colors duration-300 text-sm'
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Information Links */}
+          <div>
+            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
+              Information
+            </h3>
+            <ul className='space-y-3'>
+              {footerLinks.info.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className='text-[#d6ccc0] hover:text-[#ddb7ab] transition-colors duration-300 text-sm'
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support Links */}
+          <div>
+            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
+              Support
+            </h3>
+            <ul className='space-y-3'>
+              {footerLinks.support.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className='text-[#d6ccc0] hover:text-[#ddb7ab] transition-colors duration-300 text-sm'
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className='border-t border-[#453d30]'>
+        <div className='container py-6'>
+          <div className='flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0'>
+            <div className='flex items-center space-x-4 text-sm text-[#9a8470]'>
+              <span>© {currentYear} Mama Bloemetjes</span>
+              <span>•</span>
+              <Link
+                href='/privacy'
+                className='hover:text-[#ddb7ab] transition-colors duration-300'
+              >
+                Privacy Policy
+              </Link>
+              <span>•</span>
+              <Link
+                href='/terms'
+                className='hover:text-[#ddb7ab] transition-colors duration-300'
+              >
+                Terms of Service
+              </Link>
+            </div>
+
+            <div className='flex items-center space-x-2 text-sm text-[#9a8470]'>
+              <span>Made with</span>
+              <FiHeart className='w-4 h-4 text-[#ddb7ab]' />
+              <span>in Amsterdam</span>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   );
