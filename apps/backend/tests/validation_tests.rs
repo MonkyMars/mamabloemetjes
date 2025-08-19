@@ -1,6 +1,7 @@
 use backend::structs::order::{Address, Order, OrderContent, OrderStatus, ProductEntry};
 use backend::validate::order::validate_order;
 use rust_decimal::Decimal;
+use rust_decimal::prelude::FromPrimitive;
 use uuid::Uuid;
 
 /// Create a valid order for testing
@@ -12,10 +13,10 @@ pub fn create_valid_order() -> Order {
         address: Address {
             street: "123 Main St".to_string(),
             city: "Anytown".to_string(),
-            state: "CA".to_string(),
+            province: "CA".to_string(),
             zip: "12345".to_string(),
         },
-        price: Decimal::ZERO,
+        price: Decimal::from_f32(2.33).unwrap(),
         content: vec![OrderContent {
             product_ids: vec![ProductEntry {
                 product_id: Uuid::new_v4(),
@@ -37,11 +38,11 @@ pub fn create_invalid_order() -> Order {
         address: Address {
             street: "".to_string(), // Invalid: empty street
             city: "Anytown".to_string(),
-            state: "CA".to_string(),
+            province: "CA".to_string(),
             zip: "123".to_string(), // Invalid: too short
         },
-        price: -10.0,    // Invalid: negative price
-        content: vec![], // Invalid: empty content
+        price: Decimal::from_f32(-10.0).unwrap(), // Invalid: negative price
+        content: vec![],                          // Invalid: empty content
         created_at: None,
         updated_at: None,
         order_status: OrderStatus::Pending,
@@ -153,35 +154,35 @@ mod tests {
         let mut order = create_valid_order();
 
         // Test negative price
-        order.price = -10.0;
+        order.price = Decimal::from_f32(-10.0).unwrap();
         assert!(
             validate_order(&order).is_err(),
             "Negative price should fail validation"
         );
 
         // Test zero price
-        order.price = 0.0;
+        order.price = Decimal::ZERO;
         assert!(
             validate_order(&order).is_err(),
             "Zero price should fail validation"
         );
 
         // Test minimum valid price
-        order.price = 0.01;
+        order.price = Decimal::from_f32(0.01).unwrap();
         assert!(
             validate_order(&order).is_ok(),
             "Minimum valid price should pass validation"
         );
 
         // Test maximum valid price
-        order.price = 1_000_000.0;
+        order.price = Decimal::from_f32(1_000_000.0).unwrap();
         assert!(
             validate_order(&order).is_ok(),
             "Maximum valid price should pass validation"
         );
 
         // Test price over maximum
-        order.price = 1_000_001.0;
+        order.price = Decimal::from_f32(1_000_001.0).unwrap();
         assert!(
             validate_order(&order).is_err(),
             "Price over maximum should fail validation"
@@ -216,20 +217,20 @@ mod tests {
 
         // Reset and test state
         order.address = create_valid_order().address;
-        order.address.state = "".to_string();
+        order.address.province = "".to_string();
         assert!(
             validate_order(&order).is_err(),
             "Empty state should fail validation"
         );
 
         // Test state length
-        order.address.state = "a".to_string(); // Too short
+        order.address.province = "a".to_string(); // Too short
         assert!(
             validate_order(&order).is_err(),
             "State too short should fail validation"
         );
 
-        order.address.state = "a".repeat(21); // Too long
+        order.address.province = "a".repeat(21); // Too long
         assert!(
             validate_order(&order).is_err(),
             "State too long should fail validation"
@@ -391,7 +392,7 @@ mod tests {
         );
 
         // Test minimum valid price
-        order.price = 0.01;
+        order.price = Decimal::from_f32(0.01).unwrap();
         assert!(
             validate_order(&order).is_ok(),
             "Minimum valid price should pass validation"
@@ -405,7 +406,7 @@ mod tests {
         );
 
         // Test maximum state length
-        order.address.state = "a".repeat(20);
+        order.address.province = "a".repeat(20);
         assert!(
             validate_order(&order).is_ok(),
             "Maximum state length should pass validation"

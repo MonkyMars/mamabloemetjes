@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
@@ -9,13 +9,11 @@ pub struct Order {
     pub id: Option<Uuid>,
     pub name: String,
     pub email: String,
-    #[sqlx(json)]
     pub address: Address,
     pub price: Decimal,
-    #[sqlx(json)]
     pub content: Vec<OrderContent>,
-    pub created_at: Option<NaiveDateTime>,
-    pub updated_at: Option<NaiveDateTime>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
     pub order_status: OrderStatus,
 }
 
@@ -37,7 +35,7 @@ pub struct Address {
 
     pub city: String,
 
-    pub state: String,
+    pub province: String,
 
     pub zip: String,
 }
@@ -86,8 +84,8 @@ impl Order {
         address: Address,
         price: Decimal,
         content: Vec<OrderContent>,
-        created_at: Option<NaiveDateTime>,
-        updated_at: Option<NaiveDateTime>,
+        created_at: Option<DateTime<Utc>>,
+        updated_at: Option<DateTime<Utc>>,
         order_status: OrderStatus,
     ) -> Self {
         Self {

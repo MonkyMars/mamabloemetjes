@@ -56,25 +56,47 @@ fn validate_basic_fields(order: &Order) -> Result<(), AppError> {
         ));
     }
 
-    if order.address.state.len() < 2 || order.address.state.len() > 20 {
+    let valid_provinces: Vec<String> = vec![
+        "Noord Brabant".into(),
+        "Zuid Holland".into(),
+        "Noord Holland".into(),
+        "Gelderland".into(),
+        "Utrecht".into(),
+        "Overijssel".into(),
+        "Limburg".into(),
+        "Drenthe".into(),
+        "Flevoland".into(),
+        "Friesland".into(),
+        "Groningen".into(),
+        "Zeeland".into(),
+    ];
+
+    if order.address.province.len() < 2 || order.address.province.len() > 20 {
         return Err(AppError::validation_error(
-            "state",
-            "State must be between 2 and 20 characters",
+            "province",
+            "Province must be between 2 and 20 characters",
         ));
     }
 
-    if order.address.zip.len() < 5 || order.address.zip.len() > 10 {
+    if !valid_provinces.contains(&order.address.province) {
+        return Err(AppError::validation_error(
+            "province",
+            "Province must be one of the valid Dutch provinces",
+        ));
+    }
+
+    if order.address.zip.replace(" ", "").len() == 6 {
         return Err(AppError::validation_error(
             "zip",
-            "ZIP code must be between 5 and 10 characters",
+            "ZIP code must be between 6 characters excluding spaces",
         ));
     }
 
-    // Validate ZIP format (5 or 9 digits with optional hyphen)
+    // Validate ZIP format (1234 AB or 1234AB)
     if !is_valid_zip(&order.address.zip) {
         return Err(AppError::validation_error(
             "zip",
-            "ZIP code must be in format 12345 or 12345-6789",
+            "ZIP code must be in format 1234 AB or 1234AB",
         ));
     }
 
@@ -208,31 +230,27 @@ fn validate_business_rules(order: &Order) -> Result<(), AppError> {
     Ok(())
 }
 
-/// Validates ZIP code format
+/// Validates Dutch ZIP code format
 fn is_valid_zip(zip: &str) -> bool {
-    let zip_trimmed = zip.trim();
+    // Remove spaces and convert to uppercase for consistent checking
+    let zip_cleaned = zip.replace(" ", "").to_uppercase();
 
-    if zip_trimmed.len() == 5 {
-        // 5-digit ZIP code
-        zip_trimmed.chars().all(|c| c.is_ascii_digit())
-    } else if zip_trimmed.len() == 10 {
-        // ZIP+4 format (12345-6789)
-        if let Some((first, second)) = zip_trimmed.split_once('-') {
-            first.len() == 5
-                && second.len() == 4
-                && first.chars().all(|c| c.is_ascii_digit())
-                && second.chars().all(|c| c.is_ascii_digit())
-        } else {
-            false
-        }
-    } else {
-        false
+    if zip_cleaned.len() != 6 {
+        return false;
     }
+
+    let (digits, letters) = zip_cleaned.split_at(4);
+
+    // Dutch postal codes: 4 digits (1000-9999) + 2 letters (AA-ZZ, excluding SA, SD, SS)
+    digits.chars().all(|c| c.is_ascii_digit())
+        && letters.chars().all(|c| c.is_ascii_uppercase())
+        && digits >= "1000" && digits <= "9999"  // Valid range
+        && !matches!(letters, "SA" | "SD" | "SS") // Excluded combinations
 }
 
 /// Additional email domain validation
 fn is_valid_email_domain(email: &str) -> bool {
-    // Basic domain validation - could be extended with blacklist/whitelist
+    // Basic domain validation - could be extended with blacklist/whitelist in the future
     let domain_part = email.split('@').nth(1).unwrap_or("");
 
     // Check for basic domain structure
@@ -256,7 +274,7 @@ fn validate_address_completeness(address: &crate::structs::order::Address) -> Re
         return Err(AppError::validation_error("city", "City cannot be empty"));
     }
 
-    if address.state.trim().is_empty() {
+    if address.province.trim().is_empty() {
         return Err(AppError::validation_error("state", "State cannot be empty"));
     }
 
