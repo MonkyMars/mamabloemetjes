@@ -5,7 +5,7 @@ use crate::response::{ApiResponse, AppResponse, error::AppError, success};
 use crate::structs::order::Order;
 use crate::validate::order::validate_order;
 
-// POST request to older something.
+// POST request to order something.
 pub async fn order(Json(payload): Json<Order>) -> ApiResponse<Order> {
     // Validate the incoming order
     if let Err(validation_error) = validate_order(&payload) {
