@@ -21,21 +21,21 @@ fn main() {
         price: Decimal::from_str("99.99").unwrap(),
         content: vec![
             OrderContent {
-                product_ids: vec![
+                product: vec![
                     ProductEntry {
                         product_id: Uuid::new_v4(),
-                        count: 2,
+                        quantity: 2,
                     },
                     ProductEntry {
                         product_id: Uuid::new_v4(),
-                        count: 1,
+                        quantity: 1,
                     },
                 ],
             },
             OrderContent {
-                product_ids: vec![ProductEntry {
+                product: vec![ProductEntry {
                     product_id: Uuid::new_v4(),
-                    count: 3,
+                    quantity: 3,
                 }],
             },
         ],
@@ -93,12 +93,12 @@ fn main() {
 
                     // Check first content item
                     assert_eq!(
-                        order.content[0].product_ids.len(),
-                        deserialized_content[0].product_ids.len()
+                        order.content[0].product.len(),
+                        deserialized_content[0].product.len()
                     );
                     assert_eq!(
-                        order.content[0].product_ids[0].count,
-                        deserialized_content[0].product_ids[0].count
+                        order.content[0].product[0].quantity,
+                        deserialized_content[0].product[0].quantity
                     );
 
                     println!("✅ Content JSONB test passed!");
@@ -159,9 +159,9 @@ fn main() {
 
     // Single product entry
     let single_content = vec![OrderContent {
-        product_ids: vec![ProductEntry {
+        product: vec![ProductEntry {
             product_id: Uuid::new_v4(),
-            count: 1,
+            quantity: 1,
         }],
     }];
 
@@ -169,8 +169,8 @@ fn main() {
         Ok(json_val) => match serde_json::from_value::<Vec<OrderContent>>(json_val) {
             Ok(deserialized) => {
                 assert_eq!(deserialized.len(), 1);
-                assert_eq!(deserialized[0].product_ids.len(), 1);
-                assert_eq!(deserialized[0].product_ids[0].count, 1);
+                assert_eq!(deserialized[0].product.len(), 1);
+                assert_eq!(deserialized[0].product[0].quantity, 1);
                 println!("✅ Single product entry test passed!");
             }
             Err(e) => println!("❌ Single product deserialization failed: {}", e),

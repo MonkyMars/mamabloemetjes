@@ -76,7 +76,7 @@ pub async fn get_order_by_id(id: Uuid) -> Result<Option<Order>, SqlxError> {
         };
         Ok(Some(order))
     } else {
-        Ok(None)
+        Err(SqlxError::RowNotFound)
     }
 }
 
@@ -121,7 +121,7 @@ pub async fn get_all_products() -> Result<Vec<Product>, SqlxError> {
         "SELECT product_id, name, price, created_at, image_urls, description FROM products ORDER BY created_at DESC"
     ).fetch_all(pool).await?;
 
-    let mut products = Vec::new();
+    let mut products: Vec<Product> = Vec::new();
     for row in rows {
         // Handle image_urls flexibly - supports both TEXT[] and JSONB
         let image_urls: Vec<String> =
@@ -211,6 +211,73 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
         };
 
         Ok(Some(product))
+    } else {
+        Err(SqlxError::RowNotFound)
+    }
+}
+
+// Updates the status of an order by its ID
+// Returns the updated order if successful, or None if the order was not found
+pub async fn update_order_status(
+    id: Uuid,
+    new_status: OrderStatus,
+) -> Result<Option<Order>, SqlxError> {
+    let pool = pool();
+
+    let row = sqlx::query(
+        r#"
+        UPDATE orders
+        SET order_status = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING id, name, email, address, price, content, created_at, updated_at, order_status
+        "#,
+    )
+    .bind(new_status.to_string())
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+
+    if let Some(row) = row {
+        let order = Order {
+            id: row.try_get("id")?,
+            name: row.try_get("name")?,
+            email: row.try_get("email")?,
+            address: serde_json::from_value(row.try_get("address")?)
+                .map_err(|e| SqlxError::Decode(Box::new(e)))?,
+            price: row.try_get("price")?,
+            content: serde_json::from_value(row.try_get("content")?)
+                .map_err(|e| SqlxError::Decode(Box::new(e)))?,
+            created_at: row.try_get("created_at")?,
+            updated_at: row.try_get("updated_at")?,
+            order_status: OrderStatus::from(row.try_get::<String, _>("order_status")?),
+        };
+        Ok(Some(order))
+    } else {
+        Ok(None)
+    }
+}
+
+// Update inventory with product id and quantity
+// Returns the updated quantity if successful, or None if the product was not found
+pub async fn update_inventory(product_id: Uuid, quantity: i32) -> Result<Option<i32>, SqlxError> {
+    let pool = pool();
+
+    let row = sqlx::query(
+        r#"
+        UPDATE inventory
+        SET quantity = quantity - $1, updated_at = NOW()
+        WHERE product_id = $2
+        RETURNING quantity
+        "#,
+    )
+    .bind(quantity)
+    .bind(product_id)
+    .fetch_optional(pool)
+    .await?;
+
+    if let Some(row) = row {
+        let updated_quantity: i32 = row.try_get("quantity")?;
+        Ok(Some(updated_quantity))
     } else {
         Ok(None)
     }

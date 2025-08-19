@@ -13,21 +13,3 @@ pub struct Product {
     pub description: Option<String>,
     pub image_urls: Vec<String>,
 }
-
-impl Product {
-    pub fn new(
-        name: String,
-        price: Decimal,
-        description: Option<String>,
-        image_urls: Vec<String>,
-    ) -> Self {
-        Self {
-            product_id: None,
-            name,
-            created_at: None,
-            price,
-            description,
-            image_urls,
-        }
-    }
-}

@@ -43,6 +43,9 @@ pub enum AppError {
 
     #[error("Unprocessable entity: {0}")]
     UnprocessableEntity(String),
+
+    #[error("Inventory error: {0}")]
+    NotEnoughInventory(String),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,6 +73,7 @@ impl AppError {
             AppError::Conflict(_) => StatusCode::CONFLICT,
             AppError::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
             AppError::UnprocessableEntity(_) => StatusCode::UNPROCESSABLE_ENTITY,
+            AppError::NotEnoughInventory(_) => StatusCode::INSUFFICIENT_STORAGE,
         }
     }
 
@@ -87,6 +91,7 @@ impl AppError {
             AppError::Conflict(_) => "CONFLICT",
             AppError::TooManyRequests => "TOO_MANY_REQUESTS",
             AppError::UnprocessableEntity(_) => "UNPROCESSABLE_ENTITY",
+            AppError::NotEnoughInventory(_) => "NOT_ENOUGH_INVENTORY",
         }
     }
 }

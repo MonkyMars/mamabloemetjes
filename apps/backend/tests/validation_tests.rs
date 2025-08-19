@@ -18,9 +18,9 @@ pub fn create_valid_order() -> Order {
         },
         price: Decimal::from_f32(2.33).unwrap(),
         content: vec![OrderContent {
-            product_ids: vec![ProductEntry {
+            product: vec![ProductEntry {
                 product_id: Uuid::new_v4(),
-                count: 2,
+                quantity: 2,
             }],
         }],
         created_at: None,
@@ -282,13 +282,11 @@ mod tests {
             "Empty content should fail validation"
         );
 
-        // Test content with empty product_ids
-        order.content = vec![OrderContent {
-            product_ids: vec![],
-        }];
+        // Test content with empty product
+        order.content = vec![OrderContent { product: vec![] }];
         assert!(
             validate_order(&order).is_err(),
-            "Content with empty product_ids should fail validation"
+            "Content with empty product should fail validation"
         );
     }
 
@@ -297,35 +295,35 @@ mod tests {
         let mut order = create_valid_order();
 
         // Test zero count
-        order.content[0].product_ids[0].count = 0;
+        order.content[0].product[0].quantity = 0;
         assert!(
             validate_order(&order).is_err(),
             "Zero product count should fail validation"
         );
 
         // Test negative count
-        order.content[0].product_ids[0].count = -1;
+        order.content[0].product[0].quantity = -1;
         assert!(
             validate_order(&order).is_err(),
             "Negative product count should fail validation"
         );
 
         // Test valid count
-        order.content[0].product_ids[0].count = 1;
+        order.content[0].product[0].quantity = 1;
         assert!(
             validate_order(&order).is_ok(),
             "Valid product count should pass validation"
         );
 
         // Test maximum count
-        order.content[0].product_ids[0].count = 1000;
+        order.content[0].product[0].quantity = 1000;
         assert!(
             validate_order(&order).is_ok(),
             "Maximum product count should pass validation"
         );
 
         // Test over maximum count
-        order.content[0].product_ids[0].count = 1001;
+        order.content[0].product[0].quantity = 1001;
         assert!(
             validate_order(&order).is_err(),
             "Over maximum product count should fail validation"
@@ -333,22 +331,22 @@ mod tests {
     }
 
     #[test]
-    fn test_multiple_products_validation() {
+    fn test_multiple_product_validation() {
         let mut order = create_valid_order();
 
-        // Add multiple products to test nested validation
-        order.content[0].product_ids.push(ProductEntry {
+        // Add multiple product to test nested validation
+        order.content[0].product.push(ProductEntry {
             product_id: Uuid::new_v4(),
-            count: 3,
+            quantity: 3,
         });
 
         assert!(
             validate_order(&order).is_ok(),
-            "Multiple valid products should pass validation"
+            "Multiple valid product should pass validation"
         );
 
         // Make one product invalid
-        order.content[0].product_ids[1].count = 0;
+        order.content[0].product[1].quantity = 0;
         assert!(
             validate_order(&order).is_err(),
             "One invalid product should fail validation"
@@ -361,9 +359,9 @@ mod tests {
 
         // Add multiple content items
         order.content.push(OrderContent {
-            product_ids: vec![ProductEntry {
+            product: vec![ProductEntry {
                 product_id: Uuid::new_v4(),
-                count: 1,
+                quantity: 1,
             }],
         });
 
@@ -373,7 +371,7 @@ mod tests {
         );
 
         // Make one content item invalid
-        order.content[1].product_ids = vec![];
+        order.content[1].product = vec![];
         assert!(
             validate_order(&order).is_err(),
             "One invalid content item should fail validation"

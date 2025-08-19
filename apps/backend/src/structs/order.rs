@@ -21,12 +21,12 @@ pub struct Order {
 pub struct ProductEntry {
     pub product_id: Uuid,
 
-    pub count: i32,
+    pub quantity: i32,
 }
 
 #[derive(sqlx::FromRow, Serialize, Deserialize, Debug, Clone)]
 pub struct OrderContent {
-    pub product_ids: Vec<ProductEntry>,
+    pub product: Vec<ProductEntry>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -72,32 +72,6 @@ impl From<String> for OrderStatus {
             "delivered" => OrderStatus::Delivered,
             "cancelled" => OrderStatus::Cancelled,
             _ => OrderStatus::Pending,
-        }
-    }
-}
-
-impl Order {
-    pub fn new(
-        id: Option<Uuid>,
-        name: String,
-        email: String,
-        address: Address,
-        price: Decimal,
-        content: Vec<OrderContent>,
-        created_at: Option<DateTime<Utc>>,
-        updated_at: Option<DateTime<Utc>>,
-        order_status: OrderStatus,
-    ) -> Self {
-        Self {
-            id,
-            name,
-            email,
-            address,
-            price,
-            content,
-            created_at,
-            updated_at,
-            order_status,
         }
     }
 }
