@@ -56,10 +56,10 @@ const ShopPage: React.FC = () => {
 
   // Get unique filter options
   const filterOptions = useMemo(() => {
-    const categories = ['all', ...new Set(products.map(p => p.category))];
-    const colors = new Set(products.flatMap(p => p.colors || []));
-    const sizes = new Set(products.map(p => p.size).filter(Boolean));
-    const occasions = new Set(products.flatMap(p => p.occasion || []));
+    const categories = ['all', ...new Set(products.map((p) => p.category))];
+    const colors = new Set(products.flatMap((p) => p.colors || []));
+    const sizes = new Set(products.map((p) => p.size).filter(Boolean));
+    const occasions = new Set(products.flatMap((p) => p.occasion || []));
 
     return {
       categories,
@@ -71,10 +71,13 @@ const ShopPage: React.FC = () => {
 
   // Filter and sort products
   useEffect(() => {
-    let filtered = products.filter(product => {
+    const filtered = products.filter((product) => {
       // Search query
-      if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !product.description.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (
+        searchQuery &&
+        !product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !product.description.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
         return false;
       }
 
@@ -84,25 +87,39 @@ const ShopPage: React.FC = () => {
       }
 
       // Price range
-      if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) {
+      if (
+        product.price < filters.priceRange[0] ||
+        product.price > filters.priceRange[1]
+      ) {
         return false;
       }
 
       // Colors
-      if (filters.colors.length > 0 && product.colors &&
-          !filters.colors.some(color => product.colors?.includes(color))) {
+      if (
+        filters.colors.length > 0 &&
+        product.colors &&
+        !filters.colors.some((color) => product.colors?.includes(color))
+      ) {
         return false;
       }
 
       // Sizes
-      if (filters.sizes.length > 0 && product.size &&
-          !filters.sizes.includes(product.size)) {
+      if (
+        filters.sizes.length > 0 &&
+        product.size &&
+        !filters.sizes.includes(product.size)
+      ) {
         return false;
       }
 
       // Occasions
-      if (filters.occasions.length > 0 && product.occasion &&
-          !filters.occasions.some(occasion => product.occasion?.includes(occasion))) {
+      if (
+        filters.occasions.length > 0 &&
+        product.occasion &&
+        !filters.occasions.some((occasion) =>
+          product.occasion?.includes(occasion),
+        )
+      ) {
         return false;
       }
 
@@ -138,16 +155,19 @@ const ShopPage: React.FC = () => {
     setFilteredProducts(filtered);
   }, [products, searchQuery, filters, sortBy]);
 
-  const handleFilterChange = (key: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const handleFilterChange = (key: keyof FilterState, value: unknown) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const toggleArrayFilter = (key: 'colors' | 'sizes' | 'occasions', value: string) => {
-    setFilters(prev => ({
+  const toggleArrayFilter = (
+    key: 'colors' | 'sizes' | 'occasions',
+    value: string,
+  ) => {
+    setFilters((prev) => ({
       ...prev,
       [key]: prev[key].includes(value)
-        ? prev[key].filter(item => item !== value)
-        : [...prev[key], value]
+        ? prev[key].filter((item) => item !== value)
+        : [...prev[key], value],
     }));
   };
 
@@ -192,8 +212,8 @@ const ShopPage: React.FC = () => {
         <div className='mb-12'>
           <h1 className='heading-1 mb-4'>Our Collection</h1>
           <p className='text-lg text-[#7d6b55] max-w-2xl'>
-            Discover our beautiful handcrafted velvet flowers, perfect for any occasion.
-            Each piece is made with love and attention to detail.
+            Discover our beautiful handcrafted velvet flowers, perfect for any
+            occasion. Each piece is made with love and attention to detail.
           </p>
         </div>
 
@@ -257,10 +277,17 @@ const ShopPage: React.FC = () => {
           </div>
 
           {/* Active Filters */}
-          {(filters.category !== 'all' || filters.colors.length > 0 || filters.sizes.length > 0 ||
-            filters.occasions.length > 0 || filters.inStock || filters.customizable || searchQuery) && (
+          {(filters.category !== 'all' ||
+            filters.colors.length > 0 ||
+            filters.sizes.length > 0 ||
+            filters.occasions.length > 0 ||
+            filters.inStock ||
+            filters.customizable ||
+            searchQuery) && (
             <div className='mt-4 flex flex-wrap items-center gap-2'>
-              <span className='text-sm text-[#7d6b55] font-medium'>Active filters:</span>
+              <span className='text-sm text-[#7d6b55] font-medium'>
+                Active filters:
+              </span>
 
               {searchQuery && (
                 <span className='badge bg-[#d4a574] text-white'>
@@ -274,16 +301,22 @@ const ShopPage: React.FC = () => {
               {filters.category !== 'all' && (
                 <span className='badge bg-[#8b9dc3] text-white capitalize'>
                   {filters.category}
-                  <button onClick={() => handleFilterChange('category', 'all')} className='ml-2'>
+                  <button
+                    onClick={() => handleFilterChange('category', 'all')}
+                    className='ml-2'
+                  >
                     <FiX className='w-3 h-3' />
                   </button>
                 </span>
               )}
 
-              {filters.colors.map(color => (
+              {filters.colors.map((color) => (
                 <span key={color} className='badge bg-[#ddb7ab] text-white'>
                   {color}
-                  <button onClick={() => toggleArrayFilter('colors', color)} className='ml-2'>
+                  <button
+                    onClick={() => toggleArrayFilter('colors', color)}
+                    className='ml-2'
+                  >
                     <FiX className='w-3 h-3' />
                   </button>
                 </span>
@@ -301,7 +334,9 @@ const ShopPage: React.FC = () => {
 
         <div className='flex gap-8'>
           {/* Sidebar Filters */}
-          <aside className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+          <aside
+            className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}
+          >
             <div className='card p-6 sticky top-32'>
               <div className='flex items-center justify-between mb-6'>
                 <h3 className='heading-4 flex items-center'>
@@ -321,14 +356,19 @@ const ShopPage: React.FC = () => {
                 <div>
                   <h4 className='font-medium text-[#2d2820] mb-3'>Category</h4>
                   <div className='space-y-2'>
-                    {filterOptions.categories.map(category => (
-                      <label key={category} className='flex items-center cursor-pointer'>
+                    {filterOptions.categories.map((category) => (
+                      <label
+                        key={category}
+                        className='flex items-center cursor-pointer'
+                      >
                         <input
                           type='radio'
                           name='category'
                           value={category}
                           checked={filters.category === category}
-                          onChange={(e) => handleFilterChange('category', e.target.value)}
+                          onChange={(e) =>
+                            handleFilterChange('category', e.target.value)
+                          }
                           className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
                         />
                         <span className='text-[#7d6b55] capitalize'>
@@ -341,7 +381,9 @@ const ShopPage: React.FC = () => {
 
                 {/* Price Range */}
                 <div>
-                  <h4 className='font-medium text-[#2d2820] mb-3'>Price Range</h4>
+                  <h4 className='font-medium text-[#2d2820] mb-3'>
+                    Price Range
+                  </h4>
                   <div className='space-y-3'>
                     <div className='flex items-center justify-between text-sm text-[#7d6b55]'>
                       <span>{formatPrice(filters.priceRange[0])}</span>
@@ -352,7 +394,12 @@ const ShopPage: React.FC = () => {
                       min='0'
                       max='200'
                       value={filters.priceRange[1]}
-                      onChange={(e) => handleFilterChange('priceRange', [filters.priceRange[0], parseInt(e.target.value)])}
+                      onChange={(e) =>
+                        handleFilterChange('priceRange', [
+                          filters.priceRange[0],
+                          parseInt(e.target.value),
+                        ])
+                      }
                       className='w-full accent-[#d4a574]'
                     />
                   </div>
@@ -363,8 +410,11 @@ const ShopPage: React.FC = () => {
                   <div>
                     <h4 className='font-medium text-[#2d2820] mb-3'>Colors</h4>
                     <div className='space-y-2'>
-                      {filterOptions.colors.map(color => (
-                        <label key={color} className='flex items-center cursor-pointer'>
+                      {filterOptions.colors.map((color) => (
+                        <label
+                          key={color}
+                          className='flex items-center cursor-pointer'
+                        >
                           <input
                             type='checkbox'
                             checked={filters.colors.includes(color)}
@@ -385,15 +435,22 @@ const ShopPage: React.FC = () => {
                   <div>
                     <h4 className='font-medium text-[#2d2820] mb-3'>Size</h4>
                     <div className='space-y-2'>
-                      {filterOptions.sizes.map(size => (
-                        <label key={size} className='flex items-center cursor-pointer'>
+                      {filterOptions.sizes.map((size) => (
+                        <label
+                          key={size}
+                          className='flex items-center cursor-pointer'
+                        >
                           <input
                             type='checkbox'
-                            checked={filters.sizes.includes(size)}
-                            onChange={() => toggleArrayFilter('sizes', size)}
+                            checked={filters.sizes.includes(size as string)}
+                            onChange={() =>
+                              toggleArrayFilter('sizes', size as string)
+                            }
                             className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
                           />
-                          <span className='text-[#7d6b55] capitalize'>{size}</span>
+                          <span className='text-[#7d6b55] capitalize'>
+                            {size}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -403,14 +460,21 @@ const ShopPage: React.FC = () => {
                 {/* Occasions */}
                 {filterOptions.occasions.length > 0 && (
                   <div>
-                    <h4 className='font-medium text-[#2d2820] mb-3'>Occasions</h4>
+                    <h4 className='font-medium text-[#2d2820] mb-3'>
+                      Occasions
+                    </h4>
                     <div className='space-y-2 max-h-40 overflow-y-auto'>
-                      {filterOptions.occasions.map(occasion => (
-                        <label key={occasion} className='flex items-center cursor-pointer'>
+                      {filterOptions.occasions.map((occasion) => (
+                        <label
+                          key={occasion}
+                          className='flex items-center cursor-pointer'
+                        >
                           <input
                             type='checkbox'
                             checked={filters.occasions.includes(occasion)}
-                            onChange={() => toggleArrayFilter('occasions', occasion)}
+                            onChange={() =>
+                              toggleArrayFilter('occasions', occasion)
+                            }
                             className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
                           />
                           <span className='text-[#7d6b55] capitalize'>
@@ -424,13 +488,17 @@ const ShopPage: React.FC = () => {
 
                 {/* Other Filters */}
                 <div>
-                  <h4 className='font-medium text-[#2d2820] mb-3'>Availability</h4>
+                  <h4 className='font-medium text-[#2d2820] mb-3'>
+                    Availability
+                  </h4>
                   <div className='space-y-2'>
                     <label className='flex items-center cursor-pointer'>
                       <input
                         type='checkbox'
                         checked={filters.inStock}
-                        onChange={(e) => handleFilterChange('inStock', e.target.checked)}
+                        onChange={(e) =>
+                          handleFilterChange('inStock', e.target.checked)
+                        }
                         className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
                       />
                       <span className='text-[#7d6b55]'>In Stock Only</span>
@@ -439,7 +507,9 @@ const ShopPage: React.FC = () => {
                       <input
                         type='checkbox'
                         checked={filters.customizable}
-                        onChange={(e) => handleFilterChange('customizable', e.target.checked)}
+                        onChange={(e) =>
+                          handleFilterChange('customizable', e.target.checked)
+                        }
                         className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
                       />
                       <span className='text-[#7d6b55]'>Customizable</span>
@@ -461,12 +531,14 @@ const ShopPage: React.FC = () => {
 
             {/* Products */}
             {filteredProducts.length > 0 ? (
-              <div className={`grid gap-6 ${
-                viewMode === 'grid'
-                  ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-                  : 'grid-cols-1'
-              }`}>
-                {filteredProducts.map(product => (
+              <div
+                className={`grid gap-6 ${
+                  viewMode === 'grid'
+                    ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                    : 'grid-cols-1'
+                }`}
+              >
+                {filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -489,7 +561,8 @@ const ShopPage: React.FC = () => {
                 </div>
                 <h3 className='heading-3 mb-4'>No products found</h3>
                 <p className='text-[#7d6b55] mb-6'>
-                  Try adjusting your filters or search terms to find what you're looking for.
+                  Try adjusting your filters or search terms to find what
+                  you&qout;re looking for.
                 </p>
                 <Button variant='outline' onClick={clearFilters}>
                   Clear Filters

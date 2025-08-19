@@ -13,9 +13,7 @@ import {
   FiMail,
 } from 'react-icons/fi';
 
-interface NavigationProps {}
-
-const Navigation: React.FC<NavigationProps> = () => {
+const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);

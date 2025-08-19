@@ -182,7 +182,7 @@ const ContactModal: React.FC<ContactModalProps> = ({
               </h2>
               {product && !isSubmitted && (
                 <p className='text-[#7d6b55] mt-1'>
-                  Inquiry about "{product.name}"
+                  Inquiry about &apos;{product.name}&apos;
                 </p>
               )}
             </div>

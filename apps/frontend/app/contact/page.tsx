@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '../../components/Button';
 import { getProductById } from '../../data/products';
-import { ContactForm } from '../../types';
+import { ContactForm, Product } from '../../types';
 import {
   FiMapPin,
   FiPhone,
@@ -39,8 +39,8 @@ const ContactPage: React.FC = () => {
   useEffect(() => {
     if (productId) {
       const foundProduct = getProductById(productId);
-      setProduct(foundProduct);
       if (foundProduct) {
+        setProduct(foundProduct);
         setFormData((prev) => ({
           ...prev,
           message: `Hi! I'm interested in "${foundProduct.name}" and would like to know more about customization options.`,
