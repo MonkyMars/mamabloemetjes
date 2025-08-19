@@ -1,5 +1,6 @@
 use backend::structs::order::{Address, Order, OrderContent, OrderStatus, ProductEntry};
 use backend::validate::order::validate_order;
+use rust_decimal::Decimal;
 use uuid::Uuid;
 
 /// Create a valid order for testing
@@ -14,7 +15,7 @@ pub fn create_valid_order() -> Order {
             state: "CA".to_string(),
             zip: "12345".to_string(),
         },
-        price: 99.99,
+        price: Decimal::ZERO,
         content: vec![OrderContent {
             product_ids: vec![ProductEntry {
                 product_id: Uuid::new_v4(),

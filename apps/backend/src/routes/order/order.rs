@@ -1,27 +1,27 @@
 use axum::Json;
 
-use crate::response::{ApiResponse, AppResponse, success};
+use crate::pool::insert_order;
+use crate::response::{ApiResponse, AppResponse, error::AppError, success};
 use crate::structs::order::Order;
 use crate::validate::order::validate_order;
 
+// POST request to older something.
 pub async fn order(Json(payload): Json<Order>) -> ApiResponse<Order> {
     // Validate the incoming order
     if let Err(validation_error) = validate_order(&payload) {
         return AppResponse::Error(validation_error);
     }
 
-    // If validation passes, process the order
-    // TODO:
-    // 1. Save to database
-    // 2. Process payment
-    // 3. Send confirmation email
-    // 4. Update inventory
+    // Insert the order into the database
+    match insert_order(&payload).await {
+        Ok(inserted_order) => {
+            // TODO:
+            // 2. Process payment
+            // 3. Send confirmation email
+            // 4. Update inventory
 
-    // For now, we'll just return the validated order with a generated ID
-    let mut processed_order = payload;
-    processed_order.id = Some(uuid::Uuid::new_v4());
-    processed_order.created_at = Some(chrono::Utc::now().naive_utc());
-    processed_order.updated_at = Some(chrono::Utc::now().naive_utc());
-
-    success(processed_order)
+            success(inserted_order)
+        }
+        Err(db_error) => AppResponse::Error(AppError::DatabaseError(db_error.to_string())),
+    }
 }

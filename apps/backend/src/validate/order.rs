@@ -1,5 +1,7 @@
 use crate::response::AppError;
 use crate::structs::order::Order;
+use rust_decimal::Decimal;
+use std::str::FromStr;
 
 /// Validates an order and returns detailed validation errors if any
 pub fn validate_order(order: &Order) -> Result<(), AppError> {
@@ -30,7 +32,9 @@ fn validate_basic_fields(order: &Order) -> Result<(), AppError> {
     }
 
     // Validate price range
-    if order.price < 0.01 || order.price > 1_000_000.0 {
+    let min_price = Decimal::from_str("0.01").unwrap();
+    let max_price = Decimal::from_str("1000000.00").unwrap();
+    if order.price < min_price || order.price > max_price {
         return Err(AppError::validation_error(
             "price",
             "Price must be between $0.01 and $1,000,000",
@@ -102,7 +106,11 @@ fn is_valid_email(email: &str) -> bool {
     }
 
     // Domain part validation
-    if domain.is_empty() || !domain.contains('.') || domain.starts_with('.') || domain.ends_with('.') {
+    if domain.is_empty()
+        || !domain.contains('.')
+        || domain.starts_with('.')
+        || domain.ends_with('.')
+    {
         return false;
     }
 
@@ -161,14 +169,17 @@ fn validate_order_content(order: &Order) -> Result<(), AppError> {
 /// Validates business rules for orders
 fn validate_business_rules(order: &Order) -> Result<(), AppError> {
     // Validate price consistency
-    if order.price <= 0.0 {
+    let zero = Decimal::ZERO;
+    let max_price = Decimal::from_str("1000000.00").unwrap();
+
+    if order.price <= zero {
         return Err(AppError::validation_error(
             "price",
             "Order price must be greater than 0",
         ));
     }
 
-    if order.price > 1_000_000.0 {
+    if order.price > max_price {
         return Err(AppError::validation_error(
             "price",
             "Order price cannot exceed $1,000,000",

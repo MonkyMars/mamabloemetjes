@@ -16,7 +16,7 @@ async fn main() {
     tracing_subscriber::fmt().init();
     let app = create_router();
 
-    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = TcpListener::bind("0.0.0.0:3001").await.unwrap();
     println!("Server is listening on {}", listener.local_addr().unwrap());
 
     axum::serve(listener, app).await.unwrap();
