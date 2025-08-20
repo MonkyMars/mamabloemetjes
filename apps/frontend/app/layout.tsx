@@ -2,6 +2,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import { SearchProvider } from '../context/SearchContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -47,9 +48,11 @@ export default function RootLayout({
         <meta name='theme-color' content='#d4a574' />
       </head>
       <body className='min-h-screen flex flex-col bg-[#faf9f7] text-[#2d2820]'>
-        <Navigation />
-        <main className='flex-1'>{children}</main>
-        <Footer />
+        <SearchProvider>
+          <Navigation />
+          <main className='flex-1'>{children}</main>
+          <Footer />
+        </SearchProvider>
       </body>
     </html>
   );

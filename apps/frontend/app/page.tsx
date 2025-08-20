@@ -9,7 +9,6 @@ import { mockProducts } from '../data/products';
 import { Product } from '../types';
 import {
   FiArrowRight,
-  FiStar,
   FiHeart,
   FiShoppingBag,
   FiCheckCircle,
@@ -20,42 +19,11 @@ import {
 
 const HomePage: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [testimonialIndex, setTestimonialIndex] = useState(0);
 
   useEffect(() => {
     // Get featured products (first 8 products for the homepage)
     setFeaturedProducts(mockProducts.slice(0, 8));
   }, []);
-
-  // Testimonials data
-  const testimonials = [
-    {
-      name: 'Emma van der Berg',
-      text: 'The velvet roses for my wedding were absolutely stunning. Every guest asked where I got them!',
-      rating: 5,
-      occasion: 'Wedding',
-    },
-    {
-      name: 'Lisa Janssen',
-      text: 'Beautiful craftsmanship and attention to detail. My mother loved the Mother&apos;s Day arrangement.',
-      rating: 5,
-      occasion: 'Mother&apos;s Day',
-    },
-    {
-      name: 'Sophie de Wit',
-      text: 'These flowers never wilt! Perfect for my home office. The quality is exceptional.',
-      rating: 5,
-      occasion: 'Home Decor',
-    },
-  ];
-
-  // Auto-rotate testimonials
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTestimonialIndex((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [testimonials.length]);
 
   const features = [
     {
@@ -208,64 +176,6 @@ const HomePage: React.FC = () => {
                 }}
               />
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className='section section-alt'>
-        <div className='container'>
-          <div className='text-center mb-16'>
-            <h2 className='heading-2 mb-4'>What Our Customers Say</h2>
-            <p className='text-lg text-[#7d6b55]'>
-              Read about the experiences of our satisfied customers
-            </p>
-          </div>
-
-          <div className='max-w-4xl mx-auto'>
-            <div className='bg-white rounded-3xl p-8 md:p-12 shadow-xl'>
-              <div className='text-center'>
-                {/* Star Rating */}
-                <div className='flex justify-center space-x-1 mb-6'>
-                  {[...Array(5)].map((_, i) => (
-                    <FiStar
-                      key={i}
-                      className='w-6 h-6 fill-current text-yellow-400'
-                    />
-                  ))}
-                </div>
-
-                {/* Testimonial Text */}
-                <blockquote className='text-xl md:text-2xl font-serif text-[#2d2820] mb-6 leading-relaxed'>
-                  &ldquo;{testimonials[testimonialIndex].text}&rdquo;
-                </blockquote>
-
-                {/* Customer Info */}
-                <div className='mb-4'>
-                  <p className='font-semibold text-[#2d2820] text-lg'>
-                    {testimonials[testimonialIndex].name}
-                  </p>
-                  <p className='text-[#7d6b55]'>
-                    {testimonials[testimonialIndex].occasion}
-                  </p>
-                </div>
-
-                {/* Testimonial Indicators */}
-                <div className='flex justify-center space-x-2'>
-                  {testimonials.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setTestimonialIndex(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        index === testimonialIndex
-                          ? 'bg-[#d4a574]'
-                          : 'bg-[#e8e2d9] hover:bg-[#d6ccc0]'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>

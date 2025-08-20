@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { mockProducts } from '../../data/products';
 import { Product } from '../../types';
 import ProductCard from '../../components/ProductCard';
 import { Button } from '../../components/Button';
+import { useSearchContext } from '../../context/SearchContext';
 import {
   FiFilter,
   FiGrid,
@@ -26,9 +28,18 @@ interface FilterState {
 }
 
 const ShopPage: React.FC = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const {
+    searchResults,
+    searchQuery: globalSearchQuery,
+    hasSearched,
+    clearSearch,
+  } = useSearchContext();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
@@ -44,7 +55,7 @@ const ShopPage: React.FC = () => {
     customizable: false,
   });
 
-  // Initialize products
+  // Initialize products and handle URL search params
   useEffect(() => {
     setIsLoading(true);
     // Simulate API call
@@ -52,14 +63,42 @@ const ShopPage: React.FC = () => {
       setProducts(mockProducts);
       setIsLoading(false);
     }, 500);
-  }, []);
+
+    // Handle search query from URL
+    const urlSearch = searchParams.get('search');
+    if (urlSearch) {
+      setLocalSearchQuery(urlSearch);
+    }
+  }, [searchParams]);
+
+  // Get effective search query and products
+  const effectiveSearchQuery = searchParams.get('search') || localSearchQuery;
+  const effectiveProducts = useMemo(() => {
+    // If we have global search results from navigation, use those
+    if (hasSearched && globalSearchQuery && !effectiveSearchQuery) {
+      return searchResults;
+    }
+    return products;
+  }, [
+    hasSearched,
+    globalSearchQuery,
+    searchResults,
+    products,
+    effectiveSearchQuery,
+  ]);
 
   // Get unique filter options
+  // Update filter options when products change
   const filterOptions = useMemo(() => {
-    const categories = ['all', ...new Set(products.map((p) => p.category))];
-    const colors = new Set(products.flatMap((p) => p.colors || []));
-    const sizes = new Set(products.map((p) => p.size).filter(Boolean));
-    const occasions = new Set(products.flatMap((p) => p.occasion || []));
+    const sourceProducts =
+      effectiveProducts.length > 0 ? effectiveProducts : products;
+    const categories = [
+      'all',
+      ...new Set(sourceProducts.map((p) => p.category)),
+    ];
+    const colors = new Set(sourceProducts.flatMap((p) => p.colors || []));
+    const sizes = new Set(sourceProducts.map((p) => p.size).filter(Boolean));
+    const occasions = new Set(sourceProducts.flatMap((p) => p.occasion || []));
 
     return {
       categories,
@@ -67,16 +106,29 @@ const ShopPage: React.FC = () => {
       sizes: Array.from(sizes),
       occasions: Array.from(occasions),
     };
-  }, [products]);
+  }, [effectiveProducts, products]);
 
   // Filter and sort products
   useEffect(() => {
-    const filtered = products.filter((product) => {
+    const filtered = effectiveProducts.filter((product) => {
       // Search query
       if (
-        searchQuery &&
-        !product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !product.description.toLowerCase().includes(searchQuery.toLowerCase())
+        effectiveSearchQuery &&
+        !product.name
+          .toLowerCase()
+          .includes(effectiveSearchQuery.toLowerCase()) &&
+        !product.description
+          .toLowerCase()
+          .includes(effectiveSearchQuery.toLowerCase()) &&
+        !product.category
+          .toLowerCase()
+          .includes(effectiveSearchQuery.toLowerCase()) &&
+        !product.colors?.some((color) =>
+          color.toLowerCase().includes(effectiveSearchQuery.toLowerCase()),
+        ) &&
+        !product.occasion?.some((occasion) =>
+          occasion.toLowerCase().includes(effectiveSearchQuery.toLowerCase()),
+        )
       ) {
         return false;
       }
@@ -153,7 +205,7 @@ const ShopPage: React.FC = () => {
     });
 
     setFilteredProducts(filtered);
-  }, [products, searchQuery, filters, sortBy]);
+  }, [effectiveProducts, effectiveSearchQuery, filters, sortBy]);
 
   const handleFilterChange = (key: keyof FilterState, value: unknown) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -181,7 +233,45 @@ const ShopPage: React.FC = () => {
       inStock: false,
       customizable: false,
     });
-    setSearchQuery('');
+    setLocalSearchQuery('');
+    clearSearch();
+
+    // Clear URL search parameter if it exists
+    if (searchParams.get('search')) {
+      router.push('/shop');
+    }
+  };
+
+  const clearSearchFilter = () => {
+    setLocalSearchQuery('');
+    clearSearch();
+    if (searchParams.get('search')) {
+      router.push('/shop');
+    }
+  };
+
+  const clearCategoryFilter = () => {
+    handleFilterChange('category', 'all');
+  };
+
+  const clearColorFilter = (color: string) => {
+    toggleArrayFilter('colors', color);
+  };
+
+  const clearSizeFilter = (size: string) => {
+    toggleArrayFilter('sizes', size);
+  };
+
+  const clearOccasionFilter = (occasion: string) => {
+    toggleArrayFilter('occasions', occasion);
+  };
+
+  const clearInStockFilter = () => {
+    handleFilterChange('inStock', false);
+  };
+
+  const clearCustomizableFilter = () => {
+    handleFilterChange('customizable', false);
   };
 
   const formatPrice = (price: number) => {
@@ -226,8 +316,8 @@ const ShopPage: React.FC = () => {
               <input
                 type='text'
                 placeholder='Search flowers...'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={localSearchQuery}
+                onChange={(e) => setLocalSearchQuery(e.target.value)}
                 className='input-field pl-12'
               />
             </div>
@@ -283,16 +373,16 @@ const ShopPage: React.FC = () => {
             filters.occasions.length > 0 ||
             filters.inStock ||
             filters.customizable ||
-            searchQuery) && (
+            effectiveSearchQuery) && (
             <div className='mt-4 flex flex-wrap items-center gap-2'>
               <span className='text-sm text-[#7d6b55] font-medium'>
                 Active filters:
               </span>
 
-              {searchQuery && (
+              {effectiveSearchQuery && (
                 <span className='badge bg-[#d4a574] text-white'>
-                  Search: {searchQuery}
-                  <button onClick={() => setSearchQuery('')} className='ml-2'>
+                  Search: {effectiveSearchQuery}
+                  <button onClick={clearSearchFilter} className='ml-2'>
                     <FiX className='w-3 h-3' />
                   </button>
                 </span>
@@ -301,10 +391,7 @@ const ShopPage: React.FC = () => {
               {filters.category !== 'all' && (
                 <span className='badge bg-[#8b9dc3] text-white capitalize'>
                   {filters.category}
-                  <button
-                    onClick={() => handleFilterChange('category', 'all')}
-                    className='ml-2'
-                  >
+                  <button onClick={clearCategoryFilter} className='ml-2'>
                     <FiX className='w-3 h-3' />
                   </button>
                 </span>
@@ -314,13 +401,58 @@ const ShopPage: React.FC = () => {
                 <span key={color} className='badge bg-[#ddb7ab] text-white'>
                   {color}
                   <button
-                    onClick={() => toggleArrayFilter('colors', color)}
+                    onClick={() => clearColorFilter(color)}
                     className='ml-2'
                   >
                     <FiX className='w-3 h-3' />
                   </button>
                 </span>
               ))}
+
+              {filters.sizes.map((size) => (
+                <span
+                  key={size}
+                  className='badge bg-[#a8c8a0] text-white capitalize'
+                >
+                  {size}
+                  <button
+                    onClick={() => clearSizeFilter(size)}
+                    className='ml-2'
+                  >
+                    <FiX className='w-3 h-3' />
+                  </button>
+                </span>
+              ))}
+
+              {filters.occasions.map((occasion) => (
+                <span key={occasion} className='badge bg-[#b8a8c8] text-white'>
+                  {occasion.replace('-', ' ')}
+                  <button
+                    onClick={() => clearOccasionFilter(occasion)}
+                    className='ml-2'
+                  >
+                    <FiX className='w-3 h-3' />
+                  </button>
+                </span>
+              ))}
+
+              {filters.inStock && (
+                <span className='badge bg-[#7fb069] text-white'>
+                  In Stock Only
+                  <button onClick={clearInStockFilter} className='ml-2'>
+                    <FiX className='w-3 h-3' />
+                  </button>
+                </span>
+              )}
+
+              {filters.customizable && (
+                <span className='badge bg-[#f7931e] text-white'>
+                  Customizable Only
+                  <button onClick={clearCustomizableFilter} className='ml-2'>
+                    <FiX className='w-3 h-3' />
+                  </button>
+                </span>
+              )}
 
               <button
                 onClick={clearFilters}

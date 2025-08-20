@@ -48,7 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     try {
       onAddToCart?.(product);
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } finally {
       setIsLoading(false);
     }
@@ -73,13 +73,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ? 'bg-red-100 text-red-600 hover:bg-red-200'
             : 'bg-white/80 text-[#7d6b55] hover:bg-white hover:text-red-600'
         } backdrop-blur-sm shadow-md hover:shadow-lg transform hover:scale-110`}
-        aria-label={
-          isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'
-        }
+        aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
       >
-        <FiHeart
-          className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`}
-        />
+        <FiHeart className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`} />
       </button>
 
       {/* Stock Badge */}
@@ -212,7 +208,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </Link>
 
       {/* Action Buttons */}
-      <div className='px-6 pb-6'>
+      <div className='px-6'>
         <div className='flex space-x-3'>
           <Button
             variant='primary'
@@ -221,7 +217,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
             onClick={handleAddToCart}
             disabled={isOutOfStock}
             loading={isLoading}
-            leftIcon={!isLoading ? <FiShoppingBag className='w-4 h-4' /> : undefined}
+            leftIcon={
+              !isLoading ? <FiShoppingBag className='w-4 h-4' /> : undefined
+            }
             className='flex-1'
           >
             {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
@@ -229,11 +227,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
           {product.isCustomizable && (
             <Link href={`/product/${product.id}?customize=true`}>
-              <Button
-                variant='outline'
-                size='md'
-                className='whitespace-nowrap'
-              >
+              <Button variant='outline' size='md' className='whitespace-nowrap'>
                 Customize
               </Button>
             </Link>
