@@ -1,5 +1,5 @@
 [package]
-name = "backend"
+name = "backend_test"
 version = "0.1.0"
 edition = "2024"
 
@@ -24,12 +24,13 @@ sqlx = { version = "0.8.6", features = [
 ] }
 rust_decimal = { version = "1.36", features = ["serde-with-str"] }
 validator = { version = "0.20.0", features = ["derive"] }
-lazy_static = "1.4"
 regex = "1.7"
 
 tracing = "0.1"
 bytes = "1.5"
 http-body-util = "0.1"
+once_cell = "1.21.3"
+rust_decimal_macros = "1.37.1"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

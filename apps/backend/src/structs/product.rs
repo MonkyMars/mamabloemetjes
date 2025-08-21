@@ -1,15 +1,26 @@
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Type};
+use sqlx::FromRow;
 use uuid::Uuid;
 
-#[derive(FromRow, Serialize, Deserialize, Debug, Clone, Type)]
+#[derive(FromRow, Serialize, Deserialize, Debug, Clone)]
 pub struct Product {
-    pub product_id: Option<Uuid>,
+    pub id: Uuid,
     pub name: String,
-    pub created_at: Option<DateTime<Utc>>,
+    pub sku: String, // Stock Keeping Unit for better inventory tracking
     pub price: Decimal,
-    pub description: Option<String>,
-    pub image_urls: Vec<String>,
+    pub description: String,
+    pub is_active: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub images: Option<Vec<ProductImage>>,
+}
+
+#[derive(FromRow, Serialize, Deserialize, Debug, Clone)]
+pub struct ProductImage {
+    pub product_id: Uuid,
+    pub url: String,
+    pub alt_text: Option<String>,
+    pub is_primary: bool,
 }

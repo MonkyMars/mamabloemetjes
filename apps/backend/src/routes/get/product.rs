@@ -1,7 +1,7 @@
 use axum::extract::Path;
 use uuid::Uuid;
 
-use crate::pool::{get_all_products, get_product_by_id};
+use crate::actions::get::{get_all_products, get_product_by_id};
 use crate::response::{ApiResponse, AppResponse, error::AppError, success};
 use crate::structs::product::Product;
 
@@ -16,11 +16,11 @@ pub async fn get_products() -> ApiResponse<Vec<Product>> {
     }
 }
 
-// GET /product/:id - Get product by ID
+// // GET /product/:id - Get product by ID
 pub async fn get_product(Path(id): Path<Uuid>) -> ApiResponse<Product> {
     match get_product_by_id(id).await {
         Ok(Some(product)) => success(product),
-        Ok(None) => AppResponse::Error(AppError::NotFound(format!(
+        Ok(_) => AppResponse::Error(AppError::NotFound(format!(
             "Product with ID {} not found. Please check the product ID and try again.",
             id
         ))),

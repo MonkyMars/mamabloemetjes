@@ -1,29 +1,34 @@
-mod middleware;
-mod pool;
-mod response;
-mod routes;
-mod structs;
-mod validate;
+pub mod actions;
+pub mod middleware;
+pub mod pool;
+pub mod response;
+pub mod routes;
+pub mod services;
+pub mod structs;
+pub mod utils;
 
 use axum::Router;
 use tokio::net::TcpListener;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() {
-    // Initialize environment variables
-    if dotenv().is_err() {
-        warn!("No .env file found, using environment variables from system");
-    }
-
     // Initialize tracing with minimal formatting for console output
     tracing_subscriber::fmt()
         .with_target(false)
         .with_thread_ids(false)
         .with_line_number(false)
         .init();
+
+    // Initialize environment variables
+    match dotenv() {
+        Ok(_) => info!(".env file loaded successfully"),
+        Err(e) => {
+            error!("Failed to load .env file: {}", e);
+        }
+    }
 
     info!("Starting mamabloemetjes backend server...");
 

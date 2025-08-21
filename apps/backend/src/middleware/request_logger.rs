@@ -74,7 +74,7 @@ fn log_request(
 
     // Use stdout directly and flush to ensure immediate console output
     use std::io::{self, Write};
-    println!("{}", log_message);
+    println!("{}", log_message.trim());
     io::stdout().flush().unwrap_or(());
 }
 

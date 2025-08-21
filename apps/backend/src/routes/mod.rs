@@ -1,40 +1,52 @@
-pub mod order;
-pub mod product;
-
-use crate::response::{ApiResponse, AppResponse, HealthCheckResponse, error::AppError};
+use crate::response::{ApiResponse, AppResponse, error::AppError};
+pub mod get;
+pub mod health_check;
+pub mod post;
 use axum::{
-    Json, Router,
+    Router,
     routing::{get, post},
 };
-use std::time::{SystemTime, UNIX_EPOCH};
-
-async fn health_check() -> Json<HealthCheckResponse> {
-    let uptime = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-
-    let health = HealthCheckResponse::new("1.0.0", uptime);
-    Json(health)
-}
 
 async fn handle_404() -> ApiResponse<()> {
     AppResponse::Error(AppError::NotFound(
-        "The requested endpoint does not exist. Please check the URL and try again. Available endpoints: /health, /order, /orders, /products".to_string(),
+        "The requested endpoint does not exist. Please check the URL and try again. Available endpoints: /health, /order, /order/pricing, /order/validate-pricing, /order/check-inventory, /orders, /orders/{id}, /orders/{id}/lines, /orders/{id}/details, /products".to_string(),
     ))
 }
 
 pub fn setup_routes(router: Router) -> Router {
     router
         // Health check endpoint
-        .route("/health", get(health_check))
+        .route("/health", get(health_check::health_check))
         // The POST route; New orders come in here
-        .route("/order", post(order::order))
+        .route("/order", post(post::order::order))
+        // Pricing calculation endpoints
+        .route("/order/pricing", post(post::order::calculate_order_pricing))
+        .route(
+            "/order/validate-pricing",
+            post(post::order::validate_order_pricing),
+        )
+        // Inventory check endpoint
+        .route(
+            "/order/check-inventory",
+            post(post::order::check_order_inventory),
+        )
         // The GET routes for orders; these are used to retrieve orders. Either all or by id.
-        .route("/orders", get(order::get_orders))
-        .route("/orders/{id}", get(order::get_order))
+        .route("/orders", get(get::order::get_orders))
+        .route("/orders/{id}", get(get::order::get_order))
+        // Get order lines for a specific order
+        .route(
+            "/orders/{id}/lines",
+            get(get::order_lines::get_order_lines_by_order_id),
+        )
+        // Get order with all order lines (complete details)
+        .route(
+            "/orders/{id}/details",
+            get(get::order::get_order_with_order_lines),
+        )
         // The GET routes for products; these are used to retrieve products. Either all or by id.
-        .route("/products", get(product::get_products))
-        .route("/products/{id}", get(product::get_product))
+        .route("/products", get(get::product::get_products))
+        // .route("/products/{id}", get(product::get_product))
+        // Confirm order route - link is sent in the confirmation email
         // Fallback handler for 404 errors
         .fallback(handle_404)
 }

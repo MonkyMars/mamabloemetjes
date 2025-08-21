@@ -4,6 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SuccessResponse<T> {
@@ -177,11 +178,11 @@ pub struct HealthCheckResponse {
 }
 
 impl HealthCheckResponse {
-    pub fn new(version: &str, uptime: std::time::Duration) -> Self {
+    pub fn new(version: &str, uptime: Duration) -> Self {
         Self {
-            status: "healthy".to_string(),
             version: version.to_string(),
-            uptime: format!("{}s", uptime.as_secs()),
+            uptime: uptime.as_secs_f64().to_string() + " seconds",
+            status: "ok".to_string(),
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
