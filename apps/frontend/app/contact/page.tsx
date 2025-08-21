@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '../../components/Button';
 import { getProductById } from '../../data/products';
@@ -16,8 +16,9 @@ import {
   FiInstagram,
   FiFacebook,
 } from 'react-icons/fi';
+import { NextPage } from 'next';
 
-const ContactPage: React.FC = () => {
+const ContactComponent: React.FC = () => {
   const searchParams = useSearchParams();
   const productId = searchParams.get('product');
   const [product, setProduct] = useState<Product | null>(null);
@@ -481,6 +482,14 @@ const ContactPage: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const ContactPage: NextPage = () => {
+  return (
+    <Suspense fallback={<div className='loading'>Loading...</div>}>
+      <ContactComponent />
+    </Suspense>
   );
 };
 
