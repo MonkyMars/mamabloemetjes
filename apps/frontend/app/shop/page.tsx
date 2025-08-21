@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { mockProducts } from '../../data/products';
 import { Product } from '../../types';
@@ -16,6 +16,7 @@ import {
   FiChevronDown,
   FiSliders,
 } from 'react-icons/fi';
+import { NextPage } from 'next';
 
 interface FilterState {
   category: string;
@@ -27,7 +28,7 @@ interface FilterState {
   customizable: boolean;
 }
 
-const ShopPage: React.FC = () => {
+const ShopComponent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -705,6 +706,14 @@ const ShopPage: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const ShopPage: NextPage = () => {
+  return (
+    <Suspense fallback={<div className='loading'>Loading...</div>}>
+      <ShopComponent />
+    </Suspense>
   );
 };
 

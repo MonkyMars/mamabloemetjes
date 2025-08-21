@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getProductById } from '../../../data/products';
 import { Product } from '../../../types';
@@ -14,8 +14,10 @@ import {
   FiShield,
   FiRefreshCw,
 } from 'react-icons/fi';
+import Image from 'next/image';
+import { NextPage } from 'next';
 
-const ProductPage: React.FC = () => {
+const ProductComponent: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
@@ -122,7 +124,9 @@ const ProductPage: React.FC = () => {
           {/* Product Images */}
           <div className='space-y-4'>
             <div className='aspect-square rounded-lg overflow-hidden bg-[#f5f2ee]'>
-              <img
+              <Image
+                width={500}
+                height={500}
                 src={productImages[selectedImage]}
                 alt={product.name}
                 className='w-full h-full object-cover hover:scale-105 transition-transform duration-300'
@@ -141,7 +145,9 @@ const ProductPage: React.FC = () => {
                       : 'border-[#e8e2d9] hover:border-[#d4a574]'
                   }`}
                 >
-                  <img
+                  <Image
+                    width={80}
+                    height={80}
                     src={image}
                     alt={`${product.name} ${index + 1}`}
                     className='w-full h-full object-cover'
@@ -324,6 +330,14 @@ const ProductPage: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const ProductPage: NextPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProductComponent />
+    </Suspense>
   );
 };
 
