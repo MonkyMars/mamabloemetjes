@@ -26,7 +26,8 @@ const HomePage: React.FC = () => {
       try {
         setIsLoading(true);
         const products = await getFeaturedProducts(8);
-        setFeaturedProducts(products);
+        // Make sure we only have 8
+        setFeaturedProducts(products.slice(0, 8));
       } catch (error) {
         console.error('Failed to load featured products:', error);
         // Fallback to empty array if API fails

@@ -54,7 +54,7 @@ const ShopComponent: React.FC = () => {
     priceRange: [0, 200],
     colors: [],
     sizes: [],
-    productType: 'flower',
+    productType: 'all',
   });
 
   // Initialize products and handle URL search params
