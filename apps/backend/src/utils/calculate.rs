@@ -3,6 +3,7 @@ use crate::response::{AppResponse, error::AppError};
 use crate::structs::order::IncomingOrder;
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
+use tracing::info;
 
 pub struct Calculate;
 
@@ -24,6 +25,7 @@ impl Calculate {
                     Ok(Some(product)) => {
                         let quantity =
                             Decimal::from_i32(entry.quantity).unwrap_or_else(|| Decimal::ZERO);
+                        info!("{} * {} = {}", product.price, quantity, total);
                         total += product.price * quantity;
                     }
                     Ok(_) => {

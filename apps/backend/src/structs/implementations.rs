@@ -40,20 +40,19 @@ impl Order {
 
     /// Build order with pricing information from the pricing service.
     /// This method uses the calculated pricing including discounts
+    /// The payload price is tax-inclusive, so we extract tax instead of adding it
     pub fn build_order_with_pricing(
         payload: &IncomingOrder,
         pricing_result: &PricingResult,
     ) -> Self {
         let subtotal_before_discount = pricing_result.subtotal_before_discount;
         let discount_amount = pricing_result.total_discount_amount;
-        let subtotal_after_discount = pricing_result.final_total;
 
-        // Calculate tax on the discounted amount
-        let tax_amount = utils::tax::Tax::calculate_tax(subtotal_after_discount);
+        // The payload price already includes tax, so extract the tax amount
+        let total_amount = payload.price;
+        let subtotal_after_discount = utils::tax::Tax::total_without_tax(total_amount);
+        let tax_amount = total_amount - subtotal_after_discount;
         let shipping_cost = dec!(0.00);
-
-        // Total is subtotal after discount + tax + shipping
-        let total_amount = subtotal_after_discount + tax_amount + shipping_cost;
 
         Order {
             id: None,

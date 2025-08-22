@@ -32,9 +32,11 @@ impl PricingService {
         // Calculate pricing breakdown
         let pricing_result = Self::build_pricing_result(&products, order.price);
 
-        // Validate the total
+        // Validate the total - compare tax-inclusive amounts
+        let calculated_tax_inclusive =
+            crate::utils::tax::Tax::total_with_tax(pricing_result.final_total);
         if let Err(validation_error) =
-            ProductService::validate_total_price(pricing_result.final_total, order.price)
+            ProductService::validate_total_price(calculated_tax_inclusive, order.price)
         {
             return AppResponse::Error(validation_error);
         }
@@ -63,8 +65,10 @@ impl PricingService {
 
         let pricing_result = Self::build_pricing_result(&products, order.price);
 
-        // Validate the total
-        match ProductService::validate_total_price(pricing_result.final_total, order.price) {
+        // Validate the total - compare tax-inclusive amounts
+        let calculated_tax_inclusive =
+            crate::utils::tax::Tax::total_with_tax(pricing_result.final_total);
+        match ProductService::validate_total_price(calculated_tax_inclusive, order.price) {
             Ok(()) => AppResponse::Success(pricing_result),
             Err(validation_error) => AppResponse::Error(validation_error),
         }

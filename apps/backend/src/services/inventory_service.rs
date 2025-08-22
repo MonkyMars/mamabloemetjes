@@ -3,6 +3,7 @@ use crate::response::error::AppError;
 use crate::structs::inventory::{Inventory, InventoryReservation, InventoryUpdate};
 use rust_decimal::Decimal;
 use sqlx::Row;
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 /// Service for handling inventory operations
@@ -40,8 +41,15 @@ impl InventoryService {
         }
     }
 
-    /// Reserve inventory for an order (increase quantity_reserved)
+    /// STAGE 1: Reserve inventory for an order (increase quantity_reserved)
+    /// This happens when an order is placed - items are marked as "spoken for" but remain in warehouse
+    /// Expected result: on_hand stays same, reserved increases, available decreases
     pub async fn reserve_inventory(reservations: &[InventoryReservation]) -> Result<(), AppError> {
+        debug!(
+            "Starting inventory reservation for {} products",
+            reservations.len()
+        );
+
         let pool = pool();
         let mut tx = pool
             .begin()
@@ -49,6 +57,10 @@ impl InventoryService {
             .map_err(|e| AppError::DatabaseError(format!("Failed to start transaction: {}", e)))?;
 
         for reservation in reservations {
+            debug!(
+                "Reserving {} units for product {}",
+                reservation.quantity_to_reserve, reservation.product_id
+            );
             // First, check if we have enough available inventory
             let row = sqlx::query(
                 "SELECT quantity_on_hand, quantity_reserved FROM inventory WHERE product_id = $1 FOR UPDATE",
@@ -78,7 +90,7 @@ impl InventoryService {
                     }
 
                     // Reserve the inventory
-                    sqlx::query(
+                    let result = sqlx::query(
                         "UPDATE inventory SET quantity_reserved = quantity_reserved + $1, updated_at = NOW() WHERE product_id = $2",
                     )
                     .bind(reservation.quantity_to_reserve)
@@ -91,6 +103,13 @@ impl InventoryService {
                             reservation.product_id, e
                         ))
                     })?;
+
+                    info!(
+                        "Successfully reserved {} units for product {}. Rows affected: {}",
+                        reservation.quantity_to_reserve,
+                        reservation.product_id,
+                        result.rows_affected()
+                    );
                 }
                 _ => {
                     tx.rollback().await.ok();
@@ -103,14 +122,23 @@ impl InventoryService {
         }
 
         tx.commit().await.map_err(|e| {
+            error!("Failed to commit inventory reservations: {}", e);
             AppError::DatabaseError(format!("Failed to commit inventory reservations: {}", e))
         })?;
 
+        info!(
+            "Successfully committed reservations for {} products",
+            reservations.len()
+        );
         Ok(())
     }
 
-    /// Fulfill order (decrease both quantity_on_hand and quantity_reserved)
+    /// STAGE 2: Fulfill order (decrease both quantity_on_hand and quantity_reserved)
+    /// This happens when an order ships - items physically leave the warehouse
+    /// Expected result: on_hand decreases, reserved decreases, available stays same
     pub async fn fulfill_order(updates: &[InventoryUpdate]) -> Result<(), AppError> {
+        debug!("Starting order fulfillment for {} products", updates.len());
+
         let pool = pool();
         let mut tx = pool
             .begin()
@@ -118,6 +146,10 @@ impl InventoryService {
             .map_err(|e| AppError::DatabaseError(format!("Failed to start transaction: {}", e)))?;
 
         for update in updates {
+            debug!(
+                "Fulfilling {} units for product {}",
+                update.quantity_change, update.product_id
+            );
             // Update inventory: decrease both on_hand and reserved quantities
             let result = sqlx::query(
                 r#"
@@ -143,23 +175,39 @@ impl InventoryService {
             })?;
 
             if result.rows_affected() == 0 {
+                warn!(
+                    "Failed to fulfill order for product {} - insufficient inventory or reservation",
+                    update.product_id
+                );
                 tx.rollback().await.ok();
                 return Err(AppError::ValidationError(format!(
                     "Cannot fulfill order for product {}. Insufficient inventory or reservation.",
                     update.product_id
                 )));
             }
+
+            info!(
+                "Successfully fulfilled {} units for product {}. Rows affected: {}",
+                update.quantity_change,
+                update.product_id,
+                result.rows_affected()
+            );
         }
 
         tx.commit().await.map_err(|e| {
+            error!("Failed to commit inventory fulfillment: {}", e);
             AppError::DatabaseError(format!("Failed to commit inventory fulfillment: {}", e))
         })?;
 
+        info!(
+            "Successfully committed fulfillment for {} products",
+            updates.len()
+        );
         Ok(())
     }
 
-    /// Release reserved inventory (when order is cancelled)
-    pub async fn release_reservations(updates: &[InventoryUpdate]) -> Result<(), AppError> {
+    /// Decrease only on_hand quantity without affecting reservations
+    pub async fn decrease_on_hand_only(updates: &[InventoryUpdate]) -> Result<(), AppError> {
         let pool = pool();
         let mut tx = pool
             .begin()
@@ -167,7 +215,68 @@ impl InventoryService {
             .map_err(|e| AppError::DatabaseError(format!("Failed to start transaction: {}", e)))?;
 
         for update in updates {
-            sqlx::query(
+            // Update inventory: decrease only on_hand quantity
+            let result = sqlx::query(
+                r#"
+                UPDATE inventory
+                SET
+                    quantity_on_hand = quantity_on_hand - $1,
+                    updated_at = NOW()
+                WHERE product_id = $2
+                AND quantity_on_hand >= $1
+                "#,
+            )
+            .bind(update.quantity_change)
+            .bind(update.product_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                AppError::DatabaseError(format!(
+                    "Failed to decrease on-hand inventory for product {}: {}",
+                    update.product_id, e
+                ))
+            })?;
+
+            if result.rows_affected() == 0 {
+                tx.rollback().await.ok();
+                return Err(AppError::ValidationError(format!(
+                    "Cannot decrease on-hand inventory for product {}. Insufficient on-hand quantity.",
+                    update.product_id
+                )));
+            }
+        }
+
+        tx.commit().await.map_err(|e| {
+            AppError::DatabaseError(format!(
+                "Failed to commit on-hand inventory decrease: {}",
+                e
+            ))
+        })?;
+
+        Ok(())
+    }
+
+    /// STAGE 2 ALT: Release reserved inventory (when order is cancelled)
+    /// This happens when an order is cancelled - reserved items are freed up
+    /// Expected result: on_hand stays same, reserved decreases, available increases
+    pub async fn release_reservations(updates: &[InventoryUpdate]) -> Result<(), AppError> {
+        debug!(
+            "Starting reservation release for {} products",
+            updates.len()
+        );
+
+        let pool = pool();
+        let mut tx = pool
+            .begin()
+            .await
+            .map_err(|e| AppError::DatabaseError(format!("Failed to start transaction: {}", e)))?;
+
+        for update in updates {
+            debug!(
+                "Releasing {} reserved units for product {}",
+                update.quantity_change, update.product_id
+            );
+            let result = sqlx::query(
                 "UPDATE inventory SET quantity_reserved = quantity_reserved - $1, updated_at = NOW() WHERE product_id = $2",
             )
             .bind(update.quantity_change)
@@ -180,12 +289,24 @@ impl InventoryService {
                     update.product_id, e
                 ))
             })?;
+
+            info!(
+                "Successfully released {} reserved units for product {}. Rows affected: {}",
+                update.quantity_change,
+                update.product_id,
+                result.rows_affected()
+            );
         }
 
         tx.commit().await.map_err(|e| {
+            error!("Failed to commit reservation release: {}", e);
             AppError::DatabaseError(format!("Failed to commit reservation release: {}", e))
         })?;
 
+        info!(
+            "Successfully committed reservation release for {} products",
+            updates.len()
+        );
         Ok(())
     }
 

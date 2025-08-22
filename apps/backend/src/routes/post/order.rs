@@ -1,4 +1,4 @@
-use crate::actions::post::order::create_order_with_lines;
+use crate::actions::post::order::{create_order_with_lines, get_order_with_lines};
 use crate::response::{ApiResponse, AppResponse, error::AppError};
 use crate::services::{InventoryService, PricingService};
 use crate::structs::inventory::{InventoryReservation, InventoryUpdate};
@@ -66,7 +66,8 @@ pub async fn order(Json(payload): Json<IncomingOrder>) -> ApiResponse<Order> {
         }
     }
 
-    // Step 3: Reserve inventory for all products
+    // Step 3: Reserve inventory for all products (STAGE 1: Order Placement)
+    // This marks items as "spoken for" but keeps them in warehouse until shipment
     let mut reservations = Vec::new();
     for content in &payload.items {
         for entry in &content.product {
@@ -119,7 +120,7 @@ pub async fn order(Json(payload): Json<IncomingOrder>) -> ApiResponse<Order> {
     }
 
     // Step 6: Create order and order lines in a single transaction
-    let (created_order, created_order_lines) = match create_order_with_lines(
+    let (created_order, _created_order_lines) = match create_order_with_lines(
         &built_order,
         &order_lines,
     )
@@ -140,7 +141,7 @@ pub async fn order(Json(payload): Json<IncomingOrder>) -> ApiResponse<Order> {
                 InventoryService::release_reservations(&inventory_updates).await
             {
                 return AppResponse::Error(AppError::DatabaseError(format!(
-                    "Failed to create order AND failed to rollback reservations: Order error: {}, Rollback error: {}",
+                    "Failed to create order AND failed to rollback inventory reservations: Order error: {}, Rollback error: {}",
                     db_error, rollback_err
                 )));
             }
@@ -152,23 +153,11 @@ pub async fn order(Json(payload): Json<IncomingOrder>) -> ApiResponse<Order> {
         }
     };
 
-    // Step 7: Fulfill the order (decrease inventory quantities)
-    let inventory_updates: Vec<InventoryUpdate> = created_order_lines
-        .iter()
-        .map(|line| InventoryUpdate {
-            product_id: line.product_id,
-            quantity_change: line.quantity,
-        })
-        .collect();
-
-    if let Err(err) = InventoryService::fulfill_order(&inventory_updates).await {
-        // This is a critical error - order was created but inventory wasn't updated
-        return AppResponse::Error(AppError::DatabaseError(format!(
-            "Order created successfully but failed to update inventory. Manual intervention required. Order ID: {:?}, Error: {}",
-            created_order.id, err
-        )));
-    }
-
+    // Order placed successfully!
+    // - Inventory is reserved (quantity_reserved increased)
+    // - Items remain in warehouse (quantity_on_hand unchanged)
+    // - Available inventory decreased (on_hand - reserved)
+    // - Order ready for shipment via POST /order/ship
     AppResponse::Success(created_order)
 }
 
@@ -186,6 +175,94 @@ pub async fn validate_order_pricing(
     Json(payload): Json<IncomingOrder>,
 ) -> ApiResponse<crate::services::PricingResult> {
     PricingService::validate_order_pricing(&payload).await
+}
+
+/// Ship an order (STAGE 2: Order Fulfillment - when order physically leaves warehouse)
+/// This decreases both on_hand and reserved quantities
+pub async fn ship_order(Json(order_id): Json<Uuid>) -> ApiResponse<String> {
+    // Get order details
+    let order_with_lines = match get_order_with_lines(order_id).await {
+        Ok(Some(order_data)) => order_data,
+        Ok(_) => {
+            return AppResponse::Error(AppError::NotFound(format!(
+                "Order with ID {} not found",
+                order_id
+            )));
+        }
+        Err(err) => {
+            return AppResponse::Error(AppError::DatabaseError(format!(
+                "Failed to retrieve order {}: {}",
+                order_id, err
+            )));
+        }
+    };
+
+    // Create inventory updates for fulfillment
+    let inventory_updates: Vec<InventoryUpdate> = order_with_lines
+        .order_lines
+        .iter()
+        .map(|line| InventoryUpdate {
+            product_id: line.product_id,
+            quantity_change: line.quantity,
+        })
+        .collect();
+
+    // Fulfill the order (decrease both on_hand and reserved)
+    if let Err(err) = InventoryService::fulfill_order(&inventory_updates).await {
+        return AppResponse::Error(AppError::DatabaseError(format!(
+            "Failed to ship order {}: {}",
+            order_id, err
+        )));
+    }
+
+    // TODO: Update order status to "shipped" in database
+    // This would require adding an order update service method
+
+    AppResponse::Success(format!("Order {} shipped successfully", order_id))
+}
+
+/// Cancel an order (STAGE 2 ALT: Release reservations - when order is cancelled)
+/// This releases reserved inventory back to available stock
+pub async fn cancel_order(Json(order_id): Json<Uuid>) -> ApiResponse<String> {
+    // Get order details
+    let order_with_lines = match get_order_with_lines(order_id).await {
+        Ok(Some(order_data)) => order_data,
+        Ok(_) => {
+            return AppResponse::Error(AppError::NotFound(format!(
+                "Order with ID {} not found",
+                order_id
+            )));
+        }
+        Err(err) => {
+            return AppResponse::Error(AppError::DatabaseError(format!(
+                "Failed to retrieve order {}: {}",
+                order_id, err
+            )));
+        }
+    };
+
+    // Create inventory updates for releasing reservations
+    let inventory_updates: Vec<InventoryUpdate> = order_with_lines
+        .order_lines
+        .iter()
+        .map(|line| InventoryUpdate {
+            product_id: line.product_id,
+            quantity_change: line.quantity,
+        })
+        .collect();
+
+    // Release the reserved inventory
+    if let Err(err) = InventoryService::release_reservations(&inventory_updates).await {
+        return AppResponse::Error(AppError::DatabaseError(format!(
+            "Failed to cancel order {}: {}",
+            order_id, err
+        )));
+    }
+
+    // TODO: Update order status to "cancelled" in database
+    // This would require adding an order update service method
+
+    AppResponse::Success(format!("Order {} cancelled successfully", order_id))
 }
 
 /// Endpoint for checking inventory availability for an order
