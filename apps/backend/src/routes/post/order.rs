@@ -3,6 +3,8 @@ use crate::response::{ApiResponse, AppResponse, error::AppError};
 use crate::services::{InventoryService, PricingService};
 use crate::structs::inventory::{InventoryReservation, InventoryUpdate};
 use crate::structs::order::{IncomingOrder, Order, OrderLine};
+use crate::validate::structs::validate_customer_id;
+use crate::validate::{validate_address, validate_complete_order};
 use axum::Json;
 use rust_decimal::Decimal;
 use uuid::Uuid;
@@ -13,6 +15,34 @@ pub async fn order(Json(payload): Json<IncomingOrder>) -> ApiResponse<Order> {
         AppResponse::Success(result) => result,
         AppResponse::Error(err) => return AppResponse::Error(err),
     };
+
+    if let Err(err) = validate_complete_order(&payload) {
+        return AppResponse::Error(AppError::ValidationError(format!(
+            "Order validation failed: {}",
+            err
+        )));
+    }
+
+    if let Err(err) = validate_address(&payload.shipping_address) {
+        return AppResponse::Error(AppError::ValidationError(format!(
+            "Shipping address validation failed: {}",
+            err
+        )));
+    }
+
+    if let Err(err) = validate_address(&payload.billing_address) {
+        return AppResponse::Error(AppError::ValidationError(format!(
+            "Billing address validation failed: {}",
+            err
+        )));
+    }
+
+    if let Err(err) = validate_customer_id(&payload.customer_id) {
+        return AppResponse::Error(AppError::ValidationError(format!(
+            "Customer ID validation failed: {}",
+            err
+        )));
+    }
 
     // Step 2: Check inventory availability for all products first
     for content in &payload.items {

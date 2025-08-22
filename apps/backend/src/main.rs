@@ -6,6 +6,7 @@ pub mod routes;
 pub mod services;
 pub mod structs;
 pub mod utils;
+pub mod validate;
 
 use axum::Router;
 use tokio::net::TcpListener;
@@ -60,7 +61,8 @@ async fn main() {
 }
 
 fn create_router() -> Router {
-    routes::setup_routes(Router::new()).layer(axum::middleware::from_fn(
-        crate::middleware::request_logger_middleware,
-    ))
+    // routes::setup_routes(Router::new()).layer(axum::middleware::from_fn(
+    //     crate::middleware::request_logger_middleware,
+    // ))
+    Router::new()
 }

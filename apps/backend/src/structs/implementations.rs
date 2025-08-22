@@ -38,31 +38,7 @@ impl Order {
         self.subtotal + self.tax_amount + self.shipping_cost - self.discount_amount
     }
 
-    pub fn build_order(payload: &IncomingOrder) -> Self {
-        let tax_amount = utils::tax::Tax::calculate_tax(payload.price);
-        let subtotal = payload.price - tax_amount;
-        let shipping_cost = dec!(0.00);
-        let discount_amount = dec!(0.00);
-
-        Order {
-            id: None,
-            subtotal,
-            tax_amount,
-            shipping_cost,
-            discount_amount,
-            order_number: IncomingOrder::generate_order_number(),
-            customer_id: payload.customer_id,
-            notes: payload.notes.clone(),
-            shipping_address: payload.shipping_address.clone(),
-            billing_address: payload.billing_address.clone(),
-            total_amount: subtotal + tax_amount + shipping_cost - discount_amount,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            status: OrderStatus::Pending,
-        }
-    }
-
-    /// Build order with pricing information from the pricing service
+    /// Build order with pricing information from the pricing service.
     /// This method uses the calculated pricing including discounts
     pub fn build_order_with_pricing(
         payload: &IncomingOrder,
