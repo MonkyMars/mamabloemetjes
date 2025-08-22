@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { mockProducts } from '../../data/products';
+import { getProducts, searchProducts } from '../../data/product';
 import { Product } from '../../types';
 import ProductCard from '../../components/ProductCard';
 import { Button } from '../../components/Button';
@@ -19,13 +19,10 @@ import {
 import { NextPage } from 'next';
 
 interface FilterState {
-  category: string;
   priceRange: [number, number];
   colors: string[];
   sizes: string[];
   occasions: string[];
-  inStock: boolean;
-  customizable: boolean;
 }
 
 const ShopComponent: React.FC = () => {
@@ -47,29 +44,37 @@ const ShopComponent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [filters, setFilters] = useState<FilterState>({
-    category: 'all',
     priceRange: [0, 200],
     colors: [],
     sizes: [],
     occasions: [],
-    inStock: false,
-    customizable: false,
   });
 
   // Initialize products and handle URL search params
   useEffect(() => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setProducts(mockProducts);
-      setIsLoading(false);
-    }, 500);
+    const loadProducts = async () => {
+      try {
+        setIsLoading(true);
+        const urlSearch = searchParams.get('search');
 
-    // Handle search query from URL
-    const urlSearch = searchParams.get('search');
-    if (urlSearch) {
-      setLocalSearchQuery(urlSearch);
-    }
+        let loadedProducts: Product[] = [];
+        if (urlSearch) {
+          setLocalSearchQuery(urlSearch);
+          loadedProducts = await searchProducts(urlSearch);
+        } else {
+          loadedProducts = await getProducts();
+        }
+
+        setProducts(loadedProducts);
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProducts();
   }, [searchParams]);
 
   // Get effective search query and products
@@ -91,23 +96,12 @@ const ShopComponent: React.FC = () => {
   // Get unique filter options
   // Update filter options when products change
   const filterOptions = useMemo(() => {
-    const sourceProducts =
-      effectiveProducts.length > 0 ? effectiveProducts : products;
-    const categories = [
-      'all',
-      ...new Set(sourceProducts.map((p) => p.category)),
-    ];
-    const colors = new Set(sourceProducts.flatMap((p) => p.colors || []));
-    const sizes = new Set(sourceProducts.map((p) => p.size).filter(Boolean));
-    const occasions = new Set(sourceProducts.flatMap((p) => p.occasion || []));
-
     return {
-      categories,
-      colors: Array.from(colors),
-      sizes: Array.from(sizes),
-      occasions: Array.from(occasions),
+      colors: ['red', 'pink', 'white', 'yellow', 'purple', 'blue', 'mixed'],
+      sizes: ['small', 'medium', 'large', 'extra-large'],
+      occasions: ['wedding', 'anniversary', 'birthday', 'sympathy', 'everyday'],
     };
-  }, [effectiveProducts, products]);
+  }, []);
 
   // Filter and sort products
   useEffect(() => {
@@ -121,21 +115,8 @@ const ShopComponent: React.FC = () => {
         !product.description
           .toLowerCase()
           .includes(effectiveSearchQuery.toLowerCase()) &&
-        !product.category
-          .toLowerCase()
-          .includes(effectiveSearchQuery.toLowerCase()) &&
-        !product.colors?.some((color) =>
-          color.toLowerCase().includes(effectiveSearchQuery.toLowerCase()),
-        ) &&
-        !product.occasion?.some((occasion) =>
-          occasion.toLowerCase().includes(effectiveSearchQuery.toLowerCase()),
-        )
+        !product.sku.toLowerCase().includes(effectiveSearchQuery.toLowerCase())
       ) {
-        return false;
-      }
-
-      // Category filter
-      if (filters.category !== 'all' && product.category !== filters.category) {
         return false;
       }
 
@@ -147,42 +128,8 @@ const ShopComponent: React.FC = () => {
         return false;
       }
 
-      // Colors
-      if (
-        filters.colors.length > 0 &&
-        product.colors &&
-        !filters.colors.some((color) => product.colors?.includes(color))
-      ) {
-        return false;
-      }
-
-      // Sizes
-      if (
-        filters.sizes.length > 0 &&
-        product.size &&
-        !filters.sizes.includes(product.size)
-      ) {
-        return false;
-      }
-
-      // Occasions
-      if (
-        filters.occasions.length > 0 &&
-        product.occasion &&
-        !filters.occasions.some((occasion) =>
-          product.occasion?.includes(occasion),
-        )
-      ) {
-        return false;
-      }
-
-      // In stock filter
-      if (filters.inStock && product.stock === 0) {
-        return false;
-      }
-
-      // Customizable filter
-      if (filters.customizable && !product.isCustomizable) {
+      // Only show active products
+      if (!product.is_active) {
         return false;
       }
 
@@ -199,7 +146,9 @@ const ShopComponent: React.FC = () => {
         case 'name':
           return a.name.localeCompare(b.name);
         case 'newest':
-          return 0; // Would sort by creation date in real app
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
         default:
           return 0;
       }
@@ -226,13 +175,10 @@ const ShopComponent: React.FC = () => {
 
   const clearFilters = () => {
     setFilters({
-      category: 'all',
       priceRange: [0, 200],
       colors: [],
       sizes: [],
       occasions: [],
-      inStock: false,
-      customizable: false,
     });
     setLocalSearchQuery('');
     clearSearch();
@@ -251,10 +197,6 @@ const ShopComponent: React.FC = () => {
     }
   };
 
-  const clearCategoryFilter = () => {
-    handleFilterChange('category', 'all');
-  };
-
   const clearColorFilter = (color: string) => {
     toggleArrayFilter('colors', color);
   };
@@ -265,14 +207,6 @@ const ShopComponent: React.FC = () => {
 
   const clearOccasionFilter = (occasion: string) => {
     toggleArrayFilter('occasions', occasion);
-  };
-
-  const clearInStockFilter = () => {
-    handleFilterChange('inStock', false);
-  };
-
-  const clearCustomizableFilter = () => {
-    handleFilterChange('customizable', false);
   };
 
   const formatPrice = (price: number) => {
@@ -368,12 +302,9 @@ const ShopComponent: React.FC = () => {
           </div>
 
           {/* Active Filters */}
-          {(filters.category !== 'all' ||
-            filters.colors.length > 0 ||
+          {(filters.colors.length > 0 ||
             filters.sizes.length > 0 ||
             filters.occasions.length > 0 ||
-            filters.inStock ||
-            filters.customizable ||
             effectiveSearchQuery) && (
             <div className='mt-4 flex flex-wrap items-center gap-2'>
               <span className='text-sm text-[#7d6b55] font-medium'>
@@ -384,15 +315,6 @@ const ShopComponent: React.FC = () => {
                 <span className='badge bg-[#d4a574] text-white'>
                   Search: {effectiveSearchQuery}
                   <button onClick={clearSearchFilter} className='ml-2'>
-                    <FiX className='w-3 h-3' />
-                  </button>
-                </span>
-              )}
-
-              {filters.category !== 'all' && (
-                <span className='badge bg-[#8b9dc3] text-white capitalize'>
-                  {filters.category}
-                  <button onClick={clearCategoryFilter} className='ml-2'>
                     <FiX className='w-3 h-3' />
                   </button>
                 </span>
@@ -437,24 +359,6 @@ const ShopComponent: React.FC = () => {
                 </span>
               ))}
 
-              {filters.inStock && (
-                <span className='badge bg-[#7fb069] text-white'>
-                  In Stock Only
-                  <button onClick={clearInStockFilter} className='ml-2'>
-                    <FiX className='w-3 h-3' />
-                  </button>
-                </span>
-              )}
-
-              {filters.customizable && (
-                <span className='badge bg-[#f7931e] text-white'>
-                  Customizable Only
-                  <button onClick={clearCustomizableFilter} className='ml-2'>
-                    <FiX className='w-3 h-3' />
-                  </button>
-                </span>
-              )}
-
               <button
                 onClick={clearFilters}
                 className='text-sm text-[#d4a574] hover:text-[#b8956a] font-medium ml-2'
@@ -485,33 +389,6 @@ const ShopComponent: React.FC = () => {
               </div>
 
               <div className='space-y-6'>
-                {/* Category Filter */}
-                <div>
-                  <h4 className='font-medium text-[#2d2820] mb-3'>Category</h4>
-                  <div className='space-y-2'>
-                    {filterOptions.categories.map((category) => (
-                      <label
-                        key={category}
-                        className='flex items-center cursor-pointer'
-                      >
-                        <input
-                          type='radio'
-                          name='category'
-                          value={category}
-                          checked={filters.category === category}
-                          onChange={(e) =>
-                            handleFilterChange('category', e.target.value)
-                          }
-                          className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
-                        />
-                        <span className='text-[#7d6b55] capitalize'>
-                          {category === 'all' ? 'All Products' : category}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Price Range */}
                 <div>
                   <h4 className='font-medium text-[#2d2820] mb-3'>
@@ -618,37 +495,6 @@ const ShopComponent: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Other Filters */}
-                <div>
-                  <h4 className='font-medium text-[#2d2820] mb-3'>
-                    Availability
-                  </h4>
-                  <div className='space-y-2'>
-                    <label className='flex items-center cursor-pointer'>
-                      <input
-                        type='checkbox'
-                        checked={filters.inStock}
-                        onChange={(e) =>
-                          handleFilterChange('inStock', e.target.checked)
-                        }
-                        className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
-                      />
-                      <span className='text-[#7d6b55]'>In Stock Only</span>
-                    </label>
-                    <label className='flex items-center cursor-pointer'>
-                      <input
-                        type='checkbox'
-                        checked={filters.customizable}
-                        onChange={(e) =>
-                          handleFilterChange('customizable', e.target.checked)
-                        }
-                        className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
-                      />
-                      <span className='text-[#7d6b55]'>Customizable</span>
-                    </label>
-                  </div>
-                </div>
               </div>
             </div>
           </aside>

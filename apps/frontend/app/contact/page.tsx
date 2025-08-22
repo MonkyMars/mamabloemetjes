@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '../../components/Button';
-import { getProductById } from '../../data/products';
+import { getProductById } from '../../data/product';
 import { ContactForm, Product } from '../../types';
 import {
   FiMapPin,
@@ -38,16 +38,23 @@ const ContactComponent: React.FC = () => {
   const [errors, setErrors] = useState<Partial<ContactForm>>({});
 
   useEffect(() => {
-    if (productId) {
-      const foundProduct = getProductById(productId);
-      if (foundProduct) {
-        setProduct(foundProduct);
-        setFormData((prev) => ({
-          ...prev,
-          message: `Hi! I'm interested in "${foundProduct.name}" and would like to know more about customization options.`,
-        }));
+    const loadProduct = async () => {
+      if (productId) {
+        try {
+          const foundProduct = await getProductById(productId);
+          setProduct(foundProduct);
+          setFormData((prev) => ({
+            ...prev,
+            message: `Hi! I'm interested in "${foundProduct.name}" and would like to know more about customization options.`,
+          }));
+        } catch (error) {
+          console.error('Failed to load product:', error);
+          setProduct(null);
+        }
       }
-    }
+    };
+
+    loadProduct();
   }, [productId]);
 
   const validateForm = (): boolean => {

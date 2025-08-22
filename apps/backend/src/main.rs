@@ -33,8 +33,13 @@ async fn main() {
 
     info!("Starting mamabloemetjes backend server...");
 
+    warmup_database().await;
+
+    // Enable CORS middleware
+    let cors = middleware::cors::cors_middleware();
+
     // Create the application router
-    let app = create_router();
+    let app = create_router().layer(cors);
 
     // Setup the TCP listener with better error handling
     let listener = match TcpListener::bind("0.0.0.0:3001").await {
@@ -64,4 +69,9 @@ fn create_router() -> Router {
     routes::setup_routes(Router::new()).layer(axum::middleware::from_fn(
         crate::middleware::request_logger_middleware,
     ))
+}
+
+async fn warmup_database() {
+    let _ = actions::get::get_all_products().await;
+    tracing::info!("Database warmed up");
 }

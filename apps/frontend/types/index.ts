@@ -1,25 +1,25 @@
+export interface ProductImage {
+  product_id: string;
+  url: string;
+  alt_text: string | null;
+  is_primary: boolean;
+}
+
 export interface Product {
   id: string;
   name: string;
-  description: string;
+  sku: string;
   price: number;
-  stock: number;
-  imageUrl: string;
-  category: 'bouquet' | 'arrangement' | 'single' | 'seasonal';
-  occasion?: string[];
-  isCustomizable: boolean;
-  colors?: string[];
-  size?: 'small' | 'medium' | 'large';
+  description: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  images: ProductImage[] | null;
 }
 
 export interface CartItem {
   product: Product;
   quantity: number;
-  customization?: {
-    colors?: string[];
-    occasion?: string;
-    personalMessage?: string;
-  };
 }
 
 export interface Cart {

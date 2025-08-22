@@ -42,7 +42,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
 
-    if (product.stock === 0) return;
+    if (!product.is_active) return;
 
     setIsLoading(true);
     try {
@@ -60,8 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     onToggleWishlist?.(product);
   };
 
-  const isLowStock = product.stock < 10 && product.stock > 0;
-  const isOutOfStock = product.stock === 0;
+  const isOutOfStock = !product.is_active;
 
   return (
     <div className={`card card-hover group relative ${className}`}>
@@ -79,29 +78,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </button>
 
       {/* Stock Badge */}
-      {(isLowStock || isOutOfStock) && (
+      {isOutOfStock && (
         <div className='absolute top-4 left-4 z-10'>
-          {isOutOfStock ? (
-            <span className='bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1'>
-              <FiAlertCircle className='w-4 h-4' />
-              <span>Out of Stock</span>
-            </span>
-          ) : (
-            <span className='bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1'>
-              <FiAlertCircle className='w-4 h-4' />
-              <span>Low Stock</span>
-            </span>
-          )}
+          <span className='bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1'>
+            <FiAlertCircle className='w-4 h-4' />
+            <span>Unavailable</span>
+          </span>
         </div>
       )}
 
-      <Link href={`/product/${product.id}`} className='block'>
+      <Link href={`/shop/${product.id}`} className='block'>
         {/* Product Image */}
         <div className='relative aspect-square overflow-hidden rounded-t-2xl bg-[#f5f2ee]'>
-          {!imageError ? (
+          {!imageError && product.images && product.images.length > 0 ? (
             <Image
-              src={product.imageUrl}
-              alt={product.name}
+              src={product.images[0].url}
+              alt={product.images[0].alt_text || product.name}
               fill
               sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
               className='object-cover transition-transform duration-500 group-hover:scale-105'
@@ -130,11 +122,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Product Info */}
         <div className='p-6'>
-          {/* Category Badge */}
+          {/* SKU Badge */}
           <div className='mb-3'>
-            <span className='badge badge-category capitalize'>
-              {product.category}
-            </span>
+            <span className='badge badge-category'>{product.sku}</span>
           </div>
 
           {/* Product Name */}
@@ -147,63 +137,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {product.description}
           </p>
 
-          {/* Colors */}
-          {product.colors && product.colors.length > 0 && (
-            <div className='mb-4'>
-              <div className='flex items-center space-x-2'>
-                <span className='text-xs text-[#9a8470] font-medium'>
-                  Colors:
-                </span>
-                <div className='flex space-x-1'>
-                  {product.colors.slice(0, 3).map((color, index) => (
-                    <div
-                      key={index}
-                      className='w-4 h-4 rounded-full border border-[#e8e2d9] bg-gradient-to-br from-[#ddb7ab] to-[#d4a574]'
-                      title={color}
-                    />
-                  ))}
-                  {product.colors.length > 3 && (
-                    <span className='text-xs text-[#9a8470] ml-1'>
-                      +{product.colors.length - 3}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Created Date */}
+          <div className='mb-4'>
+            <span className='text-xs text-[#9a8470] font-medium'>
+              Added: {new Date(product.created_at).toLocaleDateString()}
+            </span>
+          </div>
 
-          {/* Size */}
-          {product.size && (
-            <div className='mb-4'>
-              <span className='text-xs text-[#9a8470] font-medium capitalize'>
-                Size: {product.size}
-              </span>
-            </div>
-          )}
-
-          {/* Price and Stock */}
+          {/* Price and Status */}
           <div className='flex items-center justify-between mb-4'>
             <div className='price'>{formatPrice(product.price)}</div>
             <div className='text-sm text-[#7d6b55]'>
               {isOutOfStock ? (
-                <span className='text-red-600 font-medium'>Out of Stock</span>
+                <span className='text-red-600 font-medium'>Unavailable</span>
               ) : (
                 <span className='flex items-center space-x-1'>
                   <FiCheck className='w-4 h-4 text-green-600' />
-                  <span>{product.stock} in stock</span>
+                  <span>Available</span>
                 </span>
               )}
             </div>
           </div>
-
-          {/* Customizable Badge */}
-          {product.isCustomizable && (
-            <div className='mb-4'>
-              <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#8b9dc3]/10 text-[#8b9dc3]'>
-                ✨ Customizable
-              </span>
-            </div>
-          )}
         </div>
       </Link>
 
@@ -222,16 +176,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
             }
             className='flex-1'
           >
-            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+            {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
           </Button>
 
-          {product.isCustomizable && (
-            <Link href={`/product/${product.id}?customize=true`}>
-              <Button variant='outline' size='md' className='whitespace-nowrap'>
-                Customize
-              </Button>
-            </Link>
-          )}
+          <Link href={`/shop/${product.id}?customize=true`}>
+            <Button variant='outline' size='md' className='whitespace-nowrap'>
+              Customize
+            </Button>
+          </Link>
         </div>
 
         {/* Ask About Product */}

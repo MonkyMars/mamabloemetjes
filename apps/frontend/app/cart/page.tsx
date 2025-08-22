@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '../../components/Button';
 import { CartItem, OrderSummary } from '../../types';
-import { getProductById } from '../../data/products';
+import { getCart, updateCartItem, removeFromCart } from '../../data/cart';
 import {
   FiMinus,
   FiPlus,
@@ -24,68 +24,50 @@ const CartPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
-  // Mock cart data - in a real app, this would come from context/state management
+  // Load cart data from API
   useEffect(() => {
-    setIsLoading(true);
-    // Simulate loading cart from storage/API
-    setTimeout(() => {
-      const mockCartItems: CartItem[] = [
-        {
-          product: getProductById('velvet-rose-bouquet-1')!,
-          quantity: 2,
-          customization: {
-            colors: ['deep-red', 'burgundy'],
-            occasion: 'anniversary',
-            personalMessage: 'Happy Anniversary!',
-          },
-        },
-        {
-          product: getProductById('velvet-peony-arrangement-1')!,
-          quantity: 1,
-        },
-        {
-          product: getProductById('velvet-wildflower-bouquet-1')!,
-          quantity: 1,
-          customization: {
-            colors: ['lavender', 'cream'],
-            occasion: 'wedding',
-          },
-        },
-      ];
-      setCartItems(mockCartItems);
-      setIsLoading(false);
-    }, 500);
+    const loadCart = async () => {
+      try {
+        setIsLoading(true);
+        const cart = await getCart();
+        setCartItems(cart.items);
+      } catch (error) {
+        console.error('Failed to load cart:', error);
+        setCartItems([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCart();
   }, []);
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
+    if (newQuantity <= 0) {
+      return removeItem(productId);
+    }
 
-    setIsUpdating(productId);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.product.id === productId
-          ? { ...item, quantity: newQuantity }
-          : item,
-      ),
-    );
-
-    setIsUpdating(null);
+    try {
+      setIsUpdating(productId);
+      const updatedCart = await updateCartItem(productId, newQuantity);
+      setCartItems(updatedCart.items);
+    } catch (error) {
+      console.error('Failed to update cart item:', error);
+    } finally {
+      setIsUpdating(null);
+    }
   };
 
   const removeItem = async (productId: string) => {
-    setIsUpdating(productId);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    setCartItems((prevItems) =>
-      prevItems.filter((item) => item.product.id !== productId),
-    );
-    setIsUpdating(null);
+    try {
+      setIsUpdating(productId);
+      const updatedCart = await removeFromCart(productId);
+      setCartItems(updatedCart.items);
+    } catch (error) {
+      console.error('Failed to remove cart item:', error);
+    } finally {
+      setIsUpdating(null);
+    }
   };
 
   const moveToWishlist = async (productId: string) => {
@@ -217,8 +199,14 @@ const CartPage: React.FC = () => {
                     <div className='flex-shrink-0'>
                       <div className='w-32 h-32 relative overflow-hidden rounded-xl bg-[#f5f2ee]'>
                         <Image
-                          src={item.product.imageUrl}
-                          alt={item.product.name}
+                          src={
+                            item.product.images?.[0]?.url ||
+                            '/images/placeholder-flower.jpg'
+                          }
+                          alt={
+                            item.product.images?.[0]?.alt_text ||
+                            item.product.name
+                          }
                           fill
                           className='object-cover'
                         />
@@ -237,8 +225,8 @@ const CartPage: React.FC = () => {
                               {item.product.name}
                             </Link>
                           </h3>
-                          <p className='text-sm text-[#7d6b55] capitalize'>
-                            {item.product.category} • {item.product.size}
+                          <p className='text-sm text-[#7d6b55]'>
+                            SKU: {item.product.sku}
                           </p>
                         </div>
                         <div className='text-right'>
@@ -254,38 +242,23 @@ const CartPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Customizations */}
-                      {item.customization && (
-                        <div className='mb-4 p-4 bg-[#f5f2ee] rounded-lg'>
-                          <h4 className='text-sm font-medium text-[#2d2820] mb-2'>
-                            Customizations:
-                          </h4>
-                          <div className='space-y-1 text-sm text-[#7d6b55]'>
-                            {item.customization.occasion && (
-                              <p>
-                                Occasion:{' '}
-                                <span className='capitalize'>
-                                  {item.customization.occasion}
-                                </span>
-                              </p>
-                            )}
-                            {item.customization.colors && (
-                              <p>
-                                Colors:{' '}
-                                {item.customization.colors
-                                  .map((c) => c.replace('-', ' '))
-                                  .join(', ')}
-                              </p>
-                            )}
-                            {item.customization.personalMessage && (
-                              <p>
-                                Message: &quot;
-                                {item.customization.personalMessage}&quot;
-                              </p>
-                            )}
-                          </div>
+                      {/* Product Details */}
+                      <div className='mb-4 p-4 bg-[#f5f2ee] rounded-lg'>
+                        <div className='space-y-1 text-sm text-[#7d6b55]'>
+                          <p>
+                            Added:{' '}
+                            {new Date(
+                              item.product.created_at,
+                            ).toLocaleDateString()}
+                          </p>
+                          <p>
+                            Status:{' '}
+                            {item.product.is_active
+                              ? 'Available'
+                              : 'Unavailable'}
+                          </p>
                         </div>
-                      )}
+                      </div>
 
                       {/* Quantity and Actions */}
                       <div className='flex items-center justify-between'>
@@ -321,7 +294,7 @@ const CartPage: React.FC = () => {
                               }
                               disabled={
                                 isUpdating === item.product.id ||
-                                item.quantity >= item.product.stock
+                                !item.product.is_active
                               }
                               className='p-2 hover:bg-[#f5f2ee] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
                             >
@@ -329,10 +302,10 @@ const CartPage: React.FC = () => {
                             </button>
                           </div>
 
-                          {/* Stock Warning */}
-                          {item.product.stock < 10 && (
-                            <span className='text-xs text-orange-600 font-medium'>
-                              Only {item.product.stock} left
+                          {/* Availability Status */}
+                          {!item.product.is_active && (
+                            <span className='text-xs text-red-600 font-medium'>
+                              Currently unavailable
                             </span>
                           )}
                         </div>

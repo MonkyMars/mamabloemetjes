@@ -49,7 +49,7 @@ pub fn setup_routes(router: Router) -> Router {
         )
         // The GET routes for products; these are used to retrieve products. Either all or by id.
         .route("/products", get(get::product::get_products))
-        // .route("/products/{id}", get(product::get_product))
+        .route("/products/{id}", get(get::product::get_product))
         // Inventory debug routes
         .route("/inventory", get(get::inventory::get_all_inventory))
         .route(

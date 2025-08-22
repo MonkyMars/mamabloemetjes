@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '../components/Button';
 import ProductCard from '../components/ProductCard';
-import { mockProducts } from '../data/products';
+import { getFeaturedProducts } from '../data/product';
 import { Product } from '../types';
 import {
   FiArrowRight,
@@ -19,10 +19,24 @@ import {
 
 const HomePage: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get featured products (first 8 products for the homepage)
-    setFeaturedProducts(mockProducts.slice(0, 8));
+    const loadFeaturedProducts = async () => {
+      try {
+        setIsLoading(true);
+        const products = await getFeaturedProducts(8);
+        setFeaturedProducts(products);
+      } catch (error) {
+        console.error('Failed to load featured products:', error);
+        // Fallback to empty array if API fails
+        setFeaturedProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFeaturedProducts();
   }, []);
 
   const features = [
@@ -162,20 +176,43 @@ const HomePage: React.FC = () => {
           </div>
 
           <div className='product-grid'>
-            {featuredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={(product) => {
-                  console.log('Added to cart:', product.name);
-                  // TODO: Implement cart functionality
-                }}
-                onToggleWishlist={(product) => {
-                  console.log('Toggled wishlist:', product.name);
-                  // TODO: Implement wishlist functionality
-                }}
-              />
-            ))}
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className='bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse'
+                >
+                  <div className='aspect-square bg-gray-200'></div>
+                  <div className='p-6'>
+                    <div className='h-4 bg-gray-200 rounded mb-2'></div>
+                    <div className='h-3 bg-gray-200 rounded w-2/3 mb-4'></div>
+                    <div className='h-6 bg-gray-200 rounded w-1/3'></div>
+                  </div>
+                </div>
+              ))
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={(product) => {
+                    console.log('Added to cart:', product.name);
+                    // TODO: Implement cart functionality
+                  }}
+                  onToggleWishlist={(product) => {
+                    console.log('Toggled wishlist:', product.name);
+                    // TODO: Implement wishlist functionality
+                  }}
+                />
+              ))
+            ) : (
+              <div className='col-span-full text-center py-12'>
+                <p className='text-[#7d6b55] text-lg'>
+                  No featured products available at the moment.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { mockProducts } from '../data/products';
+import { searchProducts } from '../data/product';
 
 interface UseSearchOptions {
   searchFields?: (keyof Product)[];
@@ -11,139 +11,124 @@ interface UseSearchOptions {
 }
 
 interface SearchResult {
-  products: Product[];
-  isSearching: boolean;
-  searchQuery: string;
-  hasSearched: boolean;
+  results: Product[];
+  isLoading: boolean;
+  error: string | null;
   totalResults: number;
 }
 
-export const useSearch = (options: UseSearchOptions = {}): SearchResult & {
+export const useSearch = (
+  options: UseSearchOptions = {},
+): SearchResult & {
   setSearchQuery: (query: string) => void;
   clearSearch: () => void;
 } => {
-  const {
-    searchFields = ['name', 'description', 'category'],
-    minSearchLength = 2,
-    debounceDelay = 300,
-  } = options;
+  const { minSearchLength = 2, debounceDelay = 300 } = options;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [results, setResults] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
-      setIsSearching(false);
     }, debounceDelay);
 
-    if (searchQuery.length >= minSearchLength) {
-      setIsSearching(true);
-    }
-
     return () => clearTimeout(timer);
-  }, [searchQuery, debounceDelay, minSearchLength]);
+  }, [searchQuery, debounceDelay]);
 
-  // Update hasSearched when we have a debounced query
+  // Perform search when debounced query changes
   useEffect(() => {
-    if (debouncedQuery.length >= minSearchLength) {
-      setHasSearched(true);
-    } else if (debouncedQuery.length === 0) {
-      setHasSearched(false);
-    }
+    const performSearch = async () => {
+      if (debouncedQuery.length < minSearchLength) {
+        setResults([]);
+        setError(null);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        const searchResults = await searchProducts(debouncedQuery);
+        setResults(searchResults);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Search failed');
+        setResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    performSearch();
   }, [debouncedQuery, minSearchLength]);
-
-  // Search logic
-  const searchResults = useMemo(() => {
-    if (debouncedQuery.length < minSearchLength) {
-      return [];
-    }
-
-    const query = debouncedQuery.toLowerCase().trim();
-
-    return mockProducts.filter((product) => {
-      // Search in specified fields
-      const matchesFields = searchFields.some((field) => {
-        const value = product[field];
-        if (typeof value === 'string') {
-          return value.toLowerCase().includes(query);
-        }
-        if (Array.isArray(value)) {
-          return value.some((item) =>
-            typeof item === 'string' && item.toLowerCase().includes(query)
-          );
-        }
-        return false;
-      });
-
-      // Also search in colors and occasions if they exist
-      const matchesColors = product.colors?.some((color) =>
-        color.toLowerCase().includes(query)
-      ) || false;
-
-      const matchesOccasions = product.occasion?.some((occasion) =>
-        occasion.toLowerCase().includes(query)
-      ) || false;
-
-      return matchesFields || matchesColors || matchesOccasions;
-    });
-  }, [debouncedQuery, searchFields, minSearchLength]);
 
   const clearSearch = () => {
     setSearchQuery('');
     setDebouncedQuery('');
-    setHasSearched(false);
-    setIsSearching(false);
+    setResults([]);
+    setError(null);
   };
 
   return {
-    products: searchResults,
-    isSearching,
-    searchQuery,
-    hasSearched,
-    totalResults: searchResults.length,
+    results,
+    isLoading,
+    error,
+    totalResults: results.length,
     setSearchQuery,
     clearSearch,
   };
 };
 
-// Hook for getting search suggestions
-export const useSearchSuggestions = (query: string, limit: number = 5) => {
-  return useMemo(() => {
-    if (query.length < 2) return [];
+// Hook for search suggestions
+export const useSearchSuggestions = (query: string): string[] => {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
-    const suggestions = new Set<string>();
-    const queryLower = query.toLowerCase();
-
-    mockProducts.forEach((product) => {
-      // Add matching product names
-      if (product.name.toLowerCase().includes(queryLower)) {
-        suggestions.add(product.name);
+  useEffect(() => {
+    const generateSuggestions = async () => {
+      if (query.length < 2) {
+        setSuggestions([]);
+        return;
       }
 
-      // Add matching categories
-      if (product.category.toLowerCase().includes(queryLower)) {
-        suggestions.add(product.category);
+      try {
+        // Get search results and extract suggestions from product names
+        const searchResults = await searchProducts(query);
+        const productSuggestions = searchResults
+          .map((product) => product.name)
+          .filter((name) => name.toLowerCase().includes(query.toLowerCase()))
+          .slice(0, 5);
+
+        // Add some common search terms based on the query
+        const commonSuggestions: string[] = [];
+        const queryLower = query.toLowerCase();
+
+        if (queryLower.includes('rose') || queryLower.includes('red')) {
+          commonSuggestions.push('Red Roses', 'Rose Bouquet');
+        }
+        if (queryLower.includes('wedding') || queryLower.includes('bride')) {
+          commonSuggestions.push('Wedding Flowers', 'Bridal Bouquet');
+        }
+        if (queryLower.includes('birth') || queryLower.includes('gift')) {
+          commonSuggestions.push('Birthday Flowers', 'Gift Bouquet');
+        }
+
+        const allSuggestions = [
+          ...new Set([...productSuggestions, ...commonSuggestions]),
+        ].slice(0, 5);
+
+        setSuggestions(allSuggestions);
+      } catch (error) {
+        console.error('Failed to generate suggestions:', error);
+        setSuggestions([]);
       }
+    };
 
-      // Add matching occasions
-      product.occasion?.forEach((occasion) => {
-        if (occasion.toLowerCase().includes(queryLower)) {
-          suggestions.add(occasion);
-        }
-      });
+    const debounceTimer = setTimeout(generateSuggestions, 200);
+    return () => clearTimeout(debounceTimer);
+  }, [query]);
 
-      // Add matching colors
-      product.colors?.forEach((color) => {
-        if (color.toLowerCase().includes(queryLower)) {
-          suggestions.add(color.replace('-', ' '));
-        }
-      });
-    });
-
-    return Array.from(suggestions).slice(0, limit);
-  }, [query, limit]);
+  return suggestions;
 };

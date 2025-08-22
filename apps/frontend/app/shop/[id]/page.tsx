@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getProductById } from '../../../data/products';
+import { getProductById } from '../../../data/product';
 import { Product } from '../../../types';
 import { Button } from '../../../components/Button';
 import {
@@ -13,6 +13,10 @@ import {
   FiTruck,
   FiShield,
   FiRefreshCw,
+  FiCalendar,
+  FiTag,
+  FiMinus,
+  FiPlus,
 } from 'react-icons/fi';
 import Image from 'next/image';
 import { NextPage } from 'next';
@@ -27,12 +31,23 @@ const ProductComponent: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
-    const productId = params.id as string;
-    if (productId) {
-      const foundProduct = getProductById(productId);
-      setProduct(foundProduct || null);
-      setIsLoading(false);
-    }
+    const loadProduct = async () => {
+      const productId = params.id as string;
+      if (productId) {
+        try {
+          setIsLoading(true);
+          const foundProduct = await getProductById(productId);
+          setProduct(foundProduct);
+        } catch (error) {
+          console.error('Failed to load product:', error);
+          setProduct(null);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadProduct();
   }, [params.id]);
 
   if (isLoading) {
@@ -89,24 +104,13 @@ const ProductComponent: React.FC = () => {
     // TODO: Implement wishlist functionality
   };
 
-  const getStockStatus = () => {
-    if (product.stock === 0) {
-      return { text: 'Out of Stock', color: 'text-red-600' };
-    } else if (product.stock < 5) {
-      return { text: `Only ${product.stock} left!`, color: 'text-orange-600' };
-    } else {
-      return { text: 'In Stock', color: 'text-green-600' };
-    }
-  };
+  // Get product images
+  const productImages = product.images?.length
+    ? product.images.map((img) => img.url)
+    : ['/images/placeholder-flower.jpg'];
 
-  const stockStatus = getStockStatus();
-
-  // Mock additional images - in a real app, these would come from the product data
-  const productImages = [
-    product.imageUrl,
-    product.imageUrl, // Duplicate for demo - would be different angles
-    product.imageUrl,
-  ];
+  const primaryImage =
+    product.images?.find((img) => img.is_primary) || product.images?.[0];
 
   return (
     <div className='min-h-screen pt-24 pb-16'>
@@ -124,208 +128,178 @@ const ProductComponent: React.FC = () => {
           {/* Product Images */}
           <div className='space-y-4'>
             <div className='aspect-square rounded-lg overflow-hidden bg-[#f5f2ee]'>
-              <Image
-                width={500}
-                height={500}
-                src={productImages[selectedImage]}
-                alt={product.name}
-                className='w-full h-full object-cover hover:scale-105 transition-transform duration-300'
-              />
+              {primaryImage ? (
+                <Image
+                  width={500}
+                  height={500}
+                  src={productImages[selectedImage]}
+                  alt={primaryImage.alt_text || product.name}
+                  className='w-full h-full object-cover hover:scale-105 transition-transform duration-300'
+                />
+              ) : (
+                <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-[#f5f2ee] to-[#e8e2d9]'>
+                  <div className='text-center text-[#9a8470]'>
+                    <div className='w-16 h-16 mx-auto mb-4 bg-[#d6ccc0] rounded-full flex items-center justify-center'>
+                      <span className='text-2xl'>🌸</span>
+                    </div>
+                    <p className='text-sm font-medium'>{product.name}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Image thumbnails */}
-            <div className='flex space-x-2'>
-              {productImages.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                    selectedImage === index
-                      ? 'border-[#d4a574]'
-                      : 'border-[#e8e2d9] hover:border-[#d4a574]'
-                  }`}
-                >
-                  <Image
-                    width={80}
-                    height={80}
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className='w-full h-full object-cover'
-                  />
-                </button>
-              ))}
-            </div>
+            {productImages.length > 1 && (
+              <div className='flex space-x-2'>
+                {productImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedImage === index
+                        ? 'border-[#d4a574]'
+                        : 'border-[#e8e2d9] hover:border-[#d4a574]/50'
+                    }`}
+                  >
+                    <Image
+                      width={80}
+                      height={80}
+                      src={image}
+                      alt={`${product.name} view ${index + 1}`}
+                      className='w-full h-full object-cover'
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Product Info */}
+          {/* Product Details */}
           <div className='space-y-6'>
-            {/* Category */}
-            <div className='text-sm text-[#d4a574] font-medium uppercase tracking-wide'>
-              {product.category}
-            </div>
+            {/* Header */}
+            <div>
+              <div className='flex items-center space-x-2 mb-3'>
+                <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#d4a574]/10 text-[#d4a574]'>
+                  <FiTag className='w-3 h-3 mr-1' />
+                  {product.sku}
+                </span>
+                {product.is_active ? (
+                  <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800'>
+                    <FiCheck className='w-3 h-3 mr-1' />
+                    Available
+                  </span>
+                ) : (
+                  <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'>
+                    Unavailable
+                  </span>
+                )}
+              </div>
 
-            {/* Title */}
-            <h1 className='text-3xl font-bold text-[#2d2820] font-serif'>
-              {product.name}
-            </h1>
-
-            {/* Price */}
-            <div className='text-2xl font-bold text-[#d4a574]'>
-              {formatPrice(product.price)}
-            </div>
-
-            {/* Stock Status */}
-            <div className={`text-sm font-medium ${stockStatus.color}`}>
-              {stockStatus.text}
+              <h1 className='heading-2 text-[#2d2820] mb-3'>{product.name}</h1>
+              <div className='price text-3xl mb-4'>
+                {formatPrice(product.price)}
+              </div>
             </div>
 
             {/* Description */}
-            <div className='prose prose-gray max-w-none'>
-              <p className='text-[#7d6b55] leading-relaxed'>
-                {product.description}
-              </p>
+            <div className='prose prose-sm max-w-none text-[#7d6b55]'>
+              <p>{product.description}</p>
             </div>
 
-            {/* Colors */}
-            {product.colors && product.colors.length > 0 && (
-              <div>
-                <h3 className='text-sm font-medium text-[#2d2820] mb-2'>
-                  Colors
-                </h3>
-                <div className='flex flex-wrap gap-2'>
-                  {product.colors.map((color) => (
-                    <span
-                      key={color}
-                      className='px-3 py-1 text-xs font-medium bg-[#f5f2ee] text-[#7d6b55] rounded-full'
-                    >
-                      {color.replace('-', ' ')}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Size */}
-            {product.size && (
-              <div>
-                <h3 className='text-sm font-medium text-[#2d2820] mb-2'>
-                  Size
-                </h3>
-                <span className='px-3 py-1 text-sm font-medium bg-[#f5f2ee] text-[#7d6b55] rounded-full capitalize'>
-                  {product.size}
+            {/* Product Info */}
+            <div className='space-y-3 p-4 bg-[#f5f2ee] rounded-lg'>
+              <div className='flex items-center space-x-2'>
+                <FiCalendar className='w-4 h-4 text-[#9a8470]' />
+                <span className='text-sm text-[#7d6b55]'>
+                  Added: {new Date(product.created_at).toLocaleDateString()}
                 </span>
               </div>
-            )}
-
-            {/* Occasions */}
-            {product.occasion && product.occasion.length > 0 && (
-              <div>
-                <h3 className='text-sm font-medium text-[#2d2820] mb-2'>
-                  Perfect For
-                </h3>
-                <div className='flex flex-wrap gap-2'>
-                  {product.occasion.map((occasion) => (
-                    <span
-                      key={occasion}
-                      className='px-3 py-1 text-xs font-medium bg-[#e8e2d9] text-[#7d6b55] rounded-full'
-                    >
-                      {occasion.replace('-', ' ')}
-                    </span>
-                  ))}
-                </div>
+              <div className='flex items-center space-x-2'>
+                <FiRefreshCw className='w-4 h-4 text-[#9a8470]' />
+                <span className='text-sm text-[#7d6b55]'>
+                  Updated: {new Date(product.updated_at).toLocaleDateString()}
+                </span>
               </div>
-            )}
-
-            {/* Customizable */}
-            {product.isCustomizable && (
-              <div className='flex items-center space-x-2 text-[#d4a574]'>
-                <FiCheck className='w-4 h-4' />
-                <span className='text-sm font-medium'>Customizable design</span>
-              </div>
-            )}
+            </div>
 
             {/* Quantity Selector */}
-            <div>
-              <h3 className='text-sm font-medium text-[#2d2820] mb-2'>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium text-[#2d2820]'>
                 Quantity
-              </h3>
+              </label>
               <div className='flex items-center space-x-3'>
                 <button
                   onClick={() =>
                     setSelectedQuantity(Math.max(1, selectedQuantity - 1))
                   }
-                  className='w-8 h-8 rounded-full border border-[#e8e2d9] hover:border-[#d4a574] flex items-center justify-center transition-colors'
-                  disabled={selectedQuantity <= 1}
+                  className='w-10 h-10 rounded-lg border border-[#e8e2d9] flex items-center justify-center hover:bg-[#f5f2ee] transition-colors'
                 >
-                  -
+                  <FiMinus className='w-4 h-4' />
                 </button>
-                <span className='w-12 text-center font-medium'>
+                <span className='w-16 text-center font-medium text-lg'>
                   {selectedQuantity}
                 </span>
                 <button
-                  onClick={() =>
-                    setSelectedQuantity(
-                      Math.min(product.stock, selectedQuantity + 1),
-                    )
-                  }
-                  className='w-8 h-8 rounded-full border border-[#e8e2d9] hover:border-[#d4a574] flex items-center justify-center transition-colors'
-                  disabled={selectedQuantity >= product.stock}
+                  onClick={() => setSelectedQuantity(selectedQuantity + 1)}
+                  className='w-10 h-10 rounded-lg border border-[#e8e2d9] flex items-center justify-center hover:bg-[#f5f2ee] transition-colors'
                 >
-                  +
+                  <FiPlus className='w-4 h-4' />
                 </button>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className='flex space-x-4'>
-              <Button
-                onClick={handleAddToCart}
-                disabled={product.stock === 0}
-                className='flex-1 flex items-center justify-center space-x-2'
-              >
-                <FiShoppingBag className='w-4 h-4' />
-                <span>Add to Cart</span>
+            {/* Action Buttons */}
+            <div className='space-y-3'>
+              <div className='flex space-x-4'>
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={!product.is_active}
+                  className='flex-1 flex items-center justify-center space-x-2'
+                >
+                  <FiShoppingBag className='w-4 h-4' />
+                  <span>
+                    {product.is_active ? 'Add to Cart' : 'Unavailable'}
+                  </span>
+                </Button>
+
+                <button
+                  onClick={handleToggleWishlist}
+                  className={`w-12 h-12 rounded-lg border flex items-center justify-center transition-colors ${
+                    isWishlisted
+                      ? 'border-red-300 bg-red-50 text-red-600'
+                      : 'border-[#e8e2d9] hover:bg-[#f5f2ee] text-[#7d6b55]'
+                  }`}
+                >
+                  <FiHeart
+                    className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`}
+                  />
+                </button>
+              </div>
+
+              <Button variant='outline' fullWidth>
+                Ask about customization
               </Button>
-
-              <button
-                onClick={handleToggleWishlist}
-                className={`p-3 rounded-lg border transition-colors ${
-                  isWishlisted
-                    ? 'border-[#d4a574] text-[#d4a574] bg-[#f5f2ee]'
-                    : 'border-[#e8e2d9] text-[#7d6b55] hover:border-[#d4a574] hover:text-[#d4a574]'
-                }`}
-              >
-                <FiHeart
-                  className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`}
-                />
-              </button>
             </div>
 
-            {/* Features */}
-            <div className='border-t border-[#e8e2d9] pt-6 space-y-3'>
-              <div className='flex items-center space-x-3 text-sm text-[#7d6b55]'>
-                <FiTruck className='w-4 h-4' />
-                <span>Free delivery on orders over €75</span>
+            {/* Trust Badges */}
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-[#e8e2d9]'>
+              <div className='flex items-center space-x-2'>
+                <FiShield className='w-5 h-5 text-[#8b9dc3]' />
+                <span className='text-sm text-[#7d6b55]'>
+                  Quality Guaranteed
+                </span>
               </div>
-              <div className='flex items-center space-x-3 text-sm text-[#7d6b55]'>
-                <FiShield className='w-4 h-4' />
-                <span>Handcrafted with premium materials</span>
+              <div className='flex items-center space-x-2'>
+                <FiTruck className='w-5 h-5 text-[#8b9dc3]' />
+                <span className='text-sm text-[#7d6b55]'>
+                  Free Delivery €75+
+                </span>
               </div>
-              <div className='flex items-center space-x-3 text-sm text-[#7d6b55]'>
-                <FiRefreshCw className='w-4 h-4' />
-                <span>30-day satisfaction guarantee</span>
+              <div className='flex items-center space-x-2'>
+                <FiHeart className='w-5 h-5 text-[#8b9dc3]' />
+                <span className='text-sm text-[#7d6b55]'>Handcrafted</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Related Products Section */}
-        <div className='mt-16'>
-          <h2 className='text-2xl font-bold text-[#2d2820] font-serif mb-8'>
-            You might also like
-          </h2>
-          <div className='text-center text-[#7d6b55]'>
-            <p>Related products coming soon...</p>
           </div>
         </div>
       </div>
