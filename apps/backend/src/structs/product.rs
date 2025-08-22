@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
+use crate::structs::enums::{Colors, ProductType, Size};
+
 #[derive(FromRow, Serialize, Deserialize, Debug, Clone)]
 pub struct Product {
     pub id: Uuid,
@@ -14,6 +16,9 @@ pub struct Product {
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub size: Size,
+    pub colors: Vec<Colors>,
+    pub product_type: ProductType,
     pub images: Option<Vec<ProductImage>>,
 }
 

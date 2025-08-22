@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getProductById } from '../../../data/product';
+import { getProductById } from '../../../data/products';
 import { Product } from '../../../types';
 import { Button } from '../../../components/Button';
 import {
@@ -14,11 +14,18 @@ import {
   FiShield,
   FiRefreshCw,
   FiCalendar,
-  FiTag,
   FiMinus,
   FiPlus,
 } from 'react-icons/fi';
+import {
+  translateColor,
+  translateSize,
+  getColorClass,
+  getProductTypeIcon,
+  getProductTypeDescription,
+} from '../../../lib/translations';
 import Image from 'next/image';
+import Link from 'next/link';
 import { NextPage } from 'next';
 
 const ProductComponent: React.FC = () => {
@@ -76,12 +83,14 @@ const ProductComponent: React.FC = () => {
       <div className='min-h-screen pt-24 pb-16'>
         <div className='container text-center'>
           <h1 className='text-2xl font-bold text-[#2d2820] mb-4'>
-            Product Not Found
+            Product niet gevonden
           </h1>
           <p className='text-[#7d6b55] mb-8'>
-            The product you&apos;re looking for doesn&apos;t exist.
+            Het product dat je zoekt bestaat niet.
           </p>
-          <Button onClick={() => router.push('/shop')}>Back to Shop</Button>
+          <Button onClick={() => router.push('/shop')}>
+            Terug naar winkel
+          </Button>
         </div>
       </div>
     );
@@ -96,7 +105,10 @@ const ProductComponent: React.FC = () => {
 
   const handleAddToCart = () => {
     // TODO: Implement cart functionality
-    console.log('Added to cart:', { product, quantity: selectedQuantity });
+    console.log('Added to cart:', {
+      product,
+      quantity: selectedQuantity,
+    });
   };
 
   const handleToggleWishlist = () => {
@@ -121,7 +133,7 @@ const ProductComponent: React.FC = () => {
           className='flex items-center space-x-2 text-[#7d6b55] hover:text-[#d4a574] transition-colors mb-8'
         >
           <FiArrowLeft className='w-4 h-4' />
-          <span>Back</span>
+          <span>Terug</span>
         </button>
 
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
@@ -179,18 +191,24 @@ const ProductComponent: React.FC = () => {
             {/* Header */}
             <div>
               <div className='flex items-center space-x-2 mb-3'>
-                <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#d4a574]/10 text-[#d4a574]'>
-                  <FiTag className='w-3 h-3 mr-1' />
-                  {product.sku}
+                <span
+                  className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    product.product_type === 'flower'
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-green-100 text-green-800'
+                  }`}
+                >
+                  {getProductTypeIcon(product.product_type)}{' '}
+                  {getProductTypeDescription(product.product_type)}
                 </span>
                 {product.is_active ? (
-                  <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800'>
+                  <span className='flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800'>
                     <FiCheck className='w-3 h-3 mr-1' />
-                    Available
+                    Beschikbaar
                   </span>
                 ) : (
                   <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'>
-                    Unavailable
+                    Niet beschikbaar
                   </span>
                 )}
               </div>
@@ -206,18 +224,61 @@ const ProductComponent: React.FC = () => {
               <p>{product.description}</p>
             </div>
 
+            {/* Product Variants Display */}
+            <div className='space-y-4 p-4 bg-[#f5f2ee] rounded-lg'>
+              <h3 className='text-sm font-medium text-[#2d2820]'>
+                Product Eigenschappen:
+              </h3>
+
+              {/* Colors Display */}
+              {product.colors && product.colors.length > 0 && (
+                <div className='space-y-2'>
+                  <h4 className='text-xs font-medium text-[#9a8470] uppercase tracking-wide'>
+                    Kleuren:
+                  </h4>
+                  <div className='flex flex-wrap gap-2'>
+                    {product.colors.map((color, index) => (
+                      <div key={index} className='flex items-center space-x-2'>
+                        <div
+                          className={`w-5 h-5 rounded-full border border-[#e8e2d9] ${getColorClass(color)}`}
+                          title={translateColor(color)}
+                        />
+                        <span className='text-sm text-[#7d6b55]'>
+                          {translateColor(color)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Size Display */}
+              {product.size && (
+                <div className='space-y-2'>
+                  <h4 className='text-xs font-medium text-[#9a8470] uppercase tracking-wide'>
+                    Maat:
+                  </h4>
+                  <span className='inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white text-[#7d6b55] border border-[#e8e2d9]'>
+                    {translateSize(product.size)}
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Product Info */}
             <div className='space-y-3 p-4 bg-[#f5f2ee] rounded-lg'>
               <div className='flex items-center space-x-2'>
                 <FiCalendar className='w-4 h-4 text-[#9a8470]' />
                 <span className='text-sm text-[#7d6b55]'>
-                  Added: {new Date(product.created_at).toLocaleDateString()}
+                  Toegevoegd:{' '}
+                  {new Date(product.created_at).toLocaleDateString('nl-NL')}
                 </span>
               </div>
               <div className='flex items-center space-x-2'>
                 <FiRefreshCw className='w-4 h-4 text-[#9a8470]' />
                 <span className='text-sm text-[#7d6b55]'>
-                  Updated: {new Date(product.updated_at).toLocaleDateString()}
+                  Bijgewerkt:{' '}
+                  {new Date(product.updated_at).toLocaleDateString('nl-NL')}
                 </span>
               </div>
             </div>
@@ -225,7 +286,9 @@ const ProductComponent: React.FC = () => {
             {/* Quantity Selector */}
             <div className='space-y-2'>
               <label className='text-sm font-medium text-[#2d2820]'>
-                Quantity
+                {product.product_type === 'flower'
+                  ? 'Aantal stuks:'
+                  : 'Aantal:'}
               </label>
               <div className='flex items-center space-x-3'>
                 <button
@@ -258,7 +321,11 @@ const ProductComponent: React.FC = () => {
                 >
                   <FiShoppingBag className='w-4 h-4' />
                   <span>
-                    {product.is_active ? 'Add to Cart' : 'Unavailable'}
+                    {!product.is_active
+                      ? 'Niet beschikbaar'
+                      : product.product_type === 'flower'
+                        ? 'Voeg toe aan boeket'
+                        : 'Voeg toe aan winkelwagen'}
                   </span>
                 </Button>
 
@@ -276,9 +343,11 @@ const ProductComponent: React.FC = () => {
                 </button>
               </div>
 
-              <Button variant='outline' fullWidth>
-                Ask about customization
-              </Button>
+              <Link href={`/contact?product=${product.id}`}>
+                <Button variant='outline' fullWidth>
+                  Vraag over dit product
+                </Button>
+              </Link>
             </div>
 
             {/* Trust Badges */}
@@ -286,18 +355,18 @@ const ProductComponent: React.FC = () => {
               <div className='flex items-center space-x-2'>
                 <FiShield className='w-5 h-5 text-[#8b9dc3]' />
                 <span className='text-sm text-[#7d6b55]'>
-                  Quality Guaranteed
+                  Kwaliteit gegarandeerd
                 </span>
               </div>
               <div className='flex items-center space-x-2'>
                 <FiTruck className='w-5 h-5 text-[#8b9dc3]' />
                 <span className='text-sm text-[#7d6b55]'>
-                  Free Delivery €75+
+                  Gratis bezorging vanaf €75
                 </span>
               </div>
               <div className='flex items-center space-x-2'>
                 <FiHeart className='w-5 h-5 text-[#8b9dc3]' />
-                <span className='text-sm text-[#7d6b55]'>Handcrafted</span>
+                <span className='text-sm text-[#7d6b55]'>Handgemaakt</span>
               </div>
             </div>
           </div>

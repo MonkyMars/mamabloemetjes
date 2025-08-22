@@ -46,8 +46,7 @@ const Navigation: React.FC = () => {
   const navigationLinks = [
     { href: '/', label: 'Home' },
     { href: '/shop', label: 'Shop' },
-    { href: '/collections', label: 'Collections' },
-    { href: '/about', label: 'About' },
+    { href: '/about', label: 'Over ons' },
     { href: '/contact', label: 'Contact' },
   ];
 
@@ -74,7 +73,7 @@ const Navigation: React.FC = () => {
             </div>
           </div>
           <div className='text-center'>
-            <span>Free delivery on orders over €75</span>
+            <span>Gratis bezorging over de €100</span>
           </div>
         </div>
       </div>

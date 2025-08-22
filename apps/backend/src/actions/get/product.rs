@@ -10,7 +10,7 @@ pub async fn get_all_products() -> Result<Vec<Product>, SqlxError> {
     let rows = sqlx::query(
         r#"
         SELECT
-            p.id, p.name, p.sku, p.price, p.description, p.created_at, p.updated_at,
+            p.id, p.name, p.sku, p.price, p.description, p.created_at, p.updated_at, p.colors, p.size, p.product_type,
             pi.product_id as image_product_id, pi.url, pi.alt_text, pi.is_primary
         FROM products p
         LEFT JOIN product_images pi ON p.id = pi.product_id
@@ -44,6 +44,9 @@ pub async fn get_all_products() -> Result<Vec<Product>, SqlxError> {
             description: row.get("description"),
             created_at: row.get("created_at"),
             updated_at: row.get("updated_at"),
+            colors: row.get("colors"),
+            size: row.get("size"),
+            product_type: row.get("product_type"),
             images: Some(Vec::new()),
         });
 
@@ -76,7 +79,7 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
     let rows = sqlx::query(
         r#"
         SELECT
-            p.id, p.name, p.sku, p.price, p.description, p.created_at, p.updated_at,
+            p.id, p.name, p.sku, p.price, p.description, p.created_at, p.updated_at, p.colors, p.size, p.product_type,
             pi.product_id as image_product_id, pi.url, pi.alt_text, pi.is_primary
         FROM products p
         LEFT JOIN product_images pi ON p.id = pi.product_id
@@ -99,6 +102,9 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
     let product_id = first_row.get("id");
     let name = first_row.get("name");
     let sku = first_row.get("sku");
+    let colors = first_row.get("colors");
+    let size = first_row.get("size");
+    let product_type = first_row.get("product_type");
     let price = first_row.get("price");
     let description = first_row.get("description");
     let created_at = first_row.get("created_at");
@@ -123,8 +129,11 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
         price,
         is_active: true,
         description,
+        product_type,
         created_at,
         updated_at,
+        colors,
+        size,
         images: if images.is_empty() {
             None
         } else {

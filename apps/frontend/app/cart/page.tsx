@@ -7,6 +7,12 @@ import { Button } from '../../components/Button';
 import { CartItem, OrderSummary } from '../../types';
 import { getCart, updateCartItem, removeFromCart } from '../../data/cart';
 import {
+  translateColor,
+  translateSize,
+  getProductTypeIcon,
+  getProductTypeDescription,
+} from '../../lib/translations';
+import {
   FiMinus,
   FiPlus,
   FiTrash2,
@@ -140,11 +146,10 @@ const CartPage: React.FC = () => {
             <div className='w-24 h-24 bg-[#f5f2ee] rounded-full flex items-center justify-center mx-auto mb-8'>
               <FiShoppingBag className='w-12 h-12 text-[#9a8470]' />
             </div>
-            <h1 className='heading-2 mb-4'>Your Cart is Empty</h1>
+            <h1 className='heading-2 mb-4'>Je winkelwagentje is nog leeg!</h1>
             <p className='text-lg text-[#7d6b55] mb-8 leading-relaxed'>
-              Looks like you haven&apos;t added any beautiful flowers to your
-              cart yet. Explore our collection and find the perfect arrangement
-              for your special moment.
+              Het lijkt erop dat je winkelwagen leeg is. Blader door onze
+              prachtige collectie bloemen en boeketten om iets moois te vinden!
             </p>
             <div className='flex flex-col sm:flex-row gap-4 justify-center'>
               <Link href='/shop'>
@@ -153,12 +158,12 @@ const CartPage: React.FC = () => {
                   size='lg'
                   rightIcon={<FiArrowRight className='w-5 h-5' />}
                 >
-                  Start Shopping
+                  Begin met Winkelen
                 </Button>
               </Link>
               <Link href='/'>
                 <Button variant='outline' size='lg'>
-                  Back to Home
+                  Terug naar Home
                 </Button>
               </Link>
             </div>
@@ -244,18 +249,43 @@ const CartPage: React.FC = () => {
 
                       {/* Product Details */}
                       <div className='mb-4 p-4 bg-[#f5f2ee] rounded-lg'>
-                        <div className='space-y-1 text-sm text-[#7d6b55]'>
-                          <p>
-                            Added:{' '}
-                            {new Date(
-                              item.product.created_at,
-                            ).toLocaleDateString()}
-                          </p>
+                        <div className='space-y-2 text-sm text-[#7d6b55]'>
+                          <div className='flex items-center space-x-2'>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                item.product.product_type === 'flower'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'bg-green-100 text-green-800'
+                              }`}
+                            >
+                              {getProductTypeIcon(item.product.product_type)}{' '}
+                              {getProductTypeDescription(
+                                item.product.product_type,
+                              )}
+                            </span>
+                          </div>
+                          {item.product.colors &&
+                            item.product.colors.length > 0 && (
+                              <p>
+                                Kleuren:{' '}
+                                {item.product.colors
+                                  .map(translateColor)
+                                  .join(', ')}
+                              </p>
+                            )}
+                          {item.product.size && (
+                            <p>
+                              Maat:{' '}
+                              <span className='font-medium'>
+                                {translateSize(item.product.size)}
+                              </span>
+                            </p>
+                          )}
                           <p>
                             Status:{' '}
                             {item.product.is_active
-                              ? 'Available'
-                              : 'Unavailable'}
+                              ? 'Beschikbaar'
+                              : 'Niet beschikbaar'}
                           </p>
                         </div>
                       </div>
@@ -305,7 +335,7 @@ const CartPage: React.FC = () => {
                           {/* Availability Status */}
                           {!item.product.is_active && (
                             <span className='text-xs text-red-600 font-medium'>
-                              Currently unavailable
+                              Momenteel niet beschikbaar
                             </span>
                           )}
                         </div>
@@ -342,7 +372,7 @@ const CartPage: React.FC = () => {
                     variant='outline'
                     leftIcon={<FiArrowLeft className='w-4 h-4' />}
                   >
-                    Continue Shopping
+                    Verder Winkelen
                   </Button>
                 </Link>
               </div>

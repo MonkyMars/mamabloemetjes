@@ -8,7 +8,13 @@ export const getProductById = async (uuid: string): Promise<Product> => {
   if (response.status !== 200) {
     throw new Error(`Failed to fetch product with ID ${uuid}`);
   }
-  return response.data.data;
+
+  const product: Product = {
+    ...response.data.data,
+    product_type: response.data.data.product_type.toLocaleLowerCase(),
+  };
+
+  return product;
 };
 
 export const getProducts = async (): Promise<Product[]> => {
@@ -16,7 +22,11 @@ export const getProducts = async (): Promise<Product[]> => {
   if (response.status !== 200) {
     throw new Error(`Failed to fetch products`);
   }
-  return response.data.data;
+
+  return response.data.data.map((product) => ({
+    ...product,
+    product_type: product.product_type.toLocaleLowerCase(),
+  }));
 };
 
 export const getFeaturedProducts = async (
@@ -103,6 +113,9 @@ const createMockProduct = (
   name: string,
   price: number,
   description: string,
+  productType: 'flower' | 'bouquet',
+  size?: string,
+  colors?: string[],
 ): Product => ({
   id,
   name,
@@ -120,57 +133,84 @@ const createMockProduct = (
       is_primary: true,
     },
   ],
+  size: size || null,
+  colors: colors || null,
+  product_type: productType,
 });
 
 // Temporary mock data - replace with actual API calls
 export const mockProducts: Product[] = [
   createMockProduct(
     'velvet-rose-bouquet-1',
-    'Velvet Rose Bouquet',
+    'Luxe Velvet Roos Boeket',
     89.99,
-    'Luxurious deep red roses',
+    'Luxueuze dieprode rozen handgemaakt van velvet',
+    'bouquet',
+    'large',
+    ['red', 'pink'],
+  ),
+  createMockProduct(
+    'single-red-rose-1',
+    'Rode Velvet Roos',
+    12.99,
+    'Enkele handgemaakte rode roos van premium velvet',
+    'flower',
+    'medium',
+    ['red'],
   ),
   createMockProduct(
     'spring-garden-mix-2',
-    'Spring Garden Mix',
+    'Lente Tuin Mix Boeket',
     65.0,
-    'Fresh seasonal spring flowers',
+    'Vers seizoensgebonden lentebloemen arrangement',
+    'bouquet',
+    'large',
+    ['pink', 'white', 'yellow'],
+  ),
+  createMockProduct(
+    'single-pink-tulip-1',
+    'Roze Velvet Tulp',
+    8.99,
+    'Enkele handgemaakte tulp in zacht roze velvet',
+    'flower',
+    'small',
+    ['pink'],
   ),
   createMockProduct(
     'elegant-lily-arrangement-3',
-    'Elegant Lily Arrangement',
+    'Elegante Lelie Arrangement',
     120.0,
-    'Sophisticated white lilies',
+    'Verfijnde witte lelies in stijlvol arrangement',
+    'bouquet',
+    'extralarge',
+    ['white'],
+  ),
+  createMockProduct(
+    'single-white-lily-1',
+    'Witte Velvet Lelie',
+    15.99,
+    'Enkele witte lelie van hoogwaardig velvet materiaal',
+    'flower',
+    'large',
+    ['white'],
   ),
   createMockProduct(
     'wildflower-meadow-4',
-    'Wildflower Meadow',
+    'Wilde Bloemen Weide Boeket',
     45.0,
-    'Rustic wildflower collection',
+    'Rustieke collectie wilde bloemen uit de weide',
+    'bouquet',
+    'medium',
+    ['purple', 'yellow', 'white'],
   ),
   createMockProduct(
-    'romantic-peonies-5',
-    'Romantic Peonies',
-    95.0,
-    'Soft pink peony bouquet',
-  ),
-  createMockProduct(
-    'sunflower-sunshine-6',
-    'Sunflower Sunshine',
-    55.0,
-    'Bright cheerful sunflowers',
-  ),
-  createMockProduct(
-    'orchid-elegance-7',
-    'Orchid Elegance',
-    150.0,
-    'Premium orchid arrangement',
-  ),
-  createMockProduct(
-    'tulip-festival-8',
-    'Tulip Festival',
-    40.0,
-    'Colorful tulip bouquet',
+    'single-sunflower-1',
+    'Gele Velvet Zonnebloem',
+    10.99,
+    'Vrolijke handgemaakte zonnebloem in helder geel',
+    'flower',
+    'large',
+    ['yellow'],
   ),
 ];
 

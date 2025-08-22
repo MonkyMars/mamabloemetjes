@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { searchProducts } from '../data/product';
+import { searchProducts } from '../data/products';
 
 interface UseSearchOptions {
   searchFields?: (keyof Product)[];

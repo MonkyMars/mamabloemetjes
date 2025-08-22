@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getProducts, searchProducts } from '../../data/product';
+import { getProducts, searchProducts } from '../../data/products';
 import { Product } from '../../types';
 import ProductCard from '../../components/ProductCard';
 import { Button } from '../../components/Button';
@@ -17,12 +17,19 @@ import {
   FiSliders,
 } from 'react-icons/fi';
 import { NextPage } from 'next';
+import {
+  translateColor,
+  translateSize,
+  type BackendColor,
+  type BackendSize,
+  type BackendProductType,
+} from '../../lib/translations';
 
 interface FilterState {
   priceRange: [number, number];
-  colors: string[];
-  sizes: string[];
-  occasions: string[];
+  colors: BackendColor[];
+  sizes: BackendSize[];
+  productType: 'all' | BackendProductType;
 }
 
 const ShopComponent: React.FC = () => {
@@ -47,7 +54,7 @@ const ShopComponent: React.FC = () => {
     priceRange: [0, 200],
     colors: [],
     sizes: [],
-    occasions: [],
+    productType: 'flower',
   });
 
   // Initialize products and handle URL search params
@@ -97,9 +104,18 @@ const ShopComponent: React.FC = () => {
   // Update filter options when products change
   const filterOptions = useMemo(() => {
     return {
-      colors: ['red', 'pink', 'white', 'yellow', 'purple', 'blue', 'mixed'],
-      sizes: ['small', 'medium', 'large', 'extra-large'],
-      occasions: ['wedding', 'anniversary', 'birthday', 'sympathy', 'everyday'],
+      colors: [
+        'red',
+        'blue',
+        'green',
+        'yellow',
+        'black',
+        'white',
+        'purple',
+        'orange',
+        'pink',
+      ] as BackendColor[],
+      sizes: ['small', 'medium', 'large', 'extralarge'] as BackendSize[],
     };
   }, []);
 
@@ -116,6 +132,40 @@ const ShopComponent: React.FC = () => {
           .toLowerCase()
           .includes(effectiveSearchQuery.toLowerCase()) &&
         !product.sku.toLowerCase().includes(effectiveSearchQuery.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // Product type filter
+      if (
+        filters.productType !== 'all' &&
+        product.product_type !== filters.productType
+      ) {
+        return false;
+      }
+
+      // Colors filter
+      if (
+        filters.colors.length > 0 &&
+        product.colors &&
+        !filters.colors.some((filterColor) =>
+          product.colors?.some(
+            (productColor) =>
+              productColor.toLowerCase() === filterColor.toLowerCase(),
+          ),
+        )
+      ) {
+        return false;
+      }
+
+      // Sizes filter
+      if (
+        filters.sizes.length > 0 &&
+        product.size &&
+        !filters.sizes.some(
+          (filterSize) =>
+            product.size?.toLowerCase() === filterSize.toLowerCase(),
+        )
       ) {
         return false;
       }
@@ -162,15 +212,26 @@ const ShopComponent: React.FC = () => {
   };
 
   const toggleArrayFilter = (
-    key: 'colors' | 'sizes' | 'occasions',
-    value: string,
+    key: 'colors' | 'sizes',
+    value: BackendColor | BackendSize,
   ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: prev[key].includes(value)
-        ? prev[key].filter((item) => item !== value)
-        : [...prev[key], value],
-    }));
+    if (key === 'colors') {
+      const colorValue = value as BackendColor;
+      setFilters((prev) => ({
+        ...prev,
+        colors: prev.colors.includes(colorValue)
+          ? prev.colors.filter((item) => item !== colorValue)
+          : [...prev.colors, colorValue],
+      }));
+    } else if (key === 'sizes') {
+      const sizeValue = value as BackendSize;
+      setFilters((prev) => ({
+        ...prev,
+        sizes: prev.sizes.includes(sizeValue)
+          ? prev.sizes.filter((item) => item !== sizeValue)
+          : [...prev.sizes, sizeValue],
+      }));
+    }
   };
 
   const clearFilters = () => {
@@ -178,7 +239,7 @@ const ShopComponent: React.FC = () => {
       priceRange: [0, 200],
       colors: [],
       sizes: [],
-      occasions: [],
+      productType: 'all',
     });
     setLocalSearchQuery('');
     clearSearch();
@@ -197,16 +258,12 @@ const ShopComponent: React.FC = () => {
     }
   };
 
-  const clearColorFilter = (color: string) => {
+  const clearColorFilter = (color: BackendColor) => {
     toggleArrayFilter('colors', color);
   };
 
-  const clearSizeFilter = (size: string) => {
+  const clearSizeFilter = (size: BackendSize) => {
     toggleArrayFilter('sizes', size);
-  };
-
-  const clearOccasionFilter = (occasion: string) => {
-    toggleArrayFilter('occasions', occasion);
   };
 
   const formatPrice = (price: number) => {
@@ -235,10 +292,10 @@ const ShopComponent: React.FC = () => {
       <div className='container'>
         {/* Page Header */}
         <div className='mb-12'>
-          <h1 className='heading-1 mb-4'>Our Collection</h1>
+          <h1 className='heading-1 mb-4'>Onze Collectie</h1>
           <p className='text-lg text-[#7d6b55] max-w-2xl'>
-            Discover our beautiful handcrafted velvet flowers, perfect for any
-            occasion. Each piece is made with love and attention to detail.
+            Ontdek onze prachtige handgemaakte velvet bloemen, perfect voor elke
+            gelegenheid. Elk stuk is gemaakt met liefde en aandacht voor detail.
           </p>
         </div>
 
@@ -250,7 +307,7 @@ const ShopComponent: React.FC = () => {
               <FiSearch className='absolute left-4 top-1/2 transform -translate-y-1/2 text-[#9a8470] w-5 h-5' />
               <input
                 type='text'
-                placeholder='Search flowers...'
+                placeholder='Zoek bloemen...'
                 value={localSearchQuery}
                 onChange={(e) => setLocalSearchQuery(e.target.value)}
                 className='input-field pl-12'
@@ -265,10 +322,10 @@ const ShopComponent: React.FC = () => {
                   onChange={(e) => setSortBy(e.target.value)}
                   className='input-field pr-12 appearance-none cursor-pointer'
                 >
-                  <option value='name'>Sort by Name</option>
-                  <option value='price-low'>Price: Low to High</option>
-                  <option value='price-high'>Price: High to Low</option>
-                  <option value='newest'>Newest First</option>
+                  <option value='name'>Sorteer op naam</option>
+                  <option value='price-low'>Prijs: Laag naar hoog</option>
+                  <option value='price-high'>Prijs: Hoog naar laag</option>
+                  <option value='newest'>Nieuwste eerst</option>
                 </select>
                 <FiChevronDown className='absolute right-4 top-1/2 transform -translate-y-1/2 text-[#9a8470] w-5 h-5 pointer-events-none' />
               </div>
@@ -304,25 +361,39 @@ const ShopComponent: React.FC = () => {
           {/* Active Filters */}
           {(filters.colors.length > 0 ||
             filters.sizes.length > 0 ||
-            filters.occasions.length > 0 ||
+            filters.productType !== 'all' ||
             effectiveSearchQuery) && (
             <div className='mt-4 flex flex-wrap items-center gap-2'>
               <span className='text-sm text-[#7d6b55] font-medium'>
-                Active filters:
+                Actieve filters:
               </span>
 
               {effectiveSearchQuery && (
                 <span className='badge bg-[#d4a574] text-white'>
-                  Search: {effectiveSearchQuery}
+                  Zoeken: {effectiveSearchQuery}
                   <button onClick={clearSearchFilter} className='ml-2'>
                     <FiX className='w-3 h-3' />
                   </button>
                 </span>
               )}
 
+              {filters.productType !== 'all' && (
+                <span className='badge bg-[#8b9dc3] text-white'>
+                  {filters.productType === 'flower'
+                    ? '🌸 Losse Bloemen'
+                    : '💐 Boeketten'}
+                  <button
+                    onClick={() => handleFilterChange('productType', 'all')}
+                    className='ml-2'
+                  >
+                    <FiX className='w-3 h-3' />
+                  </button>
+                </span>
+              )}
+
               {filters.colors.map((color) => (
-                <span key={color} className='badge bg-[#ddb7ab] text-white'>
-                  {color}
+                <span key={color} className='badge bg-[#c77a3a] text-white'>
+                  {translateColor(color)}
                   <button
                     onClick={() => clearColorFilter(color)}
                     className='ml-2'
@@ -333,11 +404,8 @@ const ShopComponent: React.FC = () => {
               ))}
 
               {filters.sizes.map((size) => (
-                <span
-                  key={size}
-                  className='badge bg-[#a8c8a0] text-white capitalize'
-                >
-                  {size}
+                <span key={size} className='badge bg-[#7fb069] text-white'>
+                  {translateSize(size)}
                   <button
                     onClick={() => clearSizeFilter(size)}
                     className='ml-2'
@@ -347,23 +415,11 @@ const ShopComponent: React.FC = () => {
                 </span>
               ))}
 
-              {filters.occasions.map((occasion) => (
-                <span key={occasion} className='badge bg-[#b8a8c8] text-white'>
-                  {occasion.replace('-', ' ')}
-                  <button
-                    onClick={() => clearOccasionFilter(occasion)}
-                    className='ml-2'
-                  >
-                    <FiX className='w-3 h-3' />
-                  </button>
-                </span>
-              ))}
-
               <button
                 onClick={clearFilters}
-                className='text-sm text-[#d4a574] hover:text-[#b8956a] font-medium ml-2'
+                className='text-sm text-[#d4a574] hover:text-[#b8956a] font-medium'
               >
-                Clear all
+                Alles wissen
               </button>
             </div>
           )}
@@ -389,10 +445,58 @@ const ShopComponent: React.FC = () => {
               </div>
 
               <div className='space-y-6'>
+                {/* Product Type Filter */}
+                <div>
+                  <h4 className='font-medium text-[#2d2820] mb-3'>
+                    Product Type
+                  </h4>
+                  <div className='space-y-2'>
+                    <label className='flex items-center cursor-pointer'>
+                      <input
+                        type='radio'
+                        name='productType'
+                        value='all'
+                        checked={filters.productType === 'all'}
+                        onChange={(e) =>
+                          handleFilterChange('productType', e.target.value)
+                        }
+                        className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
+                      />
+                      <span className='text-[#7d6b55]'>Alle producten</span>
+                    </label>
+                    <label className='flex items-center cursor-pointer'>
+                      <input
+                        type='radio'
+                        name='productType'
+                        value='flower'
+                        checked={filters.productType === 'flower'}
+                        onChange={(e) =>
+                          handleFilterChange('productType', e.target.value)
+                        }
+                        className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
+                      />
+                      <span className='text-[#7d6b55]'>🌸 Losse bloemen</span>
+                    </label>
+                    <label className='flex items-center cursor-pointer'>
+                      <input
+                        type='radio'
+                        name='productType'
+                        value='bouquet'
+                        checked={filters.productType === 'bouquet'}
+                        onChange={(e) =>
+                          handleFilterChange('productType', e.target.value)
+                        }
+                        className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
+                      />
+                      <span className='text-[#7d6b55]'>💐 Boeketten</span>
+                    </label>
+                  </div>
+                </div>
+
                 {/* Price Range */}
                 <div>
                   <h4 className='font-medium text-[#2d2820] mb-3'>
-                    Price Range
+                    Prijsbereik
                   </h4>
                   <div className='space-y-3'>
                     <div className='flex items-center justify-between text-sm text-[#7d6b55]'>
@@ -418,7 +522,7 @@ const ShopComponent: React.FC = () => {
                 {/* Colors */}
                 {filterOptions.colors.length > 0 && (
                   <div>
-                    <h4 className='font-medium text-[#2d2820] mb-3'>Colors</h4>
+                    <h4 className='font-medium text-[#2d2820] mb-3'>Kleuren</h4>
                     <div className='space-y-2'>
                       {filterOptions.colors.map((color) => (
                         <label
@@ -431,8 +535,8 @@ const ShopComponent: React.FC = () => {
                             onChange={() => toggleArrayFilter('colors', color)}
                             className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
                           />
-                          <span className='text-[#7d6b55] capitalize'>
-                            {color.replace('-', ' ')}
+                          <span className='text-[#7d6b55]'>
+                            {translateColor(color)}
                           </span>
                         </label>
                       ))}
@@ -443,7 +547,7 @@ const ShopComponent: React.FC = () => {
                 {/* Sizes */}
                 {filterOptions.sizes.length > 0 && (
                   <div>
-                    <h4 className='font-medium text-[#2d2820] mb-3'>Size</h4>
+                    <h4 className='font-medium text-[#2d2820] mb-3'>Maat</h4>
                     <div className='space-y-2'>
                       {filterOptions.sizes.map((size) => (
                         <label
@@ -452,43 +556,12 @@ const ShopComponent: React.FC = () => {
                         >
                           <input
                             type='checkbox'
-                            checked={filters.sizes.includes(size as string)}
-                            onChange={() =>
-                              toggleArrayFilter('sizes', size as string)
-                            }
+                            checked={filters.sizes.includes(size)}
+                            onChange={() => toggleArrayFilter('sizes', size)}
                             className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
                           />
-                          <span className='text-[#7d6b55] capitalize'>
-                            {size}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Occasions */}
-                {filterOptions.occasions.length > 0 && (
-                  <div>
-                    <h4 className='font-medium text-[#2d2820] mb-3'>
-                      Occasions
-                    </h4>
-                    <div className='space-y-2 max-h-40 overflow-y-auto'>
-                      {filterOptions.occasions.map((occasion) => (
-                        <label
-                          key={occasion}
-                          className='flex items-center cursor-pointer'
-                        >
-                          <input
-                            type='checkbox'
-                            checked={filters.occasions.includes(occasion)}
-                            onChange={() =>
-                              toggleArrayFilter('occasions', occasion)
-                            }
-                            className='mr-3 text-[#d4a574] focus:ring-[#d4a574]'
-                          />
-                          <span className='text-[#7d6b55] capitalize'>
-                            {occasion.replace('-', ' ')}
+                          <span className='text-[#7d6b55]'>
+                            {translateSize(size)}
                           </span>
                         </label>
                       ))}
@@ -521,15 +594,15 @@ const ShopComponent: React.FC = () => {
                   <ProductCard
                     key={product.id}
                     product={product}
+                    viewMode={viewMode}
                     onAddToCart={(product) => {
-                      console.log('Added to cart:', product.name);
+                      console.log('Toegevoegd aan winkelwagen:', product.name);
                       // TODO: Implement cart functionality
                     }}
                     onToggleWishlist={(product) => {
-                      console.log('Toggled wishlist:', product.name);
+                      console.log('Verlanglijst gewijzigd:', product.name);
                       // TODO: Implement wishlist functionality
                     }}
-                    className={viewMode === 'list' ? 'flex-row' : ''}
                   />
                 ))}
               </div>

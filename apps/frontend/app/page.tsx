@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '../components/Button';
 import ProductCard from '../components/ProductCard';
-import { getFeaturedProducts } from '../data/product';
+import { getFeaturedProducts } from '../data/products';
 import { Product } from '../types';
 import {
   FiArrowRight,
@@ -42,25 +42,27 @@ const HomePage: React.FC = () => {
   const features = [
     {
       icon: <FiHeart className='w-6 h-6' />,
-      title: 'Handcrafted with Love',
+      title: 'Handgemaakt met liefde',
       description:
-        'Each flower is carefully made by hand with premium velvet materials',
+        'Elke bloem wordt zorgvuldig met de hand gemaakt van premium velvet materialen',
     },
     {
       icon: <FiCheckCircle className='w-6 h-6' />,
-      title: 'Lasting Beauty',
+      title: 'Blijvende schoonheid',
       description:
-        'Our velvet flowers maintain their beauty for years without wilting',
+        'Onze velvet bloemen behouden hun schoonheid jarenlang zonder te verwelken',
     },
     {
       icon: <FiGift className='w-6 h-6' />,
-      title: 'Custom Designs',
-      description: 'Personalize your arrangements for any special occasion',
+      title: 'Eigen ontwerpen',
+      description:
+        'Personaliseer je arrangementen voor elke speciale gelegenheid',
     },
     {
       icon: <FiTruck className='w-6 h-6' />,
-      title: 'Free Delivery',
-      description: 'Free delivery on orders over €75 within Amsterdam',
+      title: 'Gratis bezorging',
+      description:
+        'Gratis bezorging bij bestellingen vanaf €75 binnen Amsterdam',
     },
   ];
 
@@ -84,15 +86,15 @@ const HomePage: React.FC = () => {
         <div className='container relative z-10 text-center'>
           <div className='max-w-4xl mx-auto'>
             <h1 className='heading-1 text-white mb-6 animate-fade-in'>
-              Handcrafted Velvet Flowers
+              Handgemaakte Velvet Bloemen
               <span className='block text-[#e8c4a0] mt-2'>
-                That Last Forever
+                Die Voor Eeuwig Meegaan
               </span>
             </h1>
             <p className='text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed'>
-              Discover our collection of beautiful, custom-made velvet flower
-              arrangements. Perfect for weddings, home décor, and special
-              occasions.
+              Ontdek onze collectie prachtige, op maat gemaakte velvet bloemen
+              arrangementen. Perfect voor bruiloften, woondecoratie, en speciale
+              gelegenheden.
             </p>
             <div className='flex flex-col sm:flex-row gap-4 justify-center items-center'>
               <Link href='/shop'>
@@ -102,7 +104,7 @@ const HomePage: React.FC = () => {
                   rightIcon={<FiArrowRight className='w-5 h-5' />}
                   className='min-w-[200px]'
                 >
-                  Shop Collection
+                  Bekijk Collectie
                 </Button>
               </Link>
               <Link href='/custom'>
@@ -111,7 +113,7 @@ const HomePage: React.FC = () => {
                   size='lg'
                   className='min-w-[200px] border-white text-white hover:bg-white hover:text-[#2d2820]'
                 >
-                  Custom Order
+                  Op Maat Bestellen
                 </Button>
               </Link>
             </div>
@@ -130,10 +132,12 @@ const HomePage: React.FC = () => {
       <section className='section bg-[#f5f2ee]'>
         <div className='container'>
           <div className='text-center mb-16'>
-            <h2 className='heading-2 mb-4'>Why Choose Mama Bloemetjes?</h2>
+            <h2 className='heading-2 mb-4'>
+              Waarom kiezen voor Mama Bloemetjes?
+            </h2>
             <p className='text-lg text-[#7d6b55] max-w-2xl mx-auto'>
-              We create lasting memories with flowers that stay beautiful
-              forever
+              Wij creëren blijvende herinneringen met bloemen die voor altijd
+              mooi blijven
             </p>
           </div>
 
@@ -160,9 +164,9 @@ const HomePage: React.FC = () => {
         <div className='container'>
           <div className='flex items-center justify-between mb-12'>
             <div>
-              <h2 className='heading-2 mb-4'>Featured Collection</h2>
+              <h2 className='heading-2 mb-4'>Uitgelichte Collectie</h2>
               <p className='text-lg text-[#7d6b55]'>
-                Discover our most popular handcrafted arrangements
+                Ontdek onze meest populaire handgemaakte arrangementen
               </p>
             </div>
             <Link href='/shop'>
@@ -170,7 +174,7 @@ const HomePage: React.FC = () => {
                 variant='outline'
                 rightIcon={<FiArrowRight className='w-4 h-4' />}
               >
-                View All
+                Bekijk Alles
               </Button>
             </Link>
           </div>
@@ -197,11 +201,11 @@ const HomePage: React.FC = () => {
                   key={product.id}
                   product={product}
                   onAddToCart={(product) => {
-                    console.log('Added to cart:', product.name);
+                    console.log('Toegevoegd aan winkelwagen:', product.name);
                     // TODO: Implement cart functionality
                   }}
                   onToggleWishlist={(product) => {
-                    console.log('Toggled wishlist:', product.name);
+                    console.log('Verlanglijst gewijzigd:', product.name);
                     // TODO: Implement wishlist functionality
                   }}
                 />
@@ -209,7 +213,7 @@ const HomePage: React.FC = () => {
             ) : (
               <div className='col-span-full text-center py-12'>
                 <p className='text-[#7d6b55] text-lg'>
-                  No featured products available at the moment.
+                  Op dit moment zijn er geen uitgelichte producten beschikbaar.
                 </p>
               </div>
             )}
@@ -222,12 +226,12 @@ const HomePage: React.FC = () => {
         <div className='container text-center'>
           <div className='max-w-3xl mx-auto'>
             <h2 className='text-4xl md:text-5xl font-serif font-bold mb-6'>
-              Ready to Create Something Beautiful?
+              Klaar om iets Moois te Creëren?
             </h2>
             <p className='text-xl mb-8 text-white/90 leading-relaxed'>
-              Let us help you create the perfect velvet flower arrangement for
-              your special moment. Whether it&qout;s a wedding, anniversary, or
-              just because – we&qout;re here to make it memorable.
+              Laat ons je helpen het perfecte velvet bloemenarrangement te maken
+              voor jouw speciale moment. Of het nu een bruiloft, jubileum, of
+              gewoon omdat het kan – wij zijn er om het onvergetelijk te maken.
             </p>
             <div className='flex flex-col sm:flex-row gap-4 justify-center'>
               <Link href='/contact'>
@@ -236,7 +240,7 @@ const HomePage: React.FC = () => {
                   size='lg'
                   className='min-w-[200px] bg-white text-[#d4a574] hover:bg-white/90'
                 >
-                  Get in Touch
+                  Neem Contact Op
                 </Button>
               </Link>
               <Link href='/shop'>
@@ -246,7 +250,7 @@ const HomePage: React.FC = () => {
                   className='min-w-[200px] border-white text-white hover:bg-white hover:text-[#d4a574]'
                   rightIcon={<FiShoppingBag className='w-5 h-5' />}
                 >
-                  Start Shopping
+                  Begin met Winkelen
                 </Button>
               </Link>
             </div>
@@ -256,15 +260,15 @@ const HomePage: React.FC = () => {
               <div className='flex flex-wrap justify-center items-center gap-8 text-white/80'>
                 <div className='flex items-center space-x-2'>
                   <FiAward className='w-5 h-5' />
-                  <span className='text-sm'>Handcrafted Quality</span>
+                  <span className='text-sm'>Handgemaakte Kwaliteit</span>
                 </div>
                 <div className='flex items-center space-x-2'>
                   <FiTruck className='w-5 h-5' />
-                  <span className='text-sm'>Free Delivery €75+</span>
+                  <span className='text-sm'>Gratis Bezorging €75+</span>
                 </div>
                 <div className='flex items-center space-x-2'>
                   <FiCheckCircle className='w-5 h-5' />
-                  <span className='text-sm'>Satisfaction Guaranteed</span>
+                  <span className='text-sm'>Tevredenheid Gegarandeerd</span>
                 </div>
               </div>
             </div>

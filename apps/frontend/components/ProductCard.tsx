@@ -12,6 +12,13 @@ import {
   FiAlertCircle,
   FiCheck,
 } from 'react-icons/fi';
+import {
+  translateColor,
+  translateSize,
+  getColorClass,
+  getProductTypeIcon,
+  getProductTypeDescription,
+} from '../lib/translations';
 
 interface ProductCardProps {
   product: Product;
@@ -19,6 +26,7 @@ interface ProductCardProps {
   onToggleWishlist?: (product: Product) => void;
   isInWishlist?: boolean;
   className?: string;
+  viewMode?: 'grid' | 'list';
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -27,27 +35,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onToggleWishlist,
   isInWishlist = false,
   className = '',
+  viewMode = 'grid',
 }) => {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('nl-NL', {
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('nl-NL', {
       style: 'currency',
       currency: 'EUR',
     }).format(price);
-  };
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!product.is_active) return;
 
     setIsLoading(true);
     try {
       onAddToCart?.(product);
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500));
     } finally {
       setIsLoading(false);
@@ -61,6 +67,89 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const isOutOfStock = !product.is_active;
+
+  if (viewMode === 'list') {
+    return (
+      <div className={`card card-hover group relative flex ${className}`}>
+        <Link href={`/shop/${product.id}`} className='flex w-full'>
+          {/* Product Image */}
+          <div className='relative w-30 h-full flex-shrink-0 overflow-hidden rounded-l-2xl bg-[#f5f2ee]'>
+            {!imageError && product.images?.length ? (
+              <Image
+                src={product.images[0].url}
+                alt={product.images[0].alt_text || product.name}
+                fill
+                sizes='112px'
+                className='object-cover transition-transform duration-500 group-hover:scale-105'
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-[#f5f2ee] to-[#e8e2d9]'>
+                <span className='text-2xl'>🌸</span>
+              </div>
+            )}
+          </div>
+
+          {/* Product Info */}
+          <div className='flex-1 p-4 flex flex-col justify-between min-h-[112px]'>
+            <div>
+              <h3 className='font-serif font-semibold text-lg text-[#2d2820] line-clamp-2 group-hover:text-[#d4a574] transition-colors duration-300'>
+                {product.name}
+              </h3>
+              <p className='text-[#7d6b55] text-sm leading-relaxed line-clamp-2 mt-1'>
+                {product.description}
+              </p>
+            </div>
+
+            <div className='mt-3'>
+              <div className='text-lg font-medium'>
+                {formatPrice(product.price)}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className='flex flex-col justify-center p-4 min-h-[112px]'>
+            <Button
+              variant='primary'
+              size='md'
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              loading={isLoading}
+              leftIcon={
+                !isLoading ? <FiShoppingBag className='w-4 h-4' /> : undefined
+              }
+              className='min-h-[40px] px-4 mb-2'
+            >
+              {isOutOfStock ? 'N/A' : 'Toevoegen'}
+            </Button>
+            <div className='flex items-center justify-center gap-1 text-sm'>
+              {isOutOfStock ? (
+                <span className='text-red-600 font-medium'>
+                  Niet beschikbaar
+                </span>
+              ) : (
+                <>
+                  <FiCheck className='w-4 h-4 text-green-600' />
+                  <span>Beschikbaar</span>
+                </>
+              )}
+            </div>
+          </div>
+        </Link>
+
+        {/* Stock Badge */}
+        {isOutOfStock && (
+          <div className='absolute top-3 left-3 z-10'>
+            <span className='bg-red-600 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1'>
+              <FiAlertCircle className='w-3 h-3' />
+              N/A
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`card card-hover group relative ${className}`}>
@@ -80,9 +169,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Stock Badge */}
       {isOutOfStock && (
         <div className='absolute top-4 left-4 z-10'>
-          <span className='bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1'>
+          <span className='bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1'>
             <FiAlertCircle className='w-4 h-4' />
-            <span>Unavailable</span>
+            Niet beschikbaar
           </span>
         </div>
       )}
@@ -90,7 +179,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <Link href={`/shop/${product.id}`} className='block'>
         {/* Product Image */}
         <div className='relative aspect-square overflow-hidden rounded-t-2xl bg-[#f5f2ee]'>
-          {!imageError && product.images && product.images.length > 0 ? (
+          {!imageError && product.images?.length ? (
             <Image
               src={product.images[0].url}
               alt={product.images[0].alt_text || product.name}
@@ -121,40 +210,71 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Product Info */}
-        <div className='p-6'>
-          {/* SKU Badge */}
-          <div className='mb-3'>
-            <span className='badge badge-category'>{product.sku}</span>
-          </div>
-
-          {/* Product Name */}
-          <h3 className='font-serif font-semibold text-lg text-[#2d2820] mb-2 group-hover:text-[#d4a574] transition-colors duration-300 line-clamp-2'>
+        <div className='p-6 flex flex-col gap-2'>
+          <h3 className='font-serif font-semibold text-xl text-[#2d2820] line-clamp-2 group-hover:text-[#d4a574] transition-colors duration-300'>
             {product.name}
           </h3>
 
-          {/* Description */}
-          <p className='text-[#7d6b55] text-sm mb-4 line-clamp-2 leading-relaxed'>
+          <p className='text-[#7d6b55] text-sm leading-relaxed line-clamp-2'>
             {product.description}
           </p>
 
-          {/* Created Date */}
-          <div className='mb-4'>
-            <span className='text-xs text-[#9a8470] font-medium'>
-              Added: {new Date(product.created_at).toLocaleDateString()}
+          {/* Product Type Badge */}
+          <div>
+            <span
+              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                product.product_type === 'flower'
+                  ? 'bg-purple-100 text-purple-800'
+                  : 'bg-green-100 text-green-800'
+              }`}
+            >
+              {getProductTypeIcon(product.product_type)}{' '}
+              {getProductTypeDescription(product.product_type)}
             </span>
           </div>
 
+          {/* Colors */}
+          {product.colors?.length && (
+            <div className='flex items-center gap-2 text-xs text-[#9a8470]'>
+              <span>Kleuren:</span>
+              <div className='flex gap-1'>
+                {product.colors.slice(0, 4).map((color, index) => (
+                  <div
+                    key={index}
+                    className={`w-4 h-4 rounded-full border border-[#e8e2d9] ${getColorClass(color)}`}
+                    title={translateColor(color)}
+                  />
+                ))}
+                {product.colors.length > 4 && (
+                  <span className='ml-1'>+{product.colors.length - 4}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Size */}
+          {product.size && (
+            <div className='text-xs text-[#9a8470]'>
+              Maat:{' '}
+              <span className='text-[#7d6b55]'>
+                {translateSize(product.size)}
+              </span>
+            </div>
+          )}
+
           {/* Price and Status */}
-          <div className='flex items-center justify-between mb-4'>
-            <div className='price'>{formatPrice(product.price)}</div>
-            <div className='text-sm text-[#7d6b55]'>
+          <div className='flex items-center justify-between mt-2 text-sm'>
+            <div className='font-medium'>{formatPrice(product.price)}</div>
+            <div className='flex items-center gap-1'>
               {isOutOfStock ? (
-                <span className='text-red-600 font-medium'>Unavailable</span>
-              ) : (
-                <span className='flex items-center space-x-1'>
-                  <FiCheck className='w-4 h-4 text-green-600' />
-                  <span>Available</span>
+                <span className='text-red-600 font-medium'>
+                  Niet beschikbaar
                 </span>
+              ) : (
+                <>
+                  <FiCheck className='w-4 h-4 text-green-600' />
+                  <span>Beschikbaar</span>
+                </>
               )}
             </div>
           </div>
@@ -162,35 +282,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </Link>
 
       {/* Action Buttons */}
-      <div className='px-6'>
-        <div className='flex space-x-3'>
+      <div className='px-6 pb-6 mt-2'>
+        <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
           <Button
             variant='primary'
             size='md'
-            fullWidth
             onClick={handleAddToCart}
             disabled={isOutOfStock}
             loading={isLoading}
             leftIcon={
               !isLoading ? <FiShoppingBag className='w-4 h-4' /> : undefined
             }
-            className='flex-1'
+            className='flex-1 min-h-[44px]'
           >
-            {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
+            {isOutOfStock ? 'Niet beschikbaar' : 'Winkelwagen'}
           </Button>
-
-          <Link href={`/shop/${product.id}?customize=true`}>
-            <Button variant='outline' size='md' className='whitespace-nowrap'>
-              Customize
-            </Button>
-          </Link>
         </div>
 
         {/* Ask About Product */}
         <div className='mt-3'>
           <Link href={`/contact?product=${product.id}`}>
             <button className='w-full text-sm text-[#8b9dc3] hover:text-[#7a8bb0] transition-colors duration-300 font-medium'>
-              Ask about this bouquet
+              {product.product_type === 'flower'
+                ? 'Vraag over deze bloem'
+                : 'Vraag over dit boeket'}
             </button>
           </Link>
         </div>
