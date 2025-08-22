@@ -19,7 +19,7 @@ pub async fn get_inventory_by_product(
             };
             AppResponse::Success(Some(debug_info))
         }
-        Ok(None) => AppResponse::Success(None),
+        Ok(_) => AppResponse::Success(None),
         Err(err) => AppResponse::Error(err),
     }
 }
