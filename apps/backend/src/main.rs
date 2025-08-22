@@ -61,8 +61,7 @@ async fn main() {
 }
 
 fn create_router() -> Router {
-    // routes::setup_routes(Router::new()).layer(axum::middleware::from_fn(
-    //     crate::middleware::request_logger_middleware,
-    // ))
-    Router::new()
+    routes::setup_routes(Router::new()).layer(axum::middleware::from_fn(
+        crate::middleware::request_logger_middleware,
+    ))
 }

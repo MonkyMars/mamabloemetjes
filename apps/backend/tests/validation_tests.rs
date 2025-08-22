@@ -1,5 +1,5 @@
-use backend_test::structs::{Address, IncomingOrder, OrderContent, ProductEntry};
-use backend_test::validate::*;
+use mamabloemetjes_backend::structs::{Address, IncomingOrder, OrderContent, ProductEntry};
+use mamabloemetjes_backend::validate::*;
 use rust_decimal::Decimal;
 use uuid::Uuid;
 use validator::Validate;
