@@ -248,11 +248,6 @@ const ContactModal: React.FC<ContactModalProps> = ({
                         <span className='font-serif font-semibold text-[#d4a574]'>
                           €{product.price.toFixed(2)}
                         </span>
-                        {product.isCustomizable && (
-                          <span className='badge bg-[#8b9dc3]/10 text-[#8b9dc3] text-xs'>
-                            ✨ Customizable
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
