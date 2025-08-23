@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '../types';
 import { Button } from './Button';
 import { useCart, useGuestCart } from '../hooks/useCart';
 import { useAuth } from '../context/AuthContext';
+import { usePrefetch } from '../hooks/usePrefetch';
 import {
   FiShoppingBag,
   FiEye,
@@ -36,45 +37,75 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { isAuthenticated } = useAuth();
   const authenticatedCart = useCart();
   const guestCart = useGuestCart();
+  const { handleMouseEnter } = usePrefetch({
+    prefetchDelay: 200,
+    prefetchOnHover: true,
+  });
 
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat('nl-NL', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(price);
+  const formatPrice = useCallback(
+    (price: number) =>
+      new Intl.NumberFormat('nl-NL', {
+        style: 'currency',
+        currency: 'EUR',
+      }).format(price),
+    [],
+  );
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!product.is_active || product.stock <= 0) return;
+  const handleAddToCart = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!product.is_active || product.stock <= 0) return;
 
-    setIsLoading(true);
-    try {
-      if (isAuthenticated) {
-        await authenticatedCart.addItem(product.id, 1);
-      } else {
-        guestCart.addItem(product.id, 1);
+      setIsLoading(true);
+      try {
+        if (isAuthenticated) {
+          await authenticatedCart.addItem(product.id, 1);
+        } else {
+          guestCart.addItem(product.id, 1);
+        }
+
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
+      } catch (error) {
+        console.error('Failed to add to cart:', error);
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [
+      product.is_active,
+      product.stock,
+      product.id,
+      isAuthenticated,
+      authenticatedCart,
+      guestCart,
+    ],
+  );
 
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleImageError = useCallback(() => {
+    setImageError(true);
+  }, []);
+
+  const handleLinkHover = useCallback(() => {
+    const cleanup = handleMouseEnter(`/shop/${product.id}`, product.id);
+    return cleanup;
+  }, [handleMouseEnter, product.id]);
 
   const isOutOfStock = !product.is_active || product.stock <= 0;
 
   if (viewMode === 'list') {
     return (
       <div className={`card card-hover group relative flex ${className}`}>
-        <Link href={`/shop/${product.id}`} className='flex w-full'>
+        <Link
+          href={`/shop/${product.id}`}
+          className='flex w-full'
+          onMouseEnter={handleLinkHover}
+        >
           {/* Product Image */}
           <div className='relative w-30 h-full flex-shrink-0 overflow-hidden rounded-l-2xl bg-[#f5f2ee]'>
             {!imageError && product.images?.length ? (
@@ -84,7 +115,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 fill
                 sizes='112px'
                 className='object-cover transition-transform duration-500 group-hover:scale-105'
-                onError={() => setImageError(true)}
+                onError={handleImageError}
+                priority={false}
+                quality={85}
+                placeholder='blur'
+                blurDataURL='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7+H9v4++ADCmhzgMoOe+d1+dTSTBcV/9k='
               />
             ) : (
               <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-[#f5f2ee] to-[#e8e2d9]'>
@@ -169,7 +204,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         </div>
       )}
-      <Link href={`/shop/${product.id}`} className='block'>
+      <Link
+        href={`/shop/${product.id}`}
+        className='block'
+        onMouseEnter={handleLinkHover}
+      >
         {/* Product Image */}
         <div className='relative aspect-square overflow-hidden rounded-t-2xl bg-[#f5f2ee]'>
           {!imageError && product.images?.length ? (
@@ -179,7 +218,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
               fill
               sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
               className='object-cover transition-transform duration-500 group-hover:scale-105'
-              onError={() => setImageError(true)}
+              onError={handleImageError}
+              priority={false}
+              quality={85}
+              placeholder='blur'
+              blurDataURL='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7+H9v4++ADCmhzgMoOe+d1+dTSTBcV/9k='
             />
           ) : (
             <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-[#f5f2ee] to-[#e8e2d9]'>
@@ -314,4 +357,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
   );
 };
 
-export default ProductCard;
+// Memoize the component to prevent unnecessary re-renders
+export default memo(ProductCard, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return (
+    prevProps.product.id === nextProps.product.id &&
+    prevProps.product.name === nextProps.product.name &&
+    prevProps.product.price === nextProps.product.price &&
+    prevProps.product.stock === nextProps.product.stock &&
+    prevProps.product.is_active === nextProps.product.is_active &&
+    prevProps.className === nextProps.className &&
+    prevProps.viewMode === nextProps.viewMode
+  );
+});

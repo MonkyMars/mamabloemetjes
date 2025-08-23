@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getProducts, searchProducts } from '../../data/products';
 import { Product } from '../../types';
 import ProductCard from '../../components/ProductCard';
 import { Button } from '../../components/Button';
 import { useSearchContext } from '../../context/SearchContext';
+import { useProducts, useSearchProducts } from '../../hooks/useProducts';
 import {
   FiFilter,
   FiGrid,
@@ -36,19 +36,17 @@ const ShopComponent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
-    searchResults,
+    searchResults: contextSearchResults,
     searchQuery: globalSearchQuery,
     hasSearched,
     clearSearch,
   } = useSearchContext();
 
-  const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const [filters, setFilters] = useState<FilterState>({
     priceRange: [0, 200],
@@ -57,45 +55,54 @@ const ShopComponent: React.FC = () => {
     productType: 'all',
   });
 
-  // Initialize products and handle URL search params
+  // Get URL search parameter
+  const urlSearchQuery = searchParams.get('search') || '';
+
+  // Use TanStack Query hooks
+  const {
+    data: allProducts = [],
+    isLoading: isLoadingProducts,
+    error: productsError,
+  } = useProducts();
+
+  const {
+    data: querySearchResults = [],
+    isLoading: isSearching,
+    error: searchError,
+  } = useSearchProducts(urlSearchQuery);
+
+  // Determine which products to use and loading state
+  const products = urlSearchQuery ? querySearchResults : allProducts;
+  const isLoading = urlSearchQuery ? isSearching : isLoadingProducts;
+  const error = urlSearchQuery ? searchError : productsError;
+
+  // Initialize local search query from URL
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setIsLoading(true);
-        const urlSearch = searchParams.get('search');
+    if (urlSearchQuery) {
+      setLocalSearchQuery(urlSearchQuery);
+    }
+  }, [urlSearchQuery]);
 
-        let loadedProducts: Product[] = [];
-        if (urlSearch) {
-          setLocalSearchQuery(urlSearch);
-          loadedProducts = await searchProducts(urlSearch);
-        } else {
-          loadedProducts = await getProducts();
-        }
-
-        setProducts(loadedProducts);
-      } catch (error) {
-        console.error('Failed to load products:', error);
-        setProducts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadProducts();
-  }, [searchParams]);
+  // Handle URL search parameter changes
+  useEffect(() => {
+    const urlSearch = searchParams.get('search');
+    if (urlSearch && urlSearch !== localSearchQuery) {
+      setLocalSearchQuery(urlSearch);
+    }
+  }, [searchParams, localSearchQuery]);
 
   // Get effective search query and products
   const effectiveSearchQuery = searchParams.get('search') || localSearchQuery;
   const effectiveProducts = useMemo(() => {
     // If we have global search results from navigation, use those
     if (hasSearched && globalSearchQuery && !effectiveSearchQuery) {
-      return searchResults;
+      return contextSearchResults;
     }
     return products;
   }, [
     hasSearched,
     globalSearchQuery,
-    searchResults,
+    contextSearchResults,
     products,
     effectiveSearchQuery,
   ]);
@@ -150,7 +157,7 @@ const ShopComponent: React.FC = () => {
         product.colors &&
         !filters.colors.some((filterColor) =>
           product.colors?.some(
-            (productColor) =>
+            (productColor: string) =>
               productColor.toLowerCase() === filterColor.toLowerCase(),
           ),
         )
@@ -187,7 +194,7 @@ const ShopComponent: React.FC = () => {
     });
 
     // Sort products
-    filtered.sort((a, b) => {
+    filtered.sort((a: Product, b: Product) => {
       switch (sortBy) {
         case 'price-low':
           return a.price - b.price;
@@ -207,7 +214,10 @@ const ShopComponent: React.FC = () => {
     setFilteredProducts(filtered);
   }, [effectiveProducts, effectiveSearchQuery, filters, sortBy]);
 
-  const handleFilterChange = (key: keyof FilterState, value: unknown) => {
+  const handleFilterChange = (
+    key: keyof FilterState,
+    value: string | number | string[] | [number, number],
+  ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -281,6 +291,23 @@ const ShopComponent: React.FC = () => {
             {[...Array(8)].map((_, i) => (
               <div key={i} className='card loading-shimmer h-96'></div>
             ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='min-h-screen pt-24 pb-16'>
+        <div className='container'>
+          <div className='text-center py-12'>
+            <p className='text-red-600 text-lg mb-4'>
+              Er is een fout opgetreden bij het laden van de producten.
+            </p>
+            <Button variant='outline' onClick={() => window.location.reload()}>
+              Probeer opnieuw
+            </Button>
           </div>
         </div>
       </div>
