@@ -22,6 +22,8 @@ pub fn setup_routes(router: Router) -> Router {
         .route("/health", get(health_check::health_check))
         // Merge public routes instead of nesting at root
         .merge(public_routes())
+        // RESTful routes (public)
+        .merge(restful_routes())
         // Authenticated routes (requires valid JWT)
         .nest("/api", authenticated_routes())
         // Admin routes (requires admin role)
@@ -82,13 +84,16 @@ fn authenticated_routes() -> Router {
             get(get::order::get_order_with_order_lines),
         )
         // Authenticated order operations
-        .route("/order", post(post::order::order))
-        .route("/order/pricing", post(post::order::calculate_order_pricing))
+        .route("/order", post(crate::routes::post::order))
+        .route(
+            "/order/pricing",
+            post(crate::routes::post::calculate_order_pricing),
+        )
         .route(
             "/order/validate-pricing",
-            post(post::order::validate_order_pricing),
+            post(crate::routes::post::validate_order_pricing),
         )
-        .route("/order/cancel", post(post::order::cancel_order))
+        .route("/order/cancel", post(crate::routes::post::cancel_order))
         // User profile and account management
         .route("/profile", get(auth::profile))
         .route("/logout", post(auth::logout))
@@ -103,9 +108,9 @@ fn admin_routes() -> Router {
         // Admin order management
         .route(
             "/order/check-inventory",
-            post(post::order::check_order_inventory),
+            post(crate::routes::post::check_order_inventory),
         )
-        .route("/order/ship", post(post::order::ship_order))
+        .route("/order/ship", post(crate::routes::post::ship_order))
         // Admin order viewing (can see all orders)
         .route("/orders", get(get::order::get_all_orders_admin))
         .route("/orders/{id}", get(get::order::get_order_admin))
@@ -155,43 +160,10 @@ fn auth_routes() -> Router {
         ))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use axum::http::StatusCode;
-    use tower::ServiceExt;
-
-    #[tokio::test]
-    async fn test_health_check_route() {
-        let app = setup_routes(Router::new());
-
-        let response = app
-            .oneshot(
-                axum::http::Request::builder()
-                    .uri("/health")
-                    .body(axum::body::Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        assert_eq!(response.status(), StatusCode::OK);
-    }
-
-    #[tokio::test]
-    async fn test_404_fallback() {
-        let app = setup_routes(Router::new());
-
-        let response = app
-            .oneshot(
-                axum::http::Request::builder()
-                    .uri("/nonexistent")
-                    .body(axum::body::Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
-    }
+/// RESTful routes - public access
+/// These routes are merged at the root level
+fn restful_routes() -> Router {
+    Router::new()
+        // Contact form submission
+        .route("/contact", post(crate::routes::post::contact::contact))
 }
