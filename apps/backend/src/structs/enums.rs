@@ -10,6 +10,7 @@ pub enum OrderStatus {
     Shipped,
     Delivered,
     Cancelled,
+    Deleted,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Type)]
