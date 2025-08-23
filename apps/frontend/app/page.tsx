@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Button } from '../components/Button';
 import ProductCard from '../components/ProductCard';
-import { getFeaturedProducts } from '../data/products';
-import { Product } from '../types';
+import ProductCardSkeleton from '../components/ProductCardSkeleton';
+import { useFeaturedProducts } from '../hooks/useProducts';
 import {
   FiArrowRight,
   FiHeart,
@@ -17,27 +17,11 @@ import {
 } from 'react-icons/fi';
 
 const HomePage: React.FC = () => {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadFeaturedProducts = async () => {
-      try {
-        setIsLoading(true);
-        const products = await getFeaturedProducts(8);
-        // Make sure we only have 8
-        setFeaturedProducts(products.slice(0, 8));
-      } catch (error) {
-        console.error('Failed to load featured products:', error);
-        // Fallback to empty array if API fails
-        setFeaturedProducts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadFeaturedProducts();
-  }, []);
+  const {
+    data: featuredProducts = [],
+    isLoading,
+    error,
+  } = useFeaturedProducts(8);
 
   const features = [
     {
@@ -217,18 +201,20 @@ const HomePage: React.FC = () => {
             {isLoading ? (
               // Loading skeleton
               Array.from({ length: 8 }).map((_, index) => (
-                <div
-                  key={index}
-                  className='bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse'
-                >
-                  <div className='aspect-square bg-gray-200'></div>
-                  <div className='p-6'>
-                    <div className='h-4 bg-gray-200 rounded mb-2'></div>
-                    <div className='h-3 bg-gray-200 rounded w-2/3 mb-4'></div>
-                    <div className='h-6 bg-gray-200 rounded w-1/3'></div>
-                  </div>
-                </div>
+                <ProductCardSkeleton key={index} />
               ))
+            ) : error ? (
+              <div className='col-span-full text-center py-12'>
+                <p className='text-red-600 text-lg mb-4'>
+                  Er is een fout opgetreden bij het laden van de producten.
+                </p>
+                <Button
+                  variant='outline'
+                  onClick={() => window.location.reload()}
+                >
+                  Probeer opnieuw
+                </Button>
+              </div>
             ) : featuredProducts.length > 0 ? (
               featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
