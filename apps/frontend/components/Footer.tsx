@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
       <div className='border-b border-[#453d30]'>
         <div className='container py-12'>
           <div className='max-w-2xl mx-auto text-center'>
-            <h3 className='text-2xl font-serif font-semibold mb-4 text-[#e8c4a0]'>
+            <h3 className='text-2xl font-family-serif font-semibold mb-4 text-[#e8c4a0]'>
               Blijf in Bloei
             </h3>
             <p className='text-[#d6ccc0] mb-6'>
@@ -75,12 +75,12 @@ const Footer: React.FC = () => {
           <div className='lg:col-span-2'>
             <div className='flex items-center space-x-3 mb-6'>
               <div className='w-12 h-12 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center'>
-                <span className='text-white font-serif font-bold text-xl'>
+                <span className='text-white font-family-serif font-bold text-xl'>
                   M
                 </span>
               </div>
               <div>
-                <h2 className='text-xl font-serif font-bold text-[#e8c4a0]'>
+                <h2 className='text-xl font-family-serif font-bold text-[#e8c4a0]'>
                   Mama Bloemetjes
                 </h2>
                 <p className='text-sm text-[#9a8470] -mt-1'>
@@ -131,7 +131,7 @@ const Footer: React.FC = () => {
 
           {/* Shop Links */}
           <div>
-            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
+            <h3 className='text-lg font-family-serif font-semibold text-[#e8c4a0] mb-6'>
               Winkel
             </h3>
             <ul className='space-y-3'>
@@ -150,7 +150,7 @@ const Footer: React.FC = () => {
 
           {/* Information Links */}
           <div>
-            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
+            <h3 className='text-lg font-family-serif font-semibold text-[#e8c4a0] mb-6'>
               Informatie
             </h3>
             <ul className='space-y-3'>
@@ -169,7 +169,7 @@ const Footer: React.FC = () => {
 
           {/* Support Links */}
           <div>
-            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
+            <h3 className='text-lg font-family-serif font-semibold text-[#e8c4a0] mb-6'>
               Ondersteuning
             </h3>
             <ul className='space-y-3'>

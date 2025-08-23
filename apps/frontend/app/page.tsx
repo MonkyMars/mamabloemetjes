@@ -259,7 +259,7 @@ const HomePage: React.FC = () => {
       <section className='section bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] text-white'>
         <div className='container text-center'>
           <div className='max-w-3xl mx-auto'>
-            <h2 className='text-4xl md:text-5xl font-serif font-bold mb-6'>
+            <h2 className='text-4xl md:text-5xl font-family-serif font-bold mb-6'>
               Klaar om iets Moois te Creëren?
             </h2>
             <p className='text-xl mb-8 text-white/90 leading-relaxed'>
