@@ -231,18 +231,7 @@ const HomePage: React.FC = () => {
               ))
             ) : featuredProducts.length > 0 ? (
               featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={(product) => {
-                    console.log('Toegevoegd aan winkelwagen:', product.name);
-                    // TODO: Implement cart functionality
-                  }}
-                  onToggleWishlist={(product) => {
-                    console.log('Verlanglijst gewijzigd:', product.name);
-                    // TODO: Implement wishlist functionality
-                  }}
-                />
+                <ProductCard key={product.id} product={product} />
               ))
             ) : (
               <div className='col-span-full text-center py-12'>

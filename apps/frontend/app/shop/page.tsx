@@ -595,14 +595,6 @@ const ShopComponent: React.FC = () => {
                     key={product.id}
                     product={product}
                     viewMode={viewMode}
-                    onAddToCart={(product) => {
-                      console.log('Toegevoegd aan winkelwagen:', product.name);
-                      // TODO: Implement cart functionality
-                    }}
-                    onToggleWishlist={(product) => {
-                      console.log('Verlanglijst gewijzigd:', product.name);
-                      // TODO: Implement wishlist functionality
-                    }}
                   />
                 ))}
               </div>

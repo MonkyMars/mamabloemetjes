@@ -1,8 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import { User, AuthContextType } from '../types/auth';
 import * as authService from '../lib/auth';
+import * as cartService from '../lib/cart';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -30,12 +37,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(verifiedUser);
           } catch (error) {
             // Token invalid, clear stored data
+            console.error(error);
             authService.clearTokens();
             setUser(null);
           }
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
+      } catch {
+        console.error('Auth initialization error');
         authService.clearTokens();
         setUser(null);
       } finally {
@@ -51,6 +59,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const authResponse = await authService.login({ email, password });
       setUser(authResponse.user);
+
+      // Merge guest cart after successful login
+      await mergeGuestCartOnLogin();
     } catch (error) {
       setUser(null);
       throw error;
@@ -59,11 +70,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const mergeGuestCartOnLogin = async (): Promise<void> => {
+    try {
+      const localCart = cartService.getLocalCart();
+      if (localCart.items.length > 0) {
+        // Merge guest cart with user's cart
+        await cartService.mergeCart({ items: localCart.items });
+        // Clear local cart after successful merge
+        cartService.clearLocalCart();
+      }
+    } catch (error) {
+      console.error('Failed to merge guest cart:', error);
+      // Don't throw error as login was successful, cart merge is secondary
+    }
+  };
+
   const register = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
       const authResponse = await authService.register({ email, password });
       setUser(authResponse.user);
+
+      // Merge guest cart after successful registration
+      await mergeGuestCartOnLogin();
     } catch (error) {
       setUser(null);
       throw error;
