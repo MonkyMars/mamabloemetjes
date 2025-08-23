@@ -1,3 +1,4 @@
+pub mod contact;
 pub mod customer;
 pub mod enums;
 pub mod implementations;

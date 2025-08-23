@@ -45,3 +45,12 @@ pub enum ProductType {
     Bouquet,
     Flower,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Type)]
+#[sqlx(type_name = "text")]
+#[sqlx(rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
+pub enum ContactMethod {
+    Email,
+    Phone,
+}

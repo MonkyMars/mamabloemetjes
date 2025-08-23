@@ -26,9 +26,9 @@ const ContactModal: React.FC<ContactModalProps> = ({
     email: '',
     phone: '',
     message: initialMessage,
-    productId: product?.id || '',
+    product_id: product?.id || '',
     occasion: '',
-    preferredContactMethod: 'email',
+    preferred_contact_method: 'email',
   });
 
   const [errors, setErrors] = useState<Partial<ContactForm>>({});
@@ -38,7 +38,7 @@ const ContactModal: React.FC<ContactModalProps> = ({
     if (isOpen && product) {
       setFormData((prev) => ({
         ...prev,
-        productId: product.id,
+        product_id: product.id,
         message:
           initialMessage ||
           `Hi! I&apos;m interested in &quot;${product.name}&quot; and would like to know more about it, especially regarding customization options for my special occasion.`,
@@ -142,9 +142,9 @@ const ContactModal: React.FC<ContactModalProps> = ({
       email: '',
       phone: '',
       message: '',
-      productId: '',
+      product_id: '',
       occasion: '',
-      preferredContactMethod: 'email',
+      preferred_contact_method: 'email',
     });
     setErrors({});
     setIsSubmitted(false);
@@ -366,7 +366,7 @@ const ContactModal: React.FC<ContactModalProps> = ({
                         type='radio'
                         name='preferredContactMethod'
                         value='email'
-                        checked={formData.preferredContactMethod === 'email'}
+                        checked={formData.preferred_contact_method === 'email'}
                         onChange={handleInputChange}
                         className='mr-2 text-[#d4a574] focus:ring-[#d4a574]'
                       />
@@ -377,7 +377,7 @@ const ContactModal: React.FC<ContactModalProps> = ({
                         type='radio'
                         name='preferredContactMethod'
                         value='phone'
-                        checked={formData.preferredContactMethod === 'phone'}
+                        checked={formData.preferred_contact_method === 'phone'}
                         onChange={handleInputChange}
                         className='mr-2 text-[#d4a574] focus:ring-[#d4a574]'
                       />

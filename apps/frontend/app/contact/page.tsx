@@ -28,9 +28,9 @@ const ContactComponent: React.FC = () => {
     email: '',
     phone: '',
     message: '',
-    productId: productId || '',
+    product_id: productId || null,
     occasion: '',
-    preferredContactMethod: 'email',
+    preferred_contact_method: 'email',
   });
 
   const [errors, setErrors] = useState<Partial<ContactForm>>({});
@@ -157,8 +157,8 @@ const ContactComponent: React.FC = () => {
             </div>
             <h1 className='heading-2 mb-4'>Bedankt!</h1>
             <p className='text-lg text-[#7d6b55] mb-8 leading-relaxed'>
-              We hebben uw bericht ontvangen en nemen binnen 24 uur contact met
-              u op.
+              We hebben uw bericht ontvangen en nemen zo snel mogelijk contact
+              met u op.
               {product && (
                 <span className='block mt-2'>
                   We helpen u graag met &quot;{product.name}&quot;!
@@ -273,7 +273,7 @@ const ContactComponent: React.FC = () => {
                     type='tel'
                     id='phone'
                     name='phone'
-                    value={formData.phone}
+                    value={formData.phone || ''}
                     onChange={handleInputChange}
                     className={`input-field ${errors.phone ? 'border-red-500 focus:border-red-500' : ''}`}
                     placeholder='+31 6 12 34 56 78'
@@ -294,7 +294,7 @@ const ContactComponent: React.FC = () => {
                   <select
                     id='occasion'
                     name='occasion'
-                    value={formData.occasion}
+                    value={formData.occasion || ''}
                     onChange={handleInputChange}
                     className='input-field'
                   >
@@ -323,7 +323,7 @@ const ContactComponent: React.FC = () => {
                         type='radio'
                         name='preferredContactMethod'
                         value='email'
-                        checked={formData.preferredContactMethod === 'email'}
+                        checked={formData.preferred_contact_method === 'email'}
                         onChange={handleInputChange}
                         className='mr-2 text-[#d4a574] focus:ring-[#d4a574]'
                       />
@@ -334,7 +334,7 @@ const ContactComponent: React.FC = () => {
                         type='radio'
                         name='preferredContactMethod'
                         value='phone'
-                        checked={formData.preferredContactMethod === 'phone'}
+                        checked={formData.preferred_contact_method === 'phone'}
                         onChange={handleInputChange}
                         className='mr-2 text-[#d4a574] focus:ring-[#d4a574]'
                       />

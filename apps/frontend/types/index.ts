@@ -35,11 +35,11 @@ export interface Cart {
 export interface ContactForm {
   name: string;
   email: string;
-  phone?: string;
+  phone: string | null;
   message: string;
-  productId?: string;
-  occasion?: string;
-  preferredContactMethod: 'email' | 'phone';
+  product_id: string | null;
+  occasion: string | null;
+  preferred_contact_method: 'email' | 'phone';
 }
 
 export interface OrderSummary {
