@@ -6,7 +6,7 @@ use crate::{
     structs::{Order, OrderStatus},
 };
 
-pub async fn delete_order(id: Uuid) -> Result<Order, SqlxError> {
+pub async fn update_order_status(id: Uuid, order_status: OrderStatus) -> Result<Order, SqlxError> {
     let pool = pool();
 
     let row = sqlx::query(
@@ -21,7 +21,7 @@ pub async fn delete_order(id: Uuid) -> Result<Order, SqlxError> {
             created_at, updated_at
         "#,
     )
-    .bind(OrderStatus::Deleted)
+    .bind(order_status)
     .bind(id)
     .fetch_one(pool)
     .await?;

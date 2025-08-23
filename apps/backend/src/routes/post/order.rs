@@ -1,6 +1,8 @@
+use crate::actions;
 use crate::actions::post::order::{create_order_with_lines, get_order_with_lines};
 use crate::response::{ApiResponse, AppResponse, error::AppError};
-use crate::services::{InventoryService, PricingService};
+use crate::services::{InventoryService, PricingResult, PricingService};
+use crate::structs::OrderStatus;
 use crate::structs::inventory::{InventoryReservation, InventoryUpdate};
 use crate::structs::order::{IncomingOrder, Order, OrderLine};
 use crate::validate::structs::validate_customer_id;
@@ -165,7 +167,7 @@ pub async fn order(Json(payload): Json<IncomingOrder>) -> ApiResponse<Order> {
 /// Useful for cart calculations and price previews
 pub async fn calculate_order_pricing(
     Json(payload): Json<IncomingOrder>,
-) -> ApiResponse<crate::services::PricingResult> {
+) -> ApiResponse<PricingResult> {
     PricingService::calculate_discounted_pricing(&payload).await
 }
 
@@ -173,7 +175,7 @@ pub async fn calculate_order_pricing(
 /// Useful for basic order validation
 pub async fn validate_order_pricing(
     Json(payload): Json<IncomingOrder>,
-) -> ApiResponse<crate::services::PricingResult> {
+) -> ApiResponse<PricingResult> {
     PricingService::validate_order_pricing(&payload).await
 }
 
@@ -215,8 +217,12 @@ pub async fn ship_order(Json(order_id): Json<Uuid>) -> ApiResponse<String> {
         )));
     }
 
-    // TODO: Update order status to "shipped" in database
-    // This would require adding an order update service method
+    if let Err(err) = actions::update::update_order_status(order_id, OrderStatus::Shipped).await {
+        return AppResponse::Error(AppError::DatabaseError(format!(
+            "Failed to update order status for {}: {}",
+            order_id, err
+        )));
+    }
 
     AppResponse::Success(format!("Order {} shipped successfully", order_id))
 }
@@ -259,8 +265,13 @@ pub async fn cancel_order(Json(order_id): Json<Uuid>) -> ApiResponse<String> {
         )));
     }
 
-    // TODO: Update order status to "cancelled" in database
-    // This would require adding an order update service method
+    // Update order status to "Cancelled"
+    if let Err(err) = actions::update::update_order_status(order_id, OrderStatus::Cancelled).await {
+        return AppResponse::Error(AppError::DatabaseError(format!(
+            "Failed to update order status for {}: {}",
+            order_id, err
+        )));
+    }
 
     AppResponse::Success(format!("Order {} cancelled successfully", order_id))
 }

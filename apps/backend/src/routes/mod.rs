@@ -1,7 +1,8 @@
-use crate::response::{ApiResponse, AppResponse, error::AppError};
 pub mod get;
 pub mod health_check;
 pub mod post;
+
+use crate::response::{ApiResponse, AppResponse, error::AppError};
 use axum::{
     Router,
     routing::{get, post},
@@ -17,6 +18,41 @@ pub fn setup_routes(router: Router) -> Router {
     router
         // Health check endpoint
         .route("/health", get(health_check::health_check))
+        // Product routes
+        .nest("/", product_routes(Router::new()))
+        // Inventory routes
+        .nest("/", inventory_routes(Router::new()))
+        // Order routes
+        .nest("/", order_routes(Router::new()))
+        // Admin routes
+        .nest("/admin", admin_routes(Router::new()))
+        // Fallback handler for 404 errors
+        .fallback(handle_404)
+}
+
+pub fn inventory_routes(router: Router) -> Router {
+    router
+        // Inventory debug routes
+        .route("/inventory", get(get::inventory::get_all_inventory))
+        .route(
+            "/inventory/{id}",
+            get(get::inventory::get_inventory_by_product),
+        )
+}
+
+pub fn product_routes(router: Router) -> Router {
+    router
+        // The GET routes for products; these are used to retrieve products. Either all or by id.
+        .route(
+            "/products/featured",
+            get(get::featured::get_featured_products),
+        )
+        .route("/products", get(get::product::get_products))
+        .route("/products/{id}", get(get::product::get_product))
+}
+
+pub fn order_routes(router: Router) -> Router {
+    router
         // The POST route; New orders come in here
         .route("/order", post(post::order::order))
         // Pricing calculation endpoints
@@ -25,13 +61,6 @@ pub fn setup_routes(router: Router) -> Router {
             "/order/validate-pricing",
             post(post::order::validate_order_pricing),
         )
-        // Inventory check endpoint
-        .route(
-            "/order/check-inventory",
-            post(post::order::check_order_inventory),
-        )
-        // Ship order endpoint
-        .route("/order/ship", post(post::order::ship_order))
         // Cancel order endpoint
         .route("/order/cancel", post(post::order::cancel_order))
         // The GET routes for orders; these are used to retrieve orders. Either all or by id.
@@ -47,20 +76,15 @@ pub fn setup_routes(router: Router) -> Router {
             "/orders/{id}/details",
             get(get::order::get_order_with_order_lines),
         )
-        // The GET routes for products; these are used to retrieve products. Either all or by id.
+}
+
+pub fn admin_routes(router: Router) -> Router {
+    router
+        // Inventory check endpoint
         .route(
-            "/products/featured",
-            get(get::featured::get_featured_products),
+            "/order/check-inventory",
+            post(post::order::check_order_inventory),
         )
-        .route("/products", get(get::product::get_products))
-        .route("/products/{id}", get(get::product::get_product))
-        // Inventory debug routes
-        .route("/inventory", get(get::inventory::get_all_inventory))
-        .route(
-            "/inventory/{id}",
-            get(get::inventory::get_inventory_by_product),
-        )
-        // Confirm order route - link is sent in the confirmation email
-        // Fallback handler for 404 errors
-        .fallback(handle_404)
+        // Ship order endpoint
+        .route("/order/ship", post(post::order::ship_order))
 }
