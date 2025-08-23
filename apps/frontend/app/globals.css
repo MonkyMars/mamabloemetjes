@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  --font-family-sans: 'Inter', system-ui, sans-serif;
-  --font-family-serif: 'Playfair Display', Georgia, serif;
+  --font-family-sans: 'inter', system-ui, sans-serif;
+  --font-family-serif: 'cormorant', Georgia, serif;
 
   --color-primary-50: #faf8f4;
   --color-primary-100: #f5f2ee;
@@ -66,7 +65,7 @@ html {
 body {
   color: #453d30;
   background: #faf9f7;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -123,27 +122,27 @@ body {
   }
 
   .price {
-    @apply text-2xl font-semibold text-neutral-600 font-serif;
+    @apply text-2xl font-semibold text-neutral-600 font-family-serif;
   }
 
   .price-small {
-    @apply text-lg font-medium text-neutral-600 font-serif;
+    @apply text-lg font-medium text-neutral-600 font-family-serif;
   }
 
   .heading-1 {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 font-serif leading-tight;
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 font-family-serif leading-tight;
   }
 
   .heading-2 {
-    @apply text-3xl md:text-4xl font-semibold text-neutral-900 font-serif;
+    @apply text-3xl md:text-4xl font-semibold text-neutral-900 font-family-serif leading-snug;
   }
 
   .heading-3 {
-    @apply text-2xl md:text-3xl font-medium text-neutral-800 font-serif;
+    @apply text-2xl md:text-3xl font-medium text-neutral-800 font-family-serif;
   }
 
   .heading-4 {
-    @apply text-xl md:text-2xl font-medium text-neutral-800 font-serif;
+    @apply text-xl md:text-2xl font-medium text-neutral-800 font-family-serif;
   }
 
   .section {

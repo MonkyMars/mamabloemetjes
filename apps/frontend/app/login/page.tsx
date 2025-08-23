@@ -24,14 +24,14 @@ export default function LoginPage() {
           {/* Logo/Brand section */}
           <div className='text-center mb-8'>
             <div className='inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full shadow-lg mb-4'>
-              <span className='text-white font-serif font-bold text-2xl'>
+              <span className='text-white font-family-serif font-bold text-2xl'>
                 M
               </span>
             </div>
-            <h1 className='text-2xl font-serif font-bold text-neutral-900 mb-2'>
+            <h1 className='text-2xl font-family-serif font-bold text-neutral-900 mb-2'>
               Mama Bloemetjes
             </h1>
-            <p className='text-neutral-600'>Handcrafted Velvet Flowers</p>
+            <p className='text-neutral-600'>Handgemaakte Vilt Bloemen</p>
           </div>
 
           {/* Login Form */}

@@ -222,7 +222,7 @@ const CartPage: React.FC = () => {
                     <div className='flex-1 min-w-0'>
                       <div className='flex justify-between items-start mb-2'>
                         <div>
-                          <h3 className='font-serif font-semibold text-lg text-[#2d2820] mb-1'>
+                          <h3 className='font-family-serif font-semibold text-lg text-[#2d2820] mb-1'>
                             <Link
                               href={`/product/${item.product.id}`}
                               className='hover:text-[#d4a574] transition-colors duration-300'
@@ -414,7 +414,7 @@ const CartPage: React.FC = () => {
                         <span className='text-lg font-semibold text-[#2d2820]'>
                           Total
                         </span>
-                        <span className='text-xl font-serif font-bold text-[#d4a574]'>
+                        <span className='text-xl font-family-serif font-bold text-[#d4a574]'>
                           {formatPrice(orderSummary.total)}
                         </span>
                       </div>
