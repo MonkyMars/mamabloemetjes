@@ -265,16 +265,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
                       <Image
                         width={48}
                         height={48}
-                        src={product.imageUrl}
-                        alt={product.name}
+                        src={product?.images?.[0].url || '/placeholder.png'}
+                        alt={product?.images?.[0].alt_text || product.name}
                         className='w-12 h-12 rounded-lg object-cover'
                       />
                       <div className='flex-1 min-w-0'>
                         <div className='text-sm font-medium text-[#2d2820] truncate'>
                           {highlightText(product.name, searchQuery)}
-                        </div>
-                        <div className='text-xs text-[#7d6b55] truncate'>
-                          {highlightText(product.category, searchQuery)}
                         </div>
                         <div className='text-sm font-medium text-[#d4a574]'>
                           {formatPrice(product.price)}
