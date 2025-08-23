@@ -16,12 +16,8 @@ import {
   FiUserPlus,
 } from 'react-icons/fi';
 import { useSearchContext } from '../context/SearchContext';
-<<<<<<< HEAD
 import { SearchModal, SearchButton } from './Search';
-=======
 import { useAuth } from '../context/AuthContext';
-import SearchBar from './SearchBar';
->>>>>>> main
 
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -30,7 +26,7 @@ const Navigation: React.FC = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  const { isSearchOpen, closeSearch, toggleSearch } = useSearchContext();
+  const { isSearchOpen, closeSearch } = useSearchContext();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
 
   useEffect(() => {
