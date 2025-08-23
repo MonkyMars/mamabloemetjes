@@ -89,7 +89,7 @@ const Navigation: React.FC = () => {
           </div>
           <div className='hidden sm:flex items-center space-x-2'>
             <FiTruck className='w-4 h-4' />
-            <span>Gratis bezorging over de €75</span>
+            <span>Gratis bezorging vanaf €75</span>
           </div>
         </div>
       </div>
