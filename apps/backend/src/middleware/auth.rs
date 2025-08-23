@@ -42,7 +42,7 @@ impl AuthUser {
 }
 
 /// Extract bearer token from Authorization header
-fn extract_token_from_header(auth_header: &str) -> Option<&str> {
+pub fn extract_token_from_header(auth_header: &str) -> Option<&str> {
     if auth_header.starts_with("Bearer ") {
         Some(&auth_header[7..])
     } else {
@@ -120,17 +120,4 @@ pub async fn optional_auth_middleware(
 /// Extract authenticated user from request extensions
 pub fn extract_auth_user(request: &Request) -> Option<&AuthUser> {
     request.extensions().get::<AuthUser>()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_extract_token_from_header() {
-        assert_eq!(extract_token_from_header("Bearer abc123"), Some("abc123"));
-        assert_eq!(extract_token_from_header("bearer abc123"), None);
-        assert_eq!(extract_token_from_header("Basic abc123"), None);
-        assert_eq!(extract_token_from_header("abc123"), None);
-    }
 }

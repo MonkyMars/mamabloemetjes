@@ -127,7 +127,7 @@ pub async fn get_popular_searches(Query(params): Query<SearchParams>) -> ApiResp
 }
 
 /// Parse search parameters into SearchQuery struct
-fn parse_search_params(params: SearchParams) -> Result<SearchQuery, String> {
+pub fn parse_search_params(params: SearchParams) -> Result<SearchQuery, String> {
     use crate::services::search::{
         SearchPagination, SearchSort, SearchSortDirection, SearchSortField,
     };
@@ -181,7 +181,7 @@ fn parse_search_params(params: SearchParams) -> Result<SearchQuery, String> {
 }
 
 /// Parse search filters from parameters
-fn parse_search_filters(params: &SearchParams) -> crate::services::search::SearchFilters {
+pub fn parse_search_filters(params: &SearchParams) -> crate::services::search::SearchFilters {
     use crate::services::search::SearchFilters;
     use rust_decimal::Decimal;
 
@@ -202,107 +202,11 @@ fn parse_search_filters(params: &SearchParams) -> crate::services::search::Searc
 }
 
 /// Check if any filters are provided
-fn has_filters(params: &SearchParams) -> bool {
+pub fn has_filters(params: &SearchParams) -> bool {
     params.product_type.is_some()
         || params.colors.is_some()
         || params.size.is_some()
         || params.price_min.is_some()
         || params.price_max.is_some()
         || params.in_stock.is_some()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_search_params() {
-        let params = SearchParams {
-            q: Some("rose".to_string()),
-            product_type: Some("flower".to_string()),
-            colors: Some("red,pink".to_string()),
-            size: None,
-            price_min: Some(10.0),
-            price_max: Some(50.0),
-            in_stock: Some(true),
-            sort_by: Some("price".to_string()),
-            sort_direction: Some("desc".to_string()),
-            page: Some(2),
-            per_page: Some(15),
-        };
-
-        let result = parse_search_params(params).unwrap();
-        assert_eq!(result.query, "rose");
-        assert!(result.filters.is_some());
-        assert!(result.sort.is_some());
-        assert!(result.pagination.is_some());
-
-        let filters = result.filters.unwrap();
-        assert_eq!(filters.product_type.unwrap(), "flower");
-        assert_eq!(filters.colors.unwrap(), vec!["red", "pink"]);
-        assert!(filters.in_stock.unwrap());
-
-        let pagination = result.pagination.unwrap();
-        assert_eq!(pagination.page, 2);
-        assert_eq!(pagination.per_page, 15);
-    }
-
-    #[test]
-    fn test_parse_search_filters() {
-        let params = SearchParams {
-            q: None,
-            product_type: Some("bouquet".to_string()),
-            colors: Some("red, pink, white".to_string()),
-            size: Some("large".to_string()),
-            price_min: Some(20.0),
-            price_max: Some(100.0),
-            in_stock: Some(false),
-            sort_by: None,
-            sort_direction: None,
-            page: None,
-            per_page: None,
-        };
-
-        let filters = parse_search_filters(&params);
-        assert_eq!(filters.product_type.unwrap(), "bouquet");
-        assert_eq!(filters.colors.unwrap(), vec!["red", "pink", "white"]);
-        assert_eq!(filters.size.unwrap(), "large");
-        assert!(filters.price_min.is_some());
-        assert!(filters.price_max.is_some());
-        assert!(!filters.in_stock.unwrap());
-    }
-
-    #[test]
-    fn test_has_filters() {
-        let params_with_filters = SearchParams {
-            q: None,
-            product_type: Some("flower".to_string()),
-            colors: None,
-            size: None,
-            price_min: None,
-            price_max: None,
-            in_stock: None,
-            sort_by: None,
-            sort_direction: None,
-            page: None,
-            per_page: None,
-        };
-
-        let params_without_filters = SearchParams {
-            q: Some("rose".to_string()),
-            product_type: None,
-            colors: None,
-            size: None,
-            price_min: None,
-            price_max: None,
-            in_stock: None,
-            sort_by: None,
-            sort_direction: None,
-            page: None,
-            per_page: None,
-        };
-
-        assert!(has_filters(&params_with_filters));
-        assert!(!has_filters(&params_without_filters));
-    }
 }
