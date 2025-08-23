@@ -6,21 +6,19 @@ import { Button } from '../../components/Button';
 import { getProductById } from '../../data/products';
 import { ContactForm, Product } from '../../types';
 import {
-  FiMapPin,
   FiPhone,
   FiMail,
-  FiClock,
   FiSend,
   FiCheckCircle,
   FiHeart,
-  FiInstagram,
-  FiFacebook,
 } from 'react-icons/fi';
 import { NextPage } from 'next';
+import { sendContactForm } from '@/data/contact';
 
 const ContactComponent: React.FC = () => {
   const searchParams = useSearchParams();
   const productId = searchParams.get('product');
+  const type = searchParams.get('type') as 'custom' | 'product' | null;
   const [product, setProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -45,37 +43,44 @@ const ContactComponent: React.FC = () => {
           setProduct(foundProduct);
           setFormData((prev) => ({
             ...prev,
-            message: `Hi! I'm interested in "${foundProduct.name}" and would like to know more about customization options.`,
+            message: `Hallo! Ik ben geïnteresseerd in "${foundProduct.name}" en zou graag meer willen weten over aanpassingsmogelijkheden.`,
           }));
         } catch (error) {
           console.error('Failed to load product:', error);
           setProduct(null);
         }
+      } else if (type === 'custom') {
+        setFormData((prev) => ({
+          ...prev,
+          message: `Hallo! Ik ben geïnteresseerd in een aangepast bloemstuk. Hier zijn enkele details over wat ik zoek:\n\n- Gelegenheid:\n- Gewenste bloemen:\n- Kleurenschema:\n- Budget:\n- Aanvullende opmerkingen:`,
+        }));
+      } else {
+        setProduct(null);
       }
     };
 
     loadProduct();
-  }, [productId]);
+  }, [productId, type]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<ContactForm> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = 'Naam is verplicht';
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'E-mailadres is verplicht';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Voer een geldig e-mailadres in';
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
+      newErrors.message = 'Bericht is verplicht';
     }
 
     if (formData.phone && !/^\+?[\d\s\-\(\)]+$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+      newErrors.phone = 'Voer een geldig telefoonnummer in';
     }
 
     setErrors(newErrors);
@@ -92,12 +97,7 @@ const ContactComponent: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // TODO: Replace with actual API call
-      console.log('Contact form submitted:', formData);
-
+      sendContactForm(formData);
       setIsSubmitted(true);
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -122,43 +122,29 @@ const ContactComponent: React.FC = () => {
 
   const contactInfo = [
     {
-      icon: <FiMapPin className='w-6 h-6' />,
-      title: 'Visit Our Studio',
-      details: ['Bloemenstraat 123', '1234 AB Amsterdam', 'Netherlands'],
-    },
-    {
       icon: <FiPhone className='w-6 h-6' />,
-      title: 'Call Us',
-      details: ['+31 6 12 34 56 78', 'Available during business hours'],
+      title: 'Bel Ons',
+      details: ['+31 6 00 00 00 00', 'Beschikbaar tijdens kantooruren'],
     },
     {
       icon: <FiMail className='w-6 h-6' />,
-      title: 'Email Us',
-      details: ['hello@mamabloemetjes.nl', 'We respond within 24 hours'],
-    },
-    {
-      icon: <FiClock className='w-6 h-6' />,
-      title: 'Business Hours',
-      details: [
-        'Monday - Friday: 9:00 - 17:00',
-        'Saturday: 10:00 - 16:00',
-        'Sunday: Closed',
-      ],
+      title: 'Mail Ons',
+      details: ['hello@mamabloemetjes.nl', 'We reageren binnen 24 uur'],
     },
   ];
 
   const occasions = [
-    'Wedding',
-    'Anniversary',
-    'Birthday',
-    'Mothers Day',
-    'Valentines Day',
-    'Graduation',
+    'Bruiloft',
+    'Jubileum',
+    'Verjaardag',
+    'Moederdag',
+    'Valentijnsdag',
+    'Afstuderen',
     'Housewarming',
-    'Sympathy',
-    'Corporate Event',
-    'Just Because',
-    'Other',
+    'Condoleance',
+    'Bedrijfsevenement',
+    'Zomaar',
+    'Anders',
   ];
 
   if (isSubmitted) {
@@ -169,14 +155,13 @@ const ContactComponent: React.FC = () => {
             <div className='w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6'>
               <FiCheckCircle className='w-10 h-10 text-green-600' />
             </div>
-            <h1 className='heading-2 mb-4'>Thank You!</h1>
+            <h1 className='heading-2 mb-4'>Bedankt!</h1>
             <p className='text-lg text-[#7d6b55] mb-8 leading-relaxed'>
-              We&apos;ve received your message and will get back to you within
-              24 hours.
+              We hebben uw bericht ontvangen en nemen binnen 24 uur contact met
+              u op.
               {product && (
                 <span className='block mt-2'>
-                  We&apos;re excited to help you with &quot;{product.name}
-                  &quot;!
+                  We helpen u graag met &quot;{product.name}&quot;!
                 </span>
               )}
             </p>
@@ -185,13 +170,13 @@ const ContactComponent: React.FC = () => {
                 variant='primary'
                 onClick={() => (window.location.href = '/')}
               >
-                Back to Home
+                Terug naar Home
               </Button>
               <Button
                 variant='outline'
                 onClick={() => (window.location.href = '/shop')}
               >
-                Continue Shopping
+                Verder Winkelen
               </Button>
             </div>
           </div>
@@ -205,11 +190,11 @@ const ContactComponent: React.FC = () => {
       <div className='container'>
         {/* Page Header */}
         <div className='text-center mb-16'>
-          <h1 className='heading-1 mb-4'>Get in Touch</h1>
+          <h1 className='heading-1 mb-4'>Neem Contact Op</h1>
           <p className='text-lg text-[#7d6b55] max-w-2xl mx-auto leading-relaxed'>
-            We&apos;d love to hear from you! Whether you have questions about
-            our products, need help with a custom order, or just want to say
-            hello – we&apos;re here to help.
+            We horen graag van u! Of u nu vragen heeft over onze producten, hulp
+            nodig heeft bij een maatwerk bestelling, of gewoon hallo wilt zeggen
+            – wij zijn er om te helpen.
           </p>
         </div>
 
@@ -222,11 +207,11 @@ const ContactComponent: React.FC = () => {
                   <div className='flex items-center space-x-2 mb-2'>
                     <FiHeart className='w-5 h-5 text-[#d4a574]' />
                     <span className='font-medium text-[#2d2820]'>
-                      Inquiry about: {product.name}
+                      Vraag over: {product.name}
                     </span>
                   </div>
                   <p className='text-sm text-[#7d6b55]'>
-                    We&apos;ll provide personalized assistance for this product
+                    We bieden persoonlijke assistentie voor dit product
                   </p>
                 </div>
               )}
@@ -238,7 +223,7 @@ const ContactComponent: React.FC = () => {
                     htmlFor='name'
                     className='block text-sm font-medium text-[#2d2820] mb-2'
                   >
-                    Full Name *
+                    Volledige Naam *
                   </label>
                   <input
                     type='text'
@@ -247,7 +232,7 @@ const ContactComponent: React.FC = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     className={`input-field ${errors.name ? 'border-red-500 focus:border-red-500' : ''}`}
-                    placeholder='Your full name'
+                    placeholder='Uw volledige naam'
                   />
                   {errors.name && (
                     <p className='text-red-600 text-sm mt-1'>{errors.name}</p>
@@ -260,7 +245,7 @@ const ContactComponent: React.FC = () => {
                     htmlFor='email'
                     className='block text-sm font-medium text-[#2d2820] mb-2'
                   >
-                    Email Address *
+                    E-mailadres *
                   </label>
                   <input
                     type='email'
@@ -269,7 +254,7 @@ const ContactComponent: React.FC = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className={`input-field ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
-                    placeholder='your@email.com'
+                    placeholder='uw@email.nl'
                   />
                   {errors.email && (
                     <p className='text-red-600 text-sm mt-1'>{errors.email}</p>
@@ -282,7 +267,7 @@ const ContactComponent: React.FC = () => {
                     htmlFor='phone'
                     className='block text-sm font-medium text-[#2d2820] mb-2'
                   >
-                    Phone Number
+                    Telefoonnummer
                   </label>
                   <input
                     type='tel'
@@ -304,7 +289,7 @@ const ContactComponent: React.FC = () => {
                     htmlFor='occasion'
                     className='block text-sm font-medium text-[#2d2820] mb-2'
                   >
-                    Occasion
+                    Gelegenheid
                   </label>
                   <select
                     id='occasion'
@@ -313,7 +298,9 @@ const ContactComponent: React.FC = () => {
                     onChange={handleInputChange}
                     className='input-field'
                   >
-                    <option value=''>Select an occasion (optional)</option>
+                    <option value=''>
+                      Selecteer een gelegenheid (optioneel)
+                    </option>
                     {occasions.map((occasion) => (
                       <option
                         key={occasion}
@@ -328,7 +315,7 @@ const ContactComponent: React.FC = () => {
                 {/* Preferred Contact Method */}
                 <div>
                   <label className='block text-sm font-medium text-[#2d2820] mb-3'>
-                    Preferred Contact Method
+                    Gewenste Contactmethode
                   </label>
                   <div className='flex space-x-6'>
                     <label className='flex items-center cursor-pointer'>
@@ -340,7 +327,7 @@ const ContactComponent: React.FC = () => {
                         onChange={handleInputChange}
                         className='mr-2 text-[#d4a574] focus:ring-[#d4a574]'
                       />
-                      <span className='text-[#7d6b55]'>Email</span>
+                      <span className='text-[#7d6b55]'>E-mail</span>
                     </label>
                     <label className='flex items-center cursor-pointer'>
                       <input
@@ -351,7 +338,7 @@ const ContactComponent: React.FC = () => {
                         onChange={handleInputChange}
                         className='mr-2 text-[#d4a574] focus:ring-[#d4a574]'
                       />
-                      <span className='text-[#7d6b55]'>Phone</span>
+                      <span className='text-[#7d6b55]'>Telefoon</span>
                     </label>
                   </div>
                 </div>
@@ -362,7 +349,7 @@ const ContactComponent: React.FC = () => {
                     htmlFor='message'
                     className='block text-sm font-medium text-[#2d2820] mb-2'
                   >
-                    Message *
+                    Bericht *
                   </label>
                   <textarea
                     id='message'
@@ -371,7 +358,7 @@ const ContactComponent: React.FC = () => {
                     onChange={handleInputChange}
                     rows={6}
                     className={`textarea-field ${errors.message ? 'border-red-500 focus:border-red-500' : ''}`}
-                    placeholder='Tell us about your project, questions, or how we can help...'
+                    placeholder='Vertel ons over uw project, vragen, of hoe we kunnen helpen...'
                   />
                   {errors.message && (
                     <p className='text-red-600 text-sm mt-1'>
@@ -391,11 +378,11 @@ const ContactComponent: React.FC = () => {
                     !isSubmitting ? <FiSend className='w-5 h-5' /> : undefined
                   }
                 >
-                  {isSubmitting ? 'Sending Message...' : 'Send Message'}
+                  {isSubmitting ? 'Bericht Versturen...' : 'Bericht Versturen'}
                 </Button>
 
                 <p className='text-sm text-[#9a8470] text-center'>
-                  We typically respond within 24 hours during business days.
+                  We reageren doorgaans binnen 24 uur tijdens werkdagen.
                 </p>
               </form>
             </div>
@@ -426,51 +413,8 @@ const ContactComponent: React.FC = () => {
               ))}
             </div>
 
-            {/* Social Media */}
-            <div className='card p-6'>
-              <h3 className='font-semibold text-[#2d2820] mb-4'>Follow Us</h3>
-              <p className='text-[#7d6b55] text-sm mb-4'>
-                Stay updated with our latest creations and behind-the-scenes
-                content.
-              </p>
-              <div className='flex space-x-4'>
-                <a
-                  href='https://instagram.com/mamabloemetjes'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300'
-                  aria-label='Follow us on Instagram'
-                >
-                  <FiInstagram className='w-6 h-6' />
-                </a>
-                <a
-                  href='https://facebook.com/mamabloemetjes'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300'
-                  aria-label='Follow us on Facebook'
-                >
-                  <FiFacebook className='w-6 h-6' />
-                </a>
-              </div>
-            </div>
-
-            {/* Map Placeholder */}
-            <div className='card p-6'>
-              <h3 className='font-semibold text-[#2d2820] mb-4'>
-                Visit Our Studio
-              </h3>
-              <div className='bg-[#f5f2ee] rounded-xl h-48 flex items-center justify-center text-[#9a8470]'>
-                <div className='text-center'>
-                  <FiMapPin className='w-12 h-12 mx-auto mb-2' />
-                  <p className='text-sm'>Interactive map coming soon</p>
-                  <p className='text-xs mt-1'>Bloemenstraat 123, Amsterdam</p>
-                </div>
-              </div>
-            </div>
-
             {/* FAQ Link */}
-            <div className='card p-6 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] text-white'>
+            {/*<div className='card p-6 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] text-white'>
               <h3 className='font-semibold mb-2'>Frequently Asked Questions</h3>
               <p className='text-white/90 text-sm mb-4'>
                 Find quick answers to common questions about our products and
@@ -484,7 +428,7 @@ const ContactComponent: React.FC = () => {
               >
                 View FAQ
               </Button>
-            </div>
+            </div>*/}
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ import {
   FiLogOut,
   FiLogIn,
   FiUserPlus,
+  FiTruck,
 } from 'react-icons/fi';
 import { useSearchContext } from '../context/SearchContext';
 import { SearchModal, SearchButton } from './Search';
@@ -66,7 +67,6 @@ const Navigation: React.FC = () => {
   const navigationLinks = [
     { href: '/', label: 'Home' },
     { href: '/shop', label: 'Shop' },
-    { href: '/about', label: 'Over ons' },
     { href: '/contact', label: 'Contact' },
   ];
 
@@ -85,14 +85,15 @@ const Navigation: React.FC = () => {
           <div className='flex items-center space-x-4'>
             <div className='flex items-center space-x-2'>
               <FiPhone className='w-4 h-4' />
-              <span>+31 6 12 34 56 78</span>
+              <span>+31 6 00 00 00 00</span>
             </div>
             <div className='hidden sm:flex items-center space-x-2'>
               <FiMail className='w-4 h-4' />
               <span>hello@mamabloemetjes.nl</span>
             </div>
           </div>
-          <div className='text-center'>
+          <div className='hidden sm:flex items-center space-x-2'>
+            <FiTruck className='w-4 h-4' />
             <span>Gratis bezorging over de €100</span>
           </div>
         </div>

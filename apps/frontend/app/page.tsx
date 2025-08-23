@@ -119,7 +119,7 @@ const HomePage: React.FC = () => {
                   Bekijk Collectie
                 </Button>
               </Link>
-              <Link href='/contact'>
+              <Link href='/contact?type=custom'>
                 <Button
                   variant='outline'
                   size='lg'
