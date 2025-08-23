@@ -15,25 +15,25 @@ const Footer: React.FC = () => {
 
   const footerLinks = {
     shop: [
-      { label: 'All Products', href: '/shop' },
-      { label: 'Bouquets', href: '/shop/bouquets' },
-      { label: 'Arrangements', href: '/shop/arrangements' },
-      { label: 'Seasonal', href: '/shop/seasonal' },
-      { label: 'Custom Orders', href: '/custom' },
+      { label: 'Alle Producten', href: '/shop' },
+      { label: 'Boeketten', href: '/shop/bouquets' },
+      { label: 'Arrangementen', href: '/shop/arrangements' },
+      { label: 'Seizoen', href: '/shop/seasonal' },
+      { label: 'Maatwerk', href: '/custom' },
     ],
     info: [
-      { label: 'About Us', href: '/about' },
-      { label: 'Our Story', href: '/story' },
-      { label: 'Care Instructions', href: '/care' },
-      { label: 'Shipping Info', href: '/shipping' },
-      { label: 'Returns', href: '/returns' },
+      { label: 'Over Ons', href: '/about' },
+      { label: 'Ons Verhaal', href: '/story' },
+      { label: 'Verzorgingsinstructies', href: '/care' },
+      { label: 'Verzendinfo', href: '/shipping' },
+      { label: 'Retourneren', href: '/returns' },
     ],
     support: [
-      { label: 'Contact Us', href: '/contact' },
-      { label: 'FAQ', href: '/faq' },
-      { label: 'Size Guide', href: '/size-guide' },
-      { label: 'Track Order', href: '/track' },
-      { label: 'Gift Cards', href: '/gift-cards' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Veelgestelde Vragen', href: '/faq' },
+      { label: 'Maatgids', href: '/size-guide' },
+      { label: 'Bestelling Volgen', href: '/track' },
+      { label: 'Cadeaubonnen', href: '/gift-cards' },
     ],
   };
 
@@ -43,17 +43,17 @@ const Footer: React.FC = () => {
       <div className='border-b border-[#453d30]'>
         <div className='container py-12'>
           <div className='max-w-2xl mx-auto text-center'>
-            <h3 className='text-2xl font-serif font-semibold mb-4 text-[#e8c4a0]'>
-              Stay in Bloom
+            <h3 className='text-2xl font-family-serif font-semibold mb-4 text-[#e8c4a0]'>
+              Blijf in Bloei
             </h3>
             <p className='text-[#d6ccc0] mb-6'>
-              Subscribe to our newsletter for exclusive offers, care tips, and
-              first access to new collections.
+              Abonneer je op onze nieuwsbrief voor exclusieve aanbiedingen,
+              verzorgingstips en als eerste toegang tot nieuwe collecties.
             </p>
             <form className='flex flex-col sm:flex-row gap-4 max-w-md mx-auto'>
               <input
                 type='email'
-                placeholder='Your email address'
+                placeholder='Jouw e-mailadres'
                 className='flex-1 px-4 py-3 bg-[#453d30] border border-[#615340] rounded-xl text-white placeholder-[#9a8470] focus:border-[#d4a574] focus:outline-none focus:ring-4 focus:ring-[#d4a574]/20 transition-all duration-300'
                 required
               />
@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
                 type='submit'
                 className='px-6 py-3 bg-[#d4a574] hover:bg-[#b8956a] text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1'
               >
-                Subscribe
+                Aanmelden
               </button>
             </form>
           </div>
@@ -75,34 +75,30 @@ const Footer: React.FC = () => {
           <div className='lg:col-span-2'>
             <div className='flex items-center space-x-3 mb-6'>
               <div className='w-12 h-12 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center'>
-                <span className='text-white font-serif font-bold text-xl'>
+                <span className='text-white font-family-serif font-bold text-xl'>
                   M
                 </span>
               </div>
               <div>
-                <h2 className='text-xl font-serif font-bold text-[#e8c4a0]'>
+                <h2 className='text-xl font-family-serif font-bold text-[#e8c4a0]'>
                   Mama Bloemetjes
                 </h2>
                 <p className='text-sm text-[#9a8470] -mt-1'>
-                  Handcrafted Velvet Flowers
+                  Handgemaakte Fluwelen Bloemen
                 </p>
               </div>
             </div>
             <p className='text-[#d6ccc0] mb-6 leading-relaxed'>
-              Creating beautiful, lasting memories with handcrafted velvet
-              flowers. Each piece is lovingly made to bring warmth and elegance
-              to your special moments.
+              Het creëren van prachtige, blijvende herinneringen met
+              handgemaakte fluwelen bloemen. Elk stuk wordt met liefde gemaakt
+              om warmte en elegantie te brengen in jouw bijzondere momenten.
             </p>
 
             {/* Contact Information */}
             <div className='space-y-3'>
               <div className='flex items-center space-x-3 text-[#d6ccc0]'>
-                <FiMapPin className='w-5 h-5 text-[#ddb7ab] flex-shrink-0' />
-                <span>Bloemenstraat 123, 1234 AB Amsterdam</span>
-              </div>
-              <div className='flex items-center space-x-3 text-[#d6ccc0]'>
                 <FiPhone className='w-5 h-5 text-[#ddb7ab] flex-shrink-0' />
-                <span>+31 6 12 34 56 78</span>
+                <span>+31 6 00 00 00 00</span>
               </div>
               <div className='flex items-center space-x-3 text-[#d6ccc0]'>
                 <FiMail className='w-5 h-5 text-[#ddb7ab] flex-shrink-0' />
@@ -117,7 +113,7 @@ const Footer: React.FC = () => {
                 target='_blank'
                 rel='noopener noreferrer'
                 className='w-10 h-10 bg-[#453d30] hover:bg-[#d4a574] text-[#d6ccc0] hover:text-white rounded-lg flex items-center justify-center transition-all duration-300 hover:-translate-y-1'
-                aria-label='Follow us on Instagram'
+                aria-label='Volg ons op Instagram'
               >
                 <FiInstagram className='w-5 h-5' />
               </a>
@@ -126,7 +122,7 @@ const Footer: React.FC = () => {
                 target='_blank'
                 rel='noopener noreferrer'
                 className='w-10 h-10 bg-[#453d30] hover:bg-[#d4a574] text-[#d6ccc0] hover:text-white rounded-lg flex items-center justify-center transition-all duration-300 hover:-translate-y-1'
-                aria-label='Follow us on Facebook'
+                aria-label='Volg ons op Facebook'
               >
                 <FiFacebook className='w-5 h-5' />
               </a>
@@ -135,8 +131,8 @@ const Footer: React.FC = () => {
 
           {/* Shop Links */}
           <div>
-            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
-              Shop
+            <h3 className='text-lg font-family-serif font-semibold text-[#e8c4a0] mb-6'>
+              Winkel
             </h3>
             <ul className='space-y-3'>
               {footerLinks.shop.map((link) => (
@@ -154,8 +150,8 @@ const Footer: React.FC = () => {
 
           {/* Information Links */}
           <div>
-            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
-              Information
+            <h3 className='text-lg font-family-serif font-semibold text-[#e8c4a0] mb-6'>
+              Informatie
             </h3>
             <ul className='space-y-3'>
               {footerLinks.info.map((link) => (
@@ -173,8 +169,8 @@ const Footer: React.FC = () => {
 
           {/* Support Links */}
           <div>
-            <h3 className='text-lg font-serif font-semibold text-[#e8c4a0] mb-6'>
-              Support
+            <h3 className='text-lg font-family-serif font-semibold text-[#e8c4a0] mb-6'>
+              Ondersteuning
             </h3>
             <ul className='space-y-3'>
               {footerLinks.support.map((link) => (
@@ -203,19 +199,19 @@ const Footer: React.FC = () => {
                 href='/privacy'
                 className='hover:text-[#ddb7ab] transition-colors duration-300'
               >
-                Privacy Policy
+                Privacybeleid
               </Link>
               <span>•</span>
               <Link
                 href='/terms'
                 className='hover:text-[#ddb7ab] transition-colors duration-300'
               >
-                Terms of Service
+                Algemene Voorwaarden
               </Link>
             </div>
 
             <div className='flex items-center space-x-2 text-sm text-[#9a8470]'>
-              <span>Made with</span>
+              <span>Gemaakt met</span>
               <FiHeart className='w-4 h-4 text-[#ddb7ab]' />
               <span>in Amsterdam</span>
             </div>

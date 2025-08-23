@@ -105,16 +105,16 @@ const Navigation: React.FC = () => {
             {/* Logo */}
             <Link href='/' className='flex items-center space-x-3 group'>
               <div className='w-12 h-12 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300'>
-                <span className='text-white font-serif font-bold text-xl'>
+                <span className='text-white font-family-serif font-bold text-xl'>
                   M
                 </span>
               </div>
               <div className='hidden sm:block'>
-                <h1 className='text-2xl font-serif font-bold text-[#2d2820] group-hover:text-[#d4a574] transition-colors duration-300'>
+                <h1 className='text-xl mb-0.5 font-family-serif font-bold text-[#2d2820] group-hover:text-[#d4a574] transition-colors duration-300'>
                   Mama Bloemetjes
                 </h1>
                 <p className='text-sm text-[#7d6b55] -mt-1'>
-                  Handcrafted Velvet Flowers
+                  Handgemaakte Vilt Bloemen
                 </p>
               </div>
             </Link>

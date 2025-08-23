@@ -177,7 +177,7 @@ const ContactModal: React.FC<ContactModalProps> = ({
         <div className='sticky top-0 bg-white border-b border-[#e8e2d9] px-8 py-6 rounded-t-3xl'>
           <div className='flex items-center justify-between'>
             <div>
-              <h2 className='text-2xl font-serif font-semibold text-[#2d2820]'>
+              <h2 className='text-2xl font-family-serif font-semibold text-[#2d2820]'>
                 {isSubmitted ? 'Thank You!' : 'Ask About This Bouquet'}
               </h2>
               {product && !isSubmitted && (
@@ -245,7 +245,7 @@ const ContactModal: React.FC<ContactModalProps> = ({
                         {product.description}
                       </p>
                       <div className='flex items-center justify-between'>
-                        <span className='font-serif font-semibold text-[#d4a574]'>
+                        <span className='font-family-serif font-semibold text-[#d4a574]'>
                           €{product.price.toFixed(2)}
                         </span>
                       </div>

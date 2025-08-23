@@ -96,7 +96,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           {/* Product Info */}
           <div className='flex-1 p-4 flex flex-col justify-between min-h-[112px]'>
             <div>
-              <h3 className='font-serif font-semibold text-lg text-[#2d2820] line-clamp-2 group-hover:text-[#d4a574] transition-colors duration-300'>
+              <h3 className='font-family-serif font-semibold text-lg text-[#2d2820] line-clamp-2 group-hover:text-[#d4a574] transition-colors duration-300'>
                 {product.name}
               </h3>
               <p className='text-[#7d6b55] text-sm leading-relaxed line-clamp-2 mt-1'>
@@ -204,7 +204,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Product Info */}
         <div className='p-6 flex flex-col gap-2'>
-          <h3 className='font-serif font-semibold text-xl text-[#2d2820] line-clamp-2 group-hover:text-[#d4a574] transition-colors duration-300'>
+          <h3 className='font-family-serif font-semibold text-xl text-[#2d2820] line-clamp-2 group-hover:text-[#d4a574] transition-colors duration-300'>
             {product.name}
           </h3>
 

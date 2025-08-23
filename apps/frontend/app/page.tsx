@@ -44,13 +44,13 @@ const HomePage: React.FC = () => {
       icon: <FiHeart className='w-6 h-6' />,
       title: 'Handgemaakt met liefde',
       description:
-        'Elke bloem wordt zorgvuldig met de hand gemaakt van premium velvet materialen',
+        'Elke bloem wordt zorgvuldig met de hand gemaakt van premium vilt materialen',
     },
     {
       icon: <FiCheckCircle className='w-6 h-6' />,
       title: 'Blijvende schoonheid',
       description:
-        'Onze velvet bloemen behouden hun schoonheid jarenlang zonder te verwelken',
+        'Onze vilt bloemen behouden hun schoonheid jarenlang zonder te verwelken',
     },
     {
       icon: <FiGift className='w-6 h-6' />,
@@ -92,8 +92,8 @@ const HomePage: React.FC = () => {
         {/* Hero Content */}
         <div className='container relative z-20 text-center'>
           <div className='max-w-4xl mx-auto'>
-            <h1 className='heading-1 text-[#2d2820] mb-6 animate-fade-in relative'>
-              Handgemaakte Velvet Bloemen
+            <h1 className='heading-1 text-[#2d2820] mb-6 animate-fade-in relative font-family-serif'>
+              Handgemaakte Vilt Bloemen
               <span className='block text-[#d4a574] mt-2 relative'>
                 Die Voor Eeuwig Meegaan
                 <div className='absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-[#d4a574] to-[#ddb7ab] rounded-full'></div>
@@ -102,7 +102,7 @@ const HomePage: React.FC = () => {
 
             <div className='relative mb-8'>
               <p className='text-xl text-[#7d6b55] max-w-2xl mx-auto leading-relaxed'>
-                Ontdek onze collectie prachtige, op maat gemaakte velvet bloemen
+                Ontdek onze collectie prachtige, op maat gemaakte vilt bloemen
                 arrangementen. Perfect voor bruiloften, woondecoratie, en
                 speciale gelegenheden.
               </p>
@@ -248,11 +248,11 @@ const HomePage: React.FC = () => {
       <section className='section bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] text-white'>
         <div className='container text-center'>
           <div className='max-w-3xl mx-auto'>
-            <h2 className='text-4xl md:text-5xl font-serif font-bold mb-6'>
+            <h2 className='text-4xl md:text-5xl font-family-serif font-bold mb-6'>
               Klaar om iets Moois te Creëren?
             </h2>
             <p className='text-xl mb-8 text-white/90 leading-relaxed'>
-              Laat ons je helpen het perfecte velvet bloemenarrangement te maken
+              Laat ons je helpen het perfecte vilt bloemenarrangement te maken
               voor jouw speciale moment. Of het nu een bruiloft, jubileum, of
               gewoon omdat het kan – wij zijn er om het onvergetelijk te maken.
             </p>
