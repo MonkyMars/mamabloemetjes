@@ -18,6 +18,7 @@ export interface Product {
   size: string | null; // Backend enum: small, medium, large, extralarge
   colors: string[] | null; // Backend enum: red, blue, green, etc.
   product_type: string; // Backend enum: flower, bouquet
+  stock: number;
 }
 
 export interface CartItem {
