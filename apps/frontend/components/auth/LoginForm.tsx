@@ -43,7 +43,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Wachtwoord is verplicht';
     }
 
     setErrors(newErrors);
@@ -101,9 +101,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       <div className='card p-8'>
         {/* Header */}
         <div className='text-center mb-8'>
-          <h1 className='heading-3 mb-2'>Welcome Back</h1>
+          <h1 className='heading-3 mb-2'>Welkom Terug</h1>
           <p className='text-neutral-600'>
-            Sign in to your account to continue
+            Log in op je account om verder te gaan
           </p>
         </div>
 
@@ -112,8 +112,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           {/* Email Field */}
           <Input
             type='email'
-            label='Email Address'
-            placeholder='Enter your email'
+            label='E-mailadres'
+            placeholder='Voer je e-mailadres in'
             value={formData.email}
             onChange={handleInputChange('email')}
             error={errors.email}
@@ -126,8 +126,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           {/* Password Field */}
           <Input
             type='password'
-            label='Password'
-            placeholder='Enter your password'
+            label='Wachtwoord'
+            placeholder='Voer je wachtwoord in'
             value={formData.password}
             onChange={handleInputChange('password')}
             error={errors.password}
@@ -157,7 +157,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               isSubmitting ? <FiLoader className='animate-spin' /> : undefined
             }
           >
-            {isSubmitting ? 'Signing In...' : 'Sign In'}
+            {isSubmitting ? 'Inloggen...' : 'Inloggen'}
           </Button>
         </form>
 
@@ -169,7 +169,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               href='/forgot-password'
               className='text-sm text-primary-500 hover:text-primary-600 transition-colors duration-300'
             >
-              Forgot your password?
+              Wachtwoord vergeten?
             </Link>
           </div>
 
@@ -177,12 +177,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           {showRegisterLink && (
             <div className='pt-4 border-t border-neutral-200'>
               <p className='text-sm text-neutral-600'>
-                Don&apos;t have an account?{' '}
+                Nog geen account?{' '}
                 <Link
                   href='/register'
                   className='text-primary-500 hover:text-primary-600 font-medium transition-colors duration-300'
                 >
-                  Create one here
+                  Maak er hier een aan
                 </Link>
               </p>
             </div>
