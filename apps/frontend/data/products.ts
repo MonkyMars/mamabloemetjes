@@ -42,13 +42,21 @@ export const getFeaturedProducts = async (
 };
 
 export const searchProducts = async (query: string): Promise<Product[]> => {
-  const response = await api.get<ApiResponse<Product[]>>(
-    `/products/search?q=${encodeURIComponent(query)}`,
-  );
+  const response = await api.get<
+    ApiResponse<{
+      products: Product[];
+      total_count: number;
+      page: number;
+      per_page: number;
+      total_pages: number;
+      search_time_ms: number;
+      suggestions?: string[];
+    }>
+  >(`/products/search?q=${encodeURIComponent(query)}`);
   if (response.status !== 200) {
     throw new Error(`Failed to search products`);
   }
-  return response.data.data;
+  return response.data.data.products;
 };
 
 // Cart functions

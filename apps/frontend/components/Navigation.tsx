@@ -8,12 +8,11 @@ import {
   FiMenu,
   FiX,
   FiHeart,
-  FiSearch,
   FiPhone,
   FiMail,
 } from 'react-icons/fi';
 import { useSearchContext } from '../context/SearchContext';
-import SearchBar from './SearchBar';
+import { SearchModal, SearchButton } from './Search';
 
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -21,7 +20,7 @@ const Navigation: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
-  const { isSearchOpen, closeSearch, toggleSearch } = useSearchContext();
+  const { isSearchOpen, closeSearch } = useSearchContext();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -130,17 +129,11 @@ const Navigation: React.FC = () => {
             {/* Actions */}
             <div className='flex items-center space-x-4'>
               {/* Search */}
-              <button
-                onClick={toggleSearch}
-                className={`p-2 rounded-lg transition-all duration-300 ${
-                  isSearchOpen
-                    ? 'text-[#d4a574] bg-[#f5f2ee]'
-                    : 'text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee]'
-                }`}
-                aria-label='Search'
-              >
-                <FiSearch className='w-5 h-5' />
-              </button>
+              <SearchButton
+                variant='minimal'
+                showText={false}
+                className='text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg'
+              />
 
               {/* Wishlist */}
               <button
@@ -180,29 +173,6 @@ const Navigation: React.FC = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        {isSearchOpen && (
-          <div className='border-t border-[#e8e2d9] bg-white'>
-            <div className='container py-4'>
-              <div className='flex items-center justify-between gap-4'>
-                <div className='flex-1 max-w-2xl'>
-                  <SearchBar
-                    onResultClick={closeSearch}
-                    showSuggestions={true}
-                  />
-                </div>
-                <button
-                  onClick={closeSearch}
-                  className='p-2 text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300 lg:hidden'
-                  aria-label='Close search'
-                >
-                  <FiX className='w-5 h-5' />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className='lg:hidden bg-white border-t border-[#e8e2d9] shadow-lg'>
@@ -210,13 +180,10 @@ const Navigation: React.FC = () => {
               <div className='flex flex-col space-y-4'>
                 {/* Mobile Search */}
                 <div className='mb-4'>
-                  <SearchBar
-                    onResultClick={() => {
-                      setIsMenuOpen(false);
-                      closeSearch();
-                    }}
-                    showSuggestions={true}
-                    placeholder='Search flowers...'
+                  <SearchButton
+                    variant='default'
+                    className='w-full justify-center'
+                    showText={true}
                   />
                 </div>
 
@@ -253,6 +220,9 @@ const Navigation: React.FC = () => {
           </div>
         )}
       </nav>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
     </>
   );
 };
