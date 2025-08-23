@@ -316,7 +316,7 @@ const ContactModal: React.FC<ContactModalProps> = ({
                       type='tel'
                       id='modal-phone'
                       name='phone'
-                      value={formData.phone}
+                      value={formData.phone || ''}
                       onChange={handleInputChange}
                       className={`input-field ${errors.phone ? 'border-red-500 focus:border-red-500' : ''}`}
                       placeholder='+31 6 12 34 56 78'
@@ -338,7 +338,7 @@ const ContactModal: React.FC<ContactModalProps> = ({
                     <select
                       id='modal-occasion'
                       name='occasion'
-                      value={formData.occasion}
+                      value={formData.occasion || ''}
                       onChange={handleInputChange}
                       className='input-field'
                     >
