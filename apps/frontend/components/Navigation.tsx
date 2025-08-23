@@ -11,17 +11,24 @@ import {
   FiSearch,
   FiPhone,
   FiMail,
+  FiUser,
+  FiLogOut,
+  FiLogIn,
+  FiUserPlus,
 } from 'react-icons/fi';
 import { useSearchContext } from '../context/SearchContext';
+import { useAuth } from '../context/AuthContext';
 import SearchBar from './SearchBar';
 
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
 
   const { isSearchOpen, closeSearch, toggleSearch } = useSearchContext();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,6 +38,20 @@ const Navigation: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (isUserMenuOpen) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   useEffect(() => {
     // TODO: Connect to cart context/state management
@@ -164,6 +185,79 @@ const Navigation: React.FC = () => {
                 )}
               </Link>
 
+              {/* Authentication */}
+              {!isLoading && (
+                <>
+                  {isAuthenticated && user ? (
+                    <div className='relative hidden lg:block'>
+                      <button
+                        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                        className='flex items-center space-x-2 p-2 text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300'
+                        aria-label='User menu'
+                      >
+                        <div className='w-8 h-8 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center'>
+                          <span className='text-white font-medium text-sm'>
+                            {user.email.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className='text-sm font-medium hidden xl:block'>
+                          {user.email.split('@')[0]}
+                        </span>
+                      </button>
+
+                      {/* User Dropdown */}
+                      {isUserMenuOpen && (
+                        <div className='absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-neutral-200 py-2 z-50'>
+                          <div className='px-4 py-2 border-b border-neutral-100'>
+                            <p className='text-sm font-medium text-neutral-900'>
+                              {user.email}
+                            </p>
+                            <p className='text-xs text-neutral-500 capitalize'>
+                              {user.role} account
+                            </p>
+                          </div>
+                          <Link
+                            href='/profile'
+                            className='flex items-center space-x-2 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors duration-200'
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <FiUser className='w-4 h-4' />
+                            <span>Profile</span>
+                          </Link>
+                          <button
+                            onClick={async () => {
+                              await logout();
+                              setIsUserMenuOpen(false);
+                            }}
+                            className='flex items-center space-x-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200'
+                          >
+                            <FiLogOut className='w-4 h-4' />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className='hidden lg:flex items-center space-x-2'>
+                      <Link
+                        href='/login'
+                        className='flex items-center space-x-1 px-3 py-2 text-sm font-medium text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300'
+                      >
+                        <FiLogIn className='w-4 h-4' />
+                        <span>Sign In</span>
+                      </Link>
+                      <Link
+                        href='/register'
+                        className='flex items-center space-x-1 px-3 py-2 text-sm font-medium bg-[#d4a574] hover:bg-[#b8956a] text-white rounded-lg transition-all duration-300 shadow-sm hover:shadow-md'
+                      >
+                        <FiUserPlus className='w-4 h-4' />
+                        <span>Sign Up</span>
+                      </Link>
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -234,6 +328,68 @@ const Navigation: React.FC = () => {
                     {link.label}
                   </Link>
                 ))}
+
+                {/* Mobile Authentication */}
+                {!isLoading && (
+                  <div className='pt-4 mt-4 border-t border-[#e8e2d9]'>
+                    {isAuthenticated && user ? (
+                      <div className='space-y-4'>
+                        <div className='flex items-center space-x-3 px-4 py-2 bg-[#f5f2ee] rounded-lg'>
+                          <div className='w-10 h-10 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center'>
+                            <span className='text-white font-medium'>
+                              {user.email.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className='text-sm font-medium text-neutral-900'>
+                              {user.email}
+                            </p>
+                            <p className='text-xs text-neutral-500 capitalize'>
+                              {user.role} account
+                            </p>
+                          </div>
+                        </div>
+                        <Link
+                          href='/profile'
+                          onClick={() => setIsMenuOpen(false)}
+                          className='flex items-center space-x-2 px-4 py-2 text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300'
+                        >
+                          <FiUser className='w-5 h-5' />
+                          <span className='font-medium'>Profile</span>
+                        </Link>
+                        <button
+                          onClick={async () => {
+                            await logout();
+                            setIsMenuOpen(false);
+                          }}
+                          className='flex items-center space-x-2 w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300'
+                        >
+                          <FiLogOut className='w-5 h-5' />
+                          <span className='font-medium'>Sign Out</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className='space-y-3'>
+                        <Link
+                          href='/login'
+                          onClick={() => setIsMenuOpen(false)}
+                          className='flex items-center space-x-2 w-full px-4 py-2 text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300'
+                        >
+                          <FiLogIn className='w-5 h-5' />
+                          <span className='font-medium'>Sign In</span>
+                        </Link>
+                        <Link
+                          href='/register'
+                          onClick={() => setIsMenuOpen(false)}
+                          className='flex items-center space-x-2 w-full px-4 py-2 bg-[#d4a574] hover:bg-[#b8956a] text-white rounded-lg transition-all duration-300'
+                        >
+                          <FiUserPlus className='w-5 h-5' />
+                          <span className='font-medium'>Sign Up</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Mobile Contact Info */}
                 <div className='pt-4 mt-4 border-t border-[#e8e2d9]'>
