@@ -315,7 +315,7 @@ impl SearchAnalyticsService {
     }
 
     /// Normalize search terms for consistent analytics
-    fn normalize_search_term(term: &str) -> String {
+    pub fn normalize_search_term(term: &str) -> String {
         term.trim()
             .to_lowercase()
             .chars()
@@ -393,27 +393,5 @@ impl SearchAnalyticsService {
         suggestions.truncate(limit as usize);
 
         Ok(suggestions)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_normalize_search_term() {
-        assert_eq!(
-            SearchAnalyticsService::normalize_search_term("  Rose   Bouquet  "),
-            "rose bouquet"
-        );
-        assert_eq!(
-            SearchAnalyticsService::normalize_search_term("Red-Rose"),
-            "red-rose"
-        );
-        assert_eq!(
-            SearchAnalyticsService::normalize_search_term("Special@#$%Characters!"),
-            "specialcharacters"
-        );
-        assert_eq!(SearchAnalyticsService::normalize_search_term(""), "");
     }
 }

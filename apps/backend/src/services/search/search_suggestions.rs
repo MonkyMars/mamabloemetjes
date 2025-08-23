@@ -377,7 +377,7 @@ impl SearchSuggestionsService {
     }
 
     /// Normalize query for consistent processing
-    fn normalize_query(query: &str) -> String {
+    pub fn normalize_query(query: &str) -> String {
         query
             .trim()
             .to_lowercase()
@@ -390,7 +390,7 @@ impl SearchSuggestionsService {
     }
 
     /// Expand color queries to include Dutch/English variants
-    fn expand_color_query(query: &str) -> String {
+    pub fn expand_color_query(query: &str) -> String {
         let color_mappings = [
             ("rood", "red"),
             ("red", "rood"),
@@ -422,7 +422,7 @@ impl SearchSuggestionsService {
     }
 
     /// Translate color names to Dutch
-    fn translate_color(color: &str) -> String {
+    pub fn translate_color(color: &str) -> String {
         match color.to_lowercase().as_str() {
             "red" => "rode",
             "pink" => "roze",
@@ -438,7 +438,7 @@ impl SearchSuggestionsService {
     }
 
     /// Translate size names to Dutch
-    fn translate_size(size: &str) -> String {
+    pub fn translate_size(size: &str) -> String {
         match size.to_lowercase().as_str() {
             "small" => "klein",
             "medium" => "medium",
@@ -457,52 +457,5 @@ impl SearchSuggestionsService {
             "arrangement" => "arrangementen".to_string(),
             _ => format!("{} bloemen", category),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_normalize_query() {
-        assert_eq!(
-            SearchSuggestionsService::normalize_query("  Rose   Bouquet  "),
-            "rose bouquet"
-        );
-        assert_eq!(
-            SearchSuggestionsService::normalize_query("Red-Rose!@#"),
-            "red-rose"
-        );
-    }
-
-    #[test]
-    fn test_expand_color_query() {
-        assert_eq!(SearchSuggestionsService::expand_color_query("rood"), "red");
-        assert_eq!(SearchSuggestionsService::expand_color_query("pink"), "roze");
-        assert_eq!(
-            SearchSuggestionsService::expand_color_query("unknown"),
-            "unknown"
-        );
-    }
-
-    #[test]
-    fn test_translate_color() {
-        assert_eq!(SearchSuggestionsService::translate_color("red"), "rode");
-        assert_eq!(SearchSuggestionsService::translate_color("white"), "witte");
-        assert_eq!(
-            SearchSuggestionsService::translate_color("unknown"),
-            "unknown"
-        );
-    }
-
-    #[test]
-    fn test_translate_size() {
-        assert_eq!(SearchSuggestionsService::translate_size("small"), "klein");
-        assert_eq!(SearchSuggestionsService::translate_size("large"), "groot");
-        assert_eq!(
-            SearchSuggestionsService::translate_size("unknown"),
-            "unknown"
-        );
     }
 }
