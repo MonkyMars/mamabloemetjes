@@ -26,7 +26,7 @@ fn create_test_order() -> IncomingOrder {
     };
 
     IncomingOrder {
-        customer_id: Uuid::new_v4(),
+        user_id: Uuid::new_v4(),
         price: Decimal::new(2999, 2), // €29.99
         items: vec![order_content],
         shipping_address: create_valid_address(),
@@ -495,7 +495,7 @@ fn test_validated_product_entry_invalid_quantity() {
 #[test]
 fn test_validated_incoming_order_success() {
     let order = ValidatedIncomingOrder {
-        customer_id: Uuid::new_v4(),
+        user_id: Uuid::new_v4(),
         price: Decimal::new(2999, 2), // €29.99
         items: vec![ValidatedOrderContent {
             product: vec![ValidatedProductEntry {

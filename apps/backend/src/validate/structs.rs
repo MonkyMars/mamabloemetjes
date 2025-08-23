@@ -78,8 +78,8 @@ pub struct ValidatedOrderContent {
 /// Validated incoming order with comprehensive validation
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct ValidatedIncomingOrder {
-    #[validate(custom(function = "validate_customer_id", message = "Invalid customer ID"))]
-    pub customer_id: Uuid,
+    #[validate(custom(function = "validate_user_id", message = "Invalid customer ID"))]
+    pub user_id: Uuid,
 
     #[validate(custom(function = "validate_order_price", message = "Invalid order price"))]
     pub price: Decimal,
@@ -209,9 +209,9 @@ pub fn validate_order_price(price: &Decimal) -> Result<(), ValidationError> {
 }
 
 /// Validate that customer ID is not nil
-pub fn validate_customer_id(customer_id: &Uuid) -> Result<(), ValidationError> {
-    if customer_id.is_nil() {
-        return Err(ValidationError::new("invalid_customer_id"));
+pub fn validate_user_id(user_id: &Uuid) -> Result<(), ValidationError> {
+    if user_id.is_nil() {
+        return Err(ValidationError::new("invalid_user_id"));
     }
     Ok(())
 }
@@ -219,8 +219,8 @@ pub fn validate_customer_id(customer_id: &Uuid) -> Result<(), ValidationError> {
 /// Enhanced validated incoming order with additional business rule validations
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct EnhancedValidatedOrder {
-    #[validate(custom(function = "validate_customer_id", message = "Invalid customer ID"))]
-    pub customer_id: Uuid,
+    #[validate(custom(function = "validate_user_id", message = "Invalid customer ID"))]
+    pub user_id: Uuid,
 
     #[validate(custom(function = "validate_order_price", message = "Invalid order price"))]
     #[validate(custom(
@@ -309,7 +309,7 @@ impl From<crate::structs::OrderContent> for ValidatedOrderContent {
 impl From<ValidatedIncomingOrder> for crate::structs::IncomingOrder {
     fn from(validated: ValidatedIncomingOrder) -> Self {
         Self {
-            customer_id: validated.customer_id,
+            user_id: validated.user_id,
             price: validated.price,
             items: validated.items.into_iter().map(Into::into).collect(),
             shipping_address: validated.shipping_address.into(),
@@ -322,7 +322,7 @@ impl From<ValidatedIncomingOrder> for crate::structs::IncomingOrder {
 impl From<crate::structs::IncomingOrder> for ValidatedIncomingOrder {
     fn from(order: crate::structs::IncomingOrder) -> Self {
         Self {
-            customer_id: order.customer_id,
+            user_id: order.user_id,
             price: order.price,
             items: order.items.into_iter().map(Into::into).collect(),
             shipping_address: order.shipping_address.into(),

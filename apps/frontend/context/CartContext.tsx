@@ -5,11 +5,7 @@ import { Product, CartItem, Cart } from '../types';
 
 interface CartContextType {
   cart: Cart;
-  addToCart: (
-    product: Product,
-    quantity?: number,
-    customization?: CartItem['customization'],
-  ) => void;
+  addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -28,7 +24,6 @@ type CartAction =
       payload: {
         product: Product;
         quantity: number;
-        customization?: CartItem['customization'];
       };
     }
   | { type: 'REMOVE_ITEM'; payload: string }
@@ -44,11 +39,9 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const { product, quantity, customization } = action.payload;
+      const { product, quantity } = action.payload;
       const existingItemIndex = state.items.findIndex(
-        (item) =>
-          item.product.id === product.id &&
-          JSON.stringify(item.customization) === JSON.stringify(customization),
+        (item) => item.product.id === product.id,
       );
 
       if (existingItemIndex > -1) {
@@ -64,7 +57,6 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         const newItem: CartItem = {
           product,
           quantity,
-          customization,
         };
         return { ...state, items: [...state.items, newItem] };
       }
@@ -134,11 +126,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [state.items]);
 
-  const addToCart = (
-    product: Product,
-    quantity = 1,
-    customization?: CartItem['customization'],
-  ) => {
+  const addToCart = (product: Product, quantity = 1) => {
     if (quantity <= 0 || quantity > product.stock) {
       console.warn('Invalid quantity or insufficient stock');
       return;
@@ -146,7 +134,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
     dispatch({
       type: 'ADD_ITEM',
-      payload: { product, quantity, customization },
+      payload: { product, quantity },
     });
   };
 

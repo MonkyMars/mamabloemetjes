@@ -14,6 +14,7 @@ impl std::fmt::Display for OrderStatus {
             OrderStatus::Shipped => "shipped",
             OrderStatus::Delivered => "delivered",
             OrderStatus::Cancelled => "cancelled",
+            OrderStatus::Deleted => "deleted",
         };
         write!(f, "{}", status)
     }
@@ -27,6 +28,7 @@ impl From<String> for OrderStatus {
             "shipped" => OrderStatus::Shipped,
             "delivered" => OrderStatus::Delivered,
             "cancelled" => OrderStatus::Cancelled,
+            "deleted" => OrderStatus::Deleted,
             _ => OrderStatus::Pending,
         }
     }
@@ -61,7 +63,7 @@ impl Order {
             shipping_cost,
             discount_amount,
             order_number: IncomingOrder::generate_order_number(),
-            customer_id: payload.customer_id,
+            user_id: payload.user_id,
             notes: payload.notes.clone(),
             shipping_address: payload.shipping_address.clone(),
             billing_address: payload.billing_address.clone(),

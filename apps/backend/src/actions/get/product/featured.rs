@@ -1,5 +1,6 @@
 use crate::pool::connect::pool;
 use crate::structs::product::{Product, ProductImage};
+use rust_decimal::Decimal;
 use sqlx::{Error as SqlxError, Row};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -25,10 +26,13 @@ pub async fn get_all_featured_products() -> Result<Vec<Product>, SqlxError> {
             pi.product_id AS image_product_id,
             pi.url,
             pi.alt_text,
-            pi.is_primary
+            pi.is_primary,
+            i.quantity_on_hand,
+            i.quantity_reserved
         FROM products p
         LEFT JOIN product_images pi ON p.id = pi.product_id
         JOIN featured_products fp ON p.id = fp.product_id
+        JOIN inventory i ON p.id = i.product_id
         WHERE p.is_active = true
         ORDER BY p.created_at DESC, pi.is_primary DESC
         LIMIT 8
@@ -48,6 +52,9 @@ pub async fn get_all_featured_products() -> Result<Vec<Product>, SqlxError> {
             product_order.push(product_id);
         }
 
+        let available_stock: Decimal =
+            row.get::<Decimal, _>("quantity_on_hand") - row.get::<Decimal, _>("quantity_reserved");
+
         // Get or create the product
         let product = products_map.entry(product_id).or_insert_with(|| Product {
             id: product_id,
@@ -58,6 +65,7 @@ pub async fn get_all_featured_products() -> Result<Vec<Product>, SqlxError> {
             description: row.get("description"),
             created_at: row.get("created_at"),
             updated_at: row.get("updated_at"),
+            stock: available_stock,
             colors: row.get("colors"),
             size: row.get("size"),
             product_type: row.get("product_type"),

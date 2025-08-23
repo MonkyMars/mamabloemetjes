@@ -19,6 +19,7 @@ pub struct Product {
     pub size: Size,
     pub colors: Vec<Colors>,
     pub product_type: ProductType,
+    pub stock: Decimal,
     pub images: Option<Vec<ProductImage>>,
 }
 

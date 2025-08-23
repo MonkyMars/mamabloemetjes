@@ -125,6 +125,7 @@ const createMockProduct = (
   is_active: true,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
+  stock: 100,
   images: [
     {
       product_id: id,

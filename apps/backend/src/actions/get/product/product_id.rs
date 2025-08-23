@@ -1,5 +1,6 @@
 use crate::pool::connect::pool;
 use crate::structs::product::{Product, ProductImage};
+use rust_decimal::Decimal;
 use sqlx::{Error as SqlxError, Row};
 use uuid::Uuid;
 
@@ -24,9 +25,12 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
             pi.product_id AS image_product_id,
             pi.url,
             pi.alt_text,
-            pi.is_primary
+            pi.is_primary,
+            i.quantity_on_hand,
+            i.quantity_reserved
         FROM products p
         LEFT JOIN product_images pi ON p.id = pi.product_id
+        JOIN inventory i ON p.id = i.product_id
         WHERE p.id = $1 AND p.is_active = true
         ORDER BY pi.is_primary DESC
         "#,
@@ -49,6 +53,8 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
     let size = first_row.get("size");
     let is_active = first_row.get("is_active");
     let product_type = first_row.get("product_type");
+    let available_stock: Decimal = first_row.get::<Decimal, _>("quantity_on_hand")
+        - first_row.get::<Decimal, _>("quantity_reserved");
     let price = first_row.get("price");
     let description = first_row.get("description");
     let created_at = first_row.get("created_at");
@@ -76,6 +82,7 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
         product_type,
         created_at,
         updated_at,
+        stock: available_stock,
         colors,
         size,
         images: if images.is_empty() {

@@ -54,7 +54,7 @@ pub trait BusinessValidator {
 impl BusinessValidator for IncomingOrder {
     fn validate_business_rules(&self) -> Result<(), BusinessValidationError> {
         // Validate customer ID
-        if self.customer_id.is_nil() {
+        if self.user_id.is_nil() {
             return Err(BusinessValidationError::InvalidCustomerId);
         }
 
