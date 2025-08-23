@@ -106,7 +106,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <label className={cn(labelVariants({ variant: currentVariant }))}>
             {label}
             {props.required && (
-              <span className='text-red-500 ml-1' aria-label='required'>
+              <span className='text-red-500 ml-1' aria-label='verplicht'>
                 *
               </span>
             )}
@@ -158,7 +158,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     onClick={togglePasswordVisibility}
                     className='text-neutral-400 hover:text-neutral-600 focus:text-neutral-600 focus:outline-none transition-colors duration-200'
                     aria-label={
-                      isPasswordVisible ? 'Hide password' : 'Show password'
+                      isPasswordVisible
+                        ? 'Wachtwoord verbergen'
+                        : 'Wachtwoord tonen'
                     }
                     tabIndex={-1}
                   >

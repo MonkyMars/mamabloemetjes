@@ -1,5 +1,12 @@
 import axios from 'axios';
-import { AuthResponse, LoginRequest, RegisterRequest, RefreshResponse, RefreshTokenRequest, User } from '../types/auth';
+import {
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  RefreshResponse,
+  RefreshTokenRequest,
+  User,
+} from '../types/auth';
 import { ApiResponse } from '../types/api';
 
 // Create axios instance with base configuration
@@ -23,7 +30,7 @@ authApi.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Add response interceptor to handle token refresh
@@ -51,7 +58,7 @@ authApi.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // Token management functions
@@ -95,9 +102,14 @@ export const getStoredUser = (): User | null => {
 };
 
 // API functions
-export const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
+export const login = async (
+  credentials: LoginRequest,
+): Promise<AuthResponse> => {
   try {
-    const response = await authApi.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
+    const response = await authApi.post<ApiResponse<AuthResponse>>(
+      '/auth/login',
+      credentials,
+    );
     const authData = response.data.data;
 
     // Store tokens and user data
@@ -109,13 +121,18 @@ export const login = async (credentials: LoginRequest): Promise<AuthResponse> =>
     if (axios.isAxiosError(error) && error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
-    throw new Error('Login failed. Please try again.');
+    throw new Error('Inloggen mislukt. Probeer het opnieuw.');
   }
 };
 
-export const register = async (credentials: RegisterRequest): Promise<AuthResponse> => {
+export const register = async (
+  credentials: RegisterRequest,
+): Promise<AuthResponse> => {
   try {
-    const response = await authApi.post<ApiResponse<AuthResponse>>('/auth/register', credentials);
+    const response = await authApi.post<ApiResponse<AuthResponse>>(
+      '/auth/register',
+      credentials,
+    );
     const authData = response.data.data;
 
     // Store tokens and user data
@@ -127,7 +144,7 @@ export const register = async (credentials: RegisterRequest): Promise<AuthRespon
     if (axios.isAxiosError(error) && error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
-    throw new Error('Registration failed. Please try again.');
+    throw new Error('Registratie mislukt. Probeer het opnieuw.');
   }
 };
 
@@ -146,13 +163,16 @@ export const refreshAccessToken = async (): Promise<RefreshResponse> => {
   const refreshToken = getRefreshToken();
 
   if (!refreshToken) {
-    throw new Error('No refresh token available');
+    throw new Error('Geen refresh token beschikbaar');
   }
 
   try {
-    const response = await authApi.post<ApiResponse<RefreshResponse>>('/auth/refresh', {
-      refresh_token: refreshToken,
-    } as RefreshTokenRequest);
+    const response = await authApi.post<ApiResponse<RefreshResponse>>(
+      '/auth/refresh',
+      {
+        refresh_token: refreshToken,
+      } as RefreshTokenRequest,
+    );
 
     const refreshData = response.data.data;
 
@@ -162,9 +182,9 @@ export const refreshAccessToken = async (): Promise<RefreshResponse> => {
     }
 
     return refreshData;
-  } catch (error) {
+  } catch {
     clearTokens();
-    throw new Error('Token refresh failed');
+    throw new Error('Token vernieuwen mislukt');
   }
 };
 
@@ -174,9 +194,9 @@ export const verifyToken = async (): Promise<User> => {
     const user = response.data.data;
     setUser(user);
     return user;
-  } catch (error) {
+  } catch {
     clearTokens();
-    throw new Error('Token verification failed');
+    throw new Error('Token verificatie mislukt');
   }
 };
 
@@ -190,23 +210,23 @@ export const getProfile = async (): Promise<User> => {
     if (axios.isAxiosError(error) && error.response?.data?.message) {
       throw new Error(error.response.data.message);
     }
-    throw new Error('Failed to fetch profile');
+    throw new Error('Profiel ophalen mislukt');
   }
 };
 
 // Validation functions matching backend validation
 export const validateEmail = (email: string): string | null => {
   if (!email) {
-    return 'Email is required';
+    return 'E-mailadres is verplicht';
   }
 
   if (email.length > 254) {
-    return 'Email is too long';
+    return 'E-mailadres is te lang';
   }
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
-    return 'Invalid email format';
+    return 'Ongeldig e-mailadres formaat';
   }
 
   return null;
@@ -214,32 +234,32 @@ export const validateEmail = (email: string): string | null => {
 
 export const validatePassword = (password: string): string | null => {
   if (!password) {
-    return 'Password is required';
+    return 'Wachtwoord is verplicht';
   }
 
   if (password.length < 8) {
-    return 'Password must be at least 8 characters long';
+    return 'Wachtwoord moet minimaal 8 tekens lang zijn';
   }
 
   if (password.length > 128) {
-    return 'Password is too long (max 128 characters)';
+    return 'Wachtwoord is te lang (maximaal 128 tekens)';
   }
 
   if (!/[A-Z]/.test(password)) {
-    return 'Password must contain at least one uppercase letter';
+    return 'Wachtwoord moet minimaal één hoofdletter bevatten';
   }
 
   if (!/[a-z]/.test(password)) {
-    return 'Password must contain at least one lowercase letter';
+    return 'Wachtwoord moet minimaal één kleine letter bevatten';
   }
 
   if (!/\d/.test(password)) {
-    return 'Password must contain at least one number';
+    return 'Wachtwoord moet minimaal één cijfer bevatten';
   }
 
   const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-  if (!password.split('').some(char => specialChars.includes(char))) {
-    return 'Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)';
+  if (!password.split('').some((char) => specialChars.includes(char))) {
+    return 'Wachtwoord moet minimaal één speciaal teken bevatten (!@#$%^&*()_+-=[]{}|;:,.<>?)';
   }
 
   return null;

@@ -54,9 +54,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
     // Validate password confirmation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = 'Bevestig je wachtwoord';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Wachtwoorden komen niet overeen';
     }
 
     setErrors(newErrors);
@@ -88,9 +88,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         if (confirmPassword && password !== confirmPassword) {
           setErrors((prev) => ({
             ...prev,
-            confirmPassword: 'Passwords do not match',
+            confirmPassword: 'Wachtwoorden komen niet overeen',
           }));
-        } else if (errors.confirmPassword === 'Passwords do not match') {
+        } else if (
+          errors.confirmPassword === 'Wachtwoorden komen niet overeen'
+        ) {
           setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
         }
       }
@@ -142,9 +144,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
     score = Object.values(checks).filter(Boolean).length;
 
-    if (score < 3) return { score, label: 'Weak', color: 'bg-red-500' };
-    if (score < 5) return { score, label: 'Good', color: 'bg-yellow-500' };
-    return { score, label: 'Strong', color: 'bg-green-500' };
+    if (score < 3) return { score, label: 'Zwak', color: 'bg-red-500' };
+    if (score < 5) return { score, label: 'Goed', color: 'bg-yellow-500' };
+    return { score, label: 'Sterk', color: 'bg-green-500' };
   };
 
   const passwordStrength = getPasswordStrength(formData.password);
@@ -154,9 +156,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       <div className='card p-8'>
         {/* Header */}
         <div className='text-center mb-8'>
-          <h1 className='heading-3 mb-2'>Create Your Account</h1>
+          <h1 className='heading-3 mb-2'>Maak Je Account Aan</h1>
           <p className='text-neutral-600'>
-            Join Mama Bloemetjes to start your floral journey
+            Word lid van Mama Bloemetjes en begin je bloemenreis
           </p>
         </div>
 
@@ -165,8 +167,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           {/* Email Field */}
           <Input
             type='email'
-            label='Email Address'
-            placeholder='Enter your email'
+            label='E-mailadres'
+            placeholder='Voer je e-mailadres in'
             value={formData.email}
             onChange={handleInputChange('email')}
             error={errors.email}
@@ -180,8 +182,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           <div>
             <Input
               type='password'
-              label='Password'
-              placeholder='Create a strong password'
+              label='Wachtwoord'
+              placeholder='Maak een sterk wachtwoord'
               value={formData.password}
               onChange={handleInputChange('password')}
               error={errors.password}
@@ -197,7 +199,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               <div className='mt-3'>
                 <div className='flex items-center justify-between mb-2'>
                   <span className='text-sm text-neutral-600'>
-                    Password strength:
+                    Wachtwoordsterkte:
                   </span>
                   <span
                     className={`text-sm font-medium ${
@@ -218,7 +220,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                   />
                 </div>
                 <div className='mt-2 text-xs text-neutral-500 space-y-1'>
-                  <p>Password must contain:</p>
+                  <p>Wachtwoord moet bevatten:</p>
                   <ul className='ml-4 space-y-1'>
                     <li
                       className={
@@ -227,7 +229,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                           : 'text-neutral-400'
                       }
                     >
-                      • At least 8 characters
+                      • Minimaal 8 tekens
                     </li>
                     <li
                       className={
@@ -236,7 +238,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                           : 'text-neutral-400'
                       }
                     >
-                      • One uppercase letter
+                      • Één hoofdletter
                     </li>
                     <li
                       className={
@@ -245,7 +247,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                           : 'text-neutral-400'
                       }
                     >
-                      • One lowercase letter
+                      • Één kleine letter
                     </li>
                     <li
                       className={
@@ -254,7 +256,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                           : 'text-neutral-400'
                       }
                     >
-                      • One number
+                      • Één cijfer
                     </li>
                     <li
                       className={
@@ -263,7 +265,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                           : 'text-neutral-400'
                       }
                     >
-                      • One special character
+                      • Één speciaal teken
                     </li>
                   </ul>
                 </div>
@@ -274,15 +276,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           {/* Confirm Password Field */}
           <Input
             type='password'
-            label='Confirm Password'
-            placeholder='Confirm your password'
+            label='Bevestig Wachtwoord'
+            placeholder='Bevestig je wachtwoord'
             value={formData.confirmPassword}
             onChange={handleInputChange('confirmPassword')}
             error={errors.confirmPassword}
             success={
               formData.confirmPassword &&
               formData.password === formData.confirmPassword
-                ? 'Passwords match'
+                ? 'Wachtwoorden komen overeen'
                 : undefined
             }
             leftIcon={<FiLock className='w-5 h-5' />}
@@ -301,19 +303,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
           {/* Terms and Privacy */}
           <div className='text-xs text-neutral-500 leading-relaxed'>
-            By creating an account, you agree to our{' '}
+            Door een account aan te maken, ga je akkoord met onze{' '}
             <Link
               href='/terms'
               className='text-primary-500 hover:text-primary-600 transition-colors'
             >
-              Terms of Service
+              Algemene Voorwaarden
             </Link>{' '}
-            and{' '}
+            en{' '}
             <Link
               href='/privacy'
               className='text-primary-500 hover:text-primary-600 transition-colors'
             >
-              Privacy Policy
+              Privacybeleid
             </Link>
             .
           </div>
@@ -330,7 +332,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               isSubmitting ? <FiLoader className='animate-spin' /> : <FiUser />
             }
           >
-            {isSubmitting ? 'Creating Account...' : 'Create Account'}
+            {isSubmitting ? 'Account Aanmaken...' : 'Account Aanmaken'}
           </Button>
         </form>
 
@@ -338,12 +340,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         {showLoginLink && (
           <div className='mt-8 text-center pt-6 border-t border-neutral-200'>
             <p className='text-sm text-neutral-600'>
-              Already have an account?{' '}
+              Heb je al een account?{' '}
               <Link
                 href='/login'
                 className='text-primary-500 hover:text-primary-600 font-medium transition-colors duration-300'
               >
-                Sign in here
+                Log hier in
               </Link>
             </p>
           </div>

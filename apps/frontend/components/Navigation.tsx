@@ -215,7 +215,7 @@ const Navigation: React.FC = () => {
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <FiUser className='w-4 h-4' />
-                            <span>Profile</span>
+                            <span>Profiel</span>
                           </Link>
                           <button
                             onClick={async () => {
@@ -225,7 +225,7 @@ const Navigation: React.FC = () => {
                             className='flex items-center space-x-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200'
                           >
                             <FiLogOut className='w-4 h-4' />
-                            <span>Sign Out</span>
+                            <span>Uitloggen</span>
                           </button>
                         </div>
                       )}
@@ -237,14 +237,14 @@ const Navigation: React.FC = () => {
                         className='flex items-center space-x-1 px-3 py-2 text-sm font-medium text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300'
                       >
                         <FiLogIn className='w-4 h-4' />
-                        <span>Sign In</span>
+                        <span>Inloggen</span>
                       </Link>
                       <Link
                         href='/register'
                         className='flex items-center space-x-1 px-3 py-2 text-sm font-medium bg-[#d4a574] hover:bg-[#b8956a] text-white rounded-lg transition-all duration-300 shadow-sm hover:shadow-md'
                       >
                         <FiUserPlus className='w-4 h-4' />
-                        <span>Sign Up</span>
+                        <span>Registreren</span>
                       </Link>
                     </div>
                   )}
@@ -322,7 +322,7 @@ const Navigation: React.FC = () => {
                           className='flex items-center space-x-2 px-4 py-2 text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300'
                         >
                           <FiUser className='w-5 h-5' />
-                          <span className='font-medium'>Profile</span>
+                          <span className='font-medium'>Profiel</span>
                         </Link>
                         <button
                           onClick={async () => {
@@ -332,7 +332,7 @@ const Navigation: React.FC = () => {
                           className='flex items-center space-x-2 w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300'
                         >
                           <FiLogOut className='w-5 h-5' />
-                          <span className='font-medium'>Sign Out</span>
+                          <span className='font-medium'>Uitloggen</span>
                         </button>
                       </div>
                     ) : (
@@ -343,7 +343,7 @@ const Navigation: React.FC = () => {
                           className='flex items-center space-x-2 w-full px-4 py-2 text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300'
                         >
                           <FiLogIn className='w-5 h-5' />
-                          <span className='font-medium'>Sign In</span>
+                          <span className='font-medium'>Inloggen</span>
                         </Link>
                         <Link
                           href='/register'
@@ -351,7 +351,7 @@ const Navigation: React.FC = () => {
                           className='flex items-center space-x-2 w-full px-4 py-2 bg-[#d4a574] hover:bg-[#b8956a] text-white rounded-lg transition-all duration-300'
                         >
                           <FiUserPlus className='w-5 h-5' />
-                          <span className='font-medium'>Sign Up</span>
+                          <span className='font-medium'>Registreren</span>
                         </Link>
                       </div>
                     )}
