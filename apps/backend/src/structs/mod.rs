@@ -1,3 +1,4 @@
+pub mod cart;
 pub mod contact;
 pub mod customer;
 pub mod enums;
@@ -8,6 +9,10 @@ pub mod order;
 pub mod product;
 pub mod user;
 
+pub use cart::{
+    AddCartItemRequest, Cart, CartItem, CartItemWithProduct, CartResponse, CartWithItems,
+    GuestCartItem, MergeCartRequest, UpdateCartItemRequest,
+};
 pub use customer::Address;
 pub use enums::OrderStatus;
 pub use inventory::{Inventory, InventoryReservation, InventoryUpdate};

@@ -7,7 +7,6 @@ import {
   FiShoppingBag,
   FiMenu,
   FiX,
-  FiHeart,
   FiPhone,
   FiMail,
   FiUser,
@@ -19,16 +18,23 @@ import {
 import { useSearchContext } from '../context/SearchContext';
 import { SearchModal, SearchButton } from './Search';
 import { useAuth } from '../context/AuthContext';
+import { useCart, useGuestCart } from '../hooks/useCart';
 
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
 
   const { isSearchOpen, closeSearch } = useSearchContext();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const authenticatedCart = useCart();
+  const guestCart = useGuestCart();
+
+  // Get cart item count based on authentication status
+  const cartItemCount = isAuthenticated
+    ? authenticatedCart.totalQuantity()
+    : guestCart.totalQuantity();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,17 +58,6 @@ const Navigation: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isUserMenuOpen]);
-
-  useEffect(() => {
-    // TODO: Connect to cart context/state management
-    // This would come from your cart state management solution
-    const updateCartCount = () => {
-      // Placeholder - would get actual cart count from context
-      setCartItemCount(0);
-    };
-
-    updateCartCount();
-  }, []);
 
   const navigationLinks = [
     { href: '/', label: 'Home' },
@@ -94,7 +89,7 @@ const Navigation: React.FC = () => {
           </div>
           <div className='hidden sm:flex items-center space-x-2'>
             <FiTruck className='w-4 h-4' />
-            <span>Gratis bezorging over de €100</span>
+            <span>Gratis bezorging over de €75</span>
           </div>
         </div>
       </div>
@@ -156,14 +151,6 @@ const Navigation: React.FC = () => {
                 showText={false}
                 className='text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg'
               />
-
-              {/* Wishlist */}
-              <button
-                className='p-2 text-[#7d6b55] hover:text-[#d4a574] hover:bg-[#f5f2ee] rounded-lg transition-all duration-300'
-                aria-label='Wishlist'
-              >
-                <FiHeart className='w-5 h-5' />
-              </button>
 
               {/* Cart */}
               <Link

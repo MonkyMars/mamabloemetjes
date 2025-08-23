@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod cart;
 pub mod get;
 pub mod health_check;
 pub mod post;
@@ -7,7 +8,7 @@ use crate::middleware::{admin_middleware, auth_middleware, optional_auth_middlew
 use crate::response::{ApiResponse, AppResponse, error::AppError};
 use axum::{
     Router, middleware,
-    routing::{get, post},
+    routing::{delete, get, patch, post},
 };
 
 async fn handle_404() -> ApiResponse<()> {
@@ -94,6 +95,13 @@ fn authenticated_routes() -> Router {
             post(crate::routes::post::validate_order_pricing),
         )
         .route("/order/cancel", post(crate::routes::post::cancel_order))
+        // Cart routes
+        .route("/cart", get(cart::get_cart))
+        .route("/cart", delete(cart::clear_cart))
+        .route("/cart/items", post(cart::add_cart_item))
+        .route("/cart/items/{item_id}", patch(cart::update_cart_item))
+        .route("/cart/items/{item_id}", delete(cart::remove_cart_item))
+        .route("/cart/merge", post(cart::merge_cart))
         // User profile and account management
         .route("/profile", get(auth::profile))
         .route("/logout", post(auth::logout))

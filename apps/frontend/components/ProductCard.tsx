@@ -5,12 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '../types';
 import { Button } from './Button';
+import { useCart, useGuestCart } from '../hooks/useCart';
+import { useAuth } from '../context/AuthContext';
 import {
-  FiHeart,
   FiShoppingBag,
   FiEye,
   FiAlertCircle,
   FiCheck,
+  FiCheckCircle,
 } from 'react-icons/fi';
 import {
   translateColor,
@@ -22,23 +24,22 @@ import {
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart?: (product: Product) => void;
-  onToggleWishlist?: (product: Product) => void;
-  isInWishlist?: boolean;
   className?: string;
   viewMode?: 'grid' | 'list';
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,
-  onAddToCart,
-  onToggleWishlist,
-  isInWishlist = false,
   className = '',
   viewMode = 'grid',
 }) => {
+  const { isAuthenticated } = useAuth();
+  const authenticatedCart = useCart();
+  const guestCart = useGuestCart();
+
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('nl-NL', {
@@ -49,24 +50,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!product.is_active) return;
+    if (!product.is_active || product.stock <= 0) return;
 
     setIsLoading(true);
     try {
-      onAddToCart?.(product);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (isAuthenticated) {
+        await authenticatedCart.addItem(product.id, 1);
+      } else {
+        guestCart.addItem(product.id, 1);
+      }
+
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onToggleWishlist?.(product);
-  };
-
-  const isOutOfStock = !product.is_active;
+  const isOutOfStock = !product.is_active || product.stock <= 0;
 
   if (viewMode === 'list') {
     return (
@@ -114,14 +117,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
               variant='primary'
               size='md'
               onClick={handleAddToCart}
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || isLoading}
               loading={isLoading}
               leftIcon={
-                !isLoading ? <FiShoppingBag className='w-4 h-4' /> : undefined
+                showSuccess ? (
+                  <FiCheckCircle className='w-4 h-4' />
+                ) : !isLoading ? (
+                  <FiShoppingBag className='w-4 h-4' />
+                ) : undefined
               }
               className='min-h-[40px] px-4 mb-2'
             >
-              {isOutOfStock ? 'N/A' : 'Toevoegen'}
+              {showSuccess ? 'Added!' : isOutOfStock ? 'N/A' : 'Add to Cart'}
             </Button>
             <div className='flex items-center justify-center gap-1 text-sm'>
               {isOutOfStock ? (
@@ -153,19 +160,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div className={`card card-hover group relative ${className}`}>
-      {/* Wishlist Button */}
-      <button
-        onClick={handleToggleWishlist}
-        className={`absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-          isInWishlist
-            ? 'bg-red-100 text-red-600 hover:bg-red-200'
-            : 'bg-white/80 text-[#7d6b55] hover:bg-white hover:text-red-600'
-        } backdrop-blur-sm shadow-md hover:shadow-lg transform hover:scale-110`}
-        aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-      >
-        <FiHeart className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`} />
-      </button>
-
       {/* Stock Badge */}
       {isOutOfStock && (
         <div className='absolute top-4 left-4 z-10'>
@@ -175,7 +169,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         </div>
       )}
-
       <Link href={`/shop/${product.id}`} className='block'>
         {/* Product Image */}
         <div className='relative aspect-square overflow-hidden rounded-t-2xl bg-[#f5f2ee]'>
@@ -280,7 +273,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
       </Link>
-
       {/* Action Buttons */}
       <div className='px-6 pb-6 mt-2'>
         <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
@@ -288,14 +280,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
             variant='primary'
             size='md'
             onClick={handleAddToCart}
-            disabled={isOutOfStock}
+            disabled={isOutOfStock || isLoading}
             loading={isLoading}
             leftIcon={
-              !isLoading ? <FiShoppingBag className='w-4 h-4' /> : undefined
+              showSuccess ? (
+                <FiCheckCircle className='w-4 h-4' />
+              ) : !isLoading ? (
+                <FiShoppingBag className='w-4 h-4' />
+              ) : undefined
             }
             className='flex-1 min-h-[44px]'
           >
-            {isOutOfStock ? 'Niet beschikbaar' : 'Winkelwagen'}
+            {showSuccess
+              ? 'Toegevoegf aan winkelwagentje!'
+              : isOutOfStock
+                ? 'Niet beschikbaar'
+                : 'Winkelwagentje'}
           </Button>
         </div>
 
