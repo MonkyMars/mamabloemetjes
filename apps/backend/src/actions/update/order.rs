@@ -15,7 +15,7 @@ pub async fn update_order_status(id: Uuid, order_status: OrderStatus) -> Result<
         SET status = $1, updated_at = NOW()
         WHERE id = $2
         RETURNING
-            id, customer_id, order_number, status,
+            id, user_id, order_number, status,
             subtotal, tax_amount, shipping_cost, discount_amount,
             total_amount, notes, shipping_address, billing_address,
             created_at, updated_at
@@ -28,7 +28,7 @@ pub async fn update_order_status(id: Uuid, order_status: OrderStatus) -> Result<
 
     let order = Order {
         id: row.get("id"),
-        customer_id: row.get("customer_id"),
+        user_id: row.get("user_id"),
         order_number: row.get("order_number"),
         status: row.get("status"),
         subtotal: row.get("subtotal"),

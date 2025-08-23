@@ -63,7 +63,7 @@ impl Order {
             shipping_cost,
             discount_amount,
             order_number: IncomingOrder::generate_order_number(),
-            customer_id: payload.customer_id,
+            user_id: payload.user_id,
             notes: payload.notes.clone(),
             shipping_address: payload.shipping_address.clone(),
             billing_address: payload.billing_address.clone(),

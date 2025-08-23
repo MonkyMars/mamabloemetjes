@@ -33,6 +33,7 @@ async fn main() {
 
     info!("Starting mamabloemetjes backend server...");
 
+    // Warm up the database connection pool
     warmup_database().await;
 
     // Enable CORS middleware

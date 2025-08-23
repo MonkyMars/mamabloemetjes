@@ -8,7 +8,7 @@ use uuid::Uuid;
 // All orders come from authenticated users, so we don't need to store user_id.
 #[derive(FromRow, Serialize, Deserialize, Debug, Clone)]
 pub struct IncomingOrder {
-    pub customer_id: Uuid,
+    pub user_id: Uuid,
     pub price: Decimal,
     pub items: Vec<OrderContent>,
     pub shipping_address: Address,
@@ -32,7 +32,7 @@ pub struct OrderContent {
 #[derive(FromRow, Serialize, Deserialize, Debug, Clone)]
 pub struct Order {
     pub id: Option<Uuid>,
-    pub customer_id: Uuid,
+    pub user_id: Uuid,
     pub order_number: String, // Human-readable order number
     pub status: OrderStatus,
     pub subtotal: Decimal,   // Sum of all line items

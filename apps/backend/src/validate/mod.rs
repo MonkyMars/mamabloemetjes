@@ -9,6 +9,7 @@
 //! integrated into existing application logic.
 
 pub mod address;
+pub mod auth;
 pub mod business;
 pub mod order;
 pub mod structs;
@@ -19,6 +20,8 @@ pub use address::{
     validate_dutch_house_number, validate_dutch_postal_code, validate_dutch_province,
 };
 
+pub use auth::{validate_email, validate_password, validate_role};
+
 pub use business::{
     BusinessRules, BusinessValidationError, BusinessValidator, validate_complete_business_rules,
     validate_order_notes, validate_order_total, validate_product_quantity,
@@ -27,8 +30,7 @@ pub use business::{
 pub use order::{
     AddressValidator as OrderAddressValidator, OrderValidationError, OrderValidator,
     get_valid_provinces, is_valid_postal_code, is_valid_province, normalize_postal_code,
-    validate_complete_order, validate_email, validate_phone_number, validate_postal_code,
-    validate_province,
+    validate_complete_order, validate_phone_number, validate_postal_code, validate_province,
 };
 
 use crate::structs::{Address, IncomingOrder};

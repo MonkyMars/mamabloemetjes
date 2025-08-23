@@ -10,7 +10,7 @@ pub async fn post_order(order: &Order) -> Result<Order, SqlxError> {
     let row = sqlx::query(
         r#"
         INSERT INTO orders (
-            id, customer_id, order_number, status,
+            id, user_id, order_number, status,
             subtotal, tax_amount, shipping_cost, discount_amount,
             total_amount, notes, shipping_address, billing_address,
             created_at, updated_at
@@ -22,14 +22,14 @@ pub async fn post_order(order: &Order) -> Result<Order, SqlxError> {
             $13, $14
         )
         RETURNING
-            id, customer_id, order_number, status,
+            id, user_id, order_number, status,
             subtotal, tax_amount, shipping_cost, discount_amount,
             total_amount, notes, shipping_address, billing_address,
             created_at, updated_at
         "#,
     )
     .bind(order.id)
-    .bind(order.customer_id)
+    .bind(order.user_id)
     .bind(&order.order_number)
     .bind(order.status.to_string())
     .bind(&order.subtotal)
@@ -53,7 +53,7 @@ pub async fn post_order(order: &Order) -> Result<Order, SqlxError> {
 
     let order = Order {
         id: row.get("id"),
-        customer_id: row.get("customer_id"),
+        user_id: row.get("user_id"),
         order_number: row.get("order_number"),
         status: row.get("status"),
         subtotal: row.get("subtotal"),
@@ -156,7 +156,7 @@ pub async fn create_order_with_lines(
     let order_row = sqlx::query(
         r#"
         INSERT INTO orders (
-            id, customer_id, order_number, status,
+            id, user_id, order_number, status,
             subtotal, tax_amount, shipping_cost, discount_amount,
             total_amount, notes, shipping_address, billing_address,
             created_at, updated_at
@@ -168,14 +168,14 @@ pub async fn create_order_with_lines(
             $13, $14
         )
         RETURNING
-            id, customer_id, order_number, status,
+            id, user_id, order_number, status,
             subtotal, tax_amount, shipping_cost, discount_amount,
             total_amount, notes, shipping_address, billing_address,
             created_at, updated_at
         "#,
     )
     .bind(order.id)
-    .bind(order.customer_id)
+    .bind(order.user_id)
     .bind(&order.order_number)
     .bind(order.status.to_string())
     .bind(&order.subtotal)
@@ -199,7 +199,7 @@ pub async fn create_order_with_lines(
 
     let created_order = Order {
         id: order_row.get("id"),
-        customer_id: order_row.get("customer_id"),
+        user_id: order_row.get("user_id"),
         order_number: order_row.get("order_number"),
         status: order_row.get("status"),
         subtotal: order_row.get("subtotal"),
@@ -261,6 +261,28 @@ pub async fn get_order_with_lines(
 
     // Get the order first
     let order = match get_order_by_id(order_id).await? {
+        Some(order) => order,
+        _ => return Ok(None),
+    };
+
+    // Get the order lines
+    let order_lines = get_order_lines(order_id).await?;
+
+    Ok(Some(crate::structs::order::OrderWithLines::new(
+        order,
+        order_lines,
+    )))
+}
+
+pub async fn get_order_with_lines_by_user(
+    order_id: Uuid,
+    user_id: Uuid,
+) -> Result<Option<crate::structs::order::OrderWithLines>, SqlxError> {
+    use crate::actions::get::get_order_by_id_and_user;
+    use crate::actions::get::order_line::get_order_lines;
+
+    // Get the order first (only if owned by user)
+    let order = match get_order_by_id_and_user(order_id, user_id).await? {
         Some(order) => order,
         _ => return Ok(None),
     };
