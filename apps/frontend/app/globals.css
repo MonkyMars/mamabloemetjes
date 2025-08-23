@@ -130,11 +130,12 @@ body {
   }
 
   .heading-1 {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 font-family-serif leading-tight;
+    @apply text-4xl md:text-5xl lg:text-6xl font-semibold text-neutral-900 font-family-serif leading-tight;
+    animation: fadeIn 1s ease;
   }
 
   .heading-2 {
-    @apply text-3xl md:text-4xl font-semibold text-neutral-900 font-family-serif leading-snug;
+    @apply text-3xl md:text-4xl text-neutral-900 font-family-serif;
   }
 
   .heading-3 {
@@ -261,6 +262,60 @@ body {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px) translateY(-10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px) translateY(-10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+@keyframes slideInScale {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scaleX(1);
   }
 }
 
