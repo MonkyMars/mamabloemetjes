@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { searchProducts } from '../data/products';
+import api from '../lib/axios';
 
 interface UseSearchOptions {
   searchFields?: (keyof Product)[];
@@ -15,6 +15,16 @@ interface SearchResult {
   isLoading: boolean;
   error: string | null;
   totalResults: number;
+}
+
+interface BackendSearchResult {
+  products: Product[];
+  total_count: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+  search_time_ms: number;
+  suggestions?: string[];
 }
 
 export const useSearch = (
@@ -30,6 +40,7 @@ export const useSearch = (
   const [results, setResults] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalResults, setTotalResults] = useState(0);
 
   // Debounce search query
   useEffect(() => {
@@ -45,6 +56,7 @@ export const useSearch = (
     const performSearch = async () => {
       if (debouncedQuery.length < minSearchLength) {
         setResults([]);
+        setTotalResults(0);
         setError(null);
         return;
       }
@@ -52,11 +64,23 @@ export const useSearch = (
       try {
         setIsLoading(true);
         setError(null);
-        const searchResults = await searchProducts(debouncedQuery);
-        setResults(searchResults);
+
+        const response = await api.get<{
+          status: string;
+          data: BackendSearchResult;
+        }>(`/products/search?q=${encodeURIComponent(debouncedQuery)}`);
+
+        if (response.status === 200 && response.data.status === 'success') {
+          const searchData = response.data.data;
+          setResults(searchData.products);
+          setTotalResults(searchData.total_count);
+        } else {
+          throw new Error('Search request failed');
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Search failed');
         setResults([]);
+        setTotalResults(0);
       } finally {
         setIsLoading(false);
       }
@@ -69,6 +93,7 @@ export const useSearch = (
     setSearchQuery('');
     setDebouncedQuery('');
     setResults([]);
+    setTotalResults(0);
     setError(null);
   };
 
@@ -76,13 +101,13 @@ export const useSearch = (
     results,
     isLoading,
     error,
-    totalResults: results.length,
+    totalResults,
     setSearchQuery,
     clearSearch,
   };
 };
 
-// Hook for search suggestions
+// Hook for search suggestions using new backend API
 export const useSearchSuggestions = (query: string): string[] => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
@@ -94,32 +119,15 @@ export const useSearchSuggestions = (query: string): string[] => {
       }
 
       try {
-        // Get search results and extract suggestions from product names
-        const searchResults = await searchProducts(query);
-        const productSuggestions = searchResults
-          .map((product) => product.name)
-          .filter((name) => name.toLowerCase().includes(query.toLowerCase()))
-          .slice(0, 5);
+        const response = await api.get<{ status: string; data: string[] }>(
+          `/products/search/suggestions?q=${encodeURIComponent(query)}`,
+        );
 
-        // Add some common search terms based on the query
-        const commonSuggestions: string[] = [];
-        const queryLower = query.toLowerCase();
-
-        if (queryLower.includes('rose') || queryLower.includes('red')) {
-          commonSuggestions.push('Red Roses', 'Rose Bouquet');
+        if (response.status === 200 && response.data.status === 'success') {
+          setSuggestions(response.data.data.slice(0, 5));
+        } else {
+          setSuggestions([]);
         }
-        if (queryLower.includes('wedding') || queryLower.includes('bride')) {
-          commonSuggestions.push('Wedding Flowers', 'Bridal Bouquet');
-        }
-        if (queryLower.includes('birth') || queryLower.includes('gift')) {
-          commonSuggestions.push('Birthday Flowers', 'Gift Bouquet');
-        }
-
-        const allSuggestions = [
-          ...new Set([...productSuggestions, ...commonSuggestions]),
-        ].slice(0, 5);
-
-        setSuggestions(allSuggestions);
       } catch (error) {
         console.error('Failed to generate suggestions:', error);
         setSuggestions([]);
@@ -131,4 +139,30 @@ export const useSearchSuggestions = (query: string): string[] => {
   }, [query]);
 
   return suggestions;
+};
+
+// Hook for popular searches
+export const usePopularSearches = (limit: number = 5): string[] => {
+  const [popularSearches, setPopularSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchPopularSearches = async () => {
+      try {
+        const response = await api.get<{ status: string; data: string[] }>(
+          `/products/search/popular?per_page=${limit}`,
+        );
+
+        if (response.status === 200 && response.data.status === 'success') {
+          setPopularSearches(response.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch popular searches:', error);
+        setPopularSearches([]);
+      }
+    };
+
+    fetchPopularSearches();
+  }, [limit]);
+
+  return popularSearches;
 };

@@ -42,7 +42,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     closeSearch,
   } = useSearchContext();
 
-  const suggestions = useSearchSuggestions(searchQuery, 5);
+  const suggestions = useSearchSuggestions(searchQuery);
 
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);

@@ -43,6 +43,19 @@ fn public_routes() -> Router {
         )
         .route("/products", get(get::product::get_products))
         .route("/products/{id}", get(get::product::get_product))
+        // Search routes (public)
+        .route(
+            "/products/search",
+            get(crate::actions::get::search::search_products),
+        )
+        .route(
+            "/products/search/suggestions",
+            get(crate::actions::get::search::get_search_suggestions),
+        )
+        .route(
+            "/products/search/popular",
+            get(crate::actions::get::search::get_popular_searches),
+        )
         // Public inventory routes (limited access)
         .route("/inventory", get(get::inventory::get_all_inventory))
         .route(

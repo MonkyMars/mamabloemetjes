@@ -33,18 +33,32 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const {
-    products: searchResults,
-    isSearching,
-    searchQuery,
-    hasSearched,
+    results,
+    isLoading,
     totalResults,
     setSearchQuery,
     clearSearch: clearSearchHook,
   } = useSearch({
-    searchFields: ['name', 'description', 'category'],
+    searchFields: ['name', 'description', 'colors'],
     minSearchLength: 2,
     debounceDelay: 300,
   });
+
+  // Track search state
+  const [searchQuery, setSearchQueryState] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Update search query and track search state
+  const handleSetSearchQuery = useCallback(
+    (query: string) => {
+      setSearchQueryState(query);
+      setSearchQuery(query);
+      if (query.trim()) {
+        setHasSearched(true);
+      }
+    },
+    [setSearchQuery],
+  );
 
   const openSearch = useCallback(() => {
     setIsSearchOpen(true);
@@ -60,14 +74,16 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
 
   const clearSearch = useCallback(() => {
     clearSearchHook();
+    setSearchQueryState('');
+    setHasSearched(false);
     setIsSearchOpen(false);
   }, [clearSearchHook]);
 
   const value: SearchContextType = {
     // Search state
     searchQuery,
-    searchResults,
-    isSearching,
+    searchResults: results,
+    isSearching: isLoading,
     hasSearched,
     totalResults,
 
@@ -75,7 +91,7 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
     isSearchOpen,
 
     // Actions
-    setSearchQuery,
+    setSearchQuery: handleSetSearchQuery,
     clearSearch,
     openSearch,
     closeSearch,
@@ -83,9 +99,7 @@ export const SearchProvider: React.FC<SearchProviderProps> = ({ children }) => {
   };
 
   return (
-    <SearchContext.Provider value={value}>
-      {children}
-    </SearchContext.Provider>
+    <SearchContext.Provider value={value}>{children}</SearchContext.Provider>
   );
 };
 
