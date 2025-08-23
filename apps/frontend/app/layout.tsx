@@ -1,4 +1,4 @@
-import { Inter, Playfair_Display } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
@@ -10,29 +10,24 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-});
-
 export const metadata = {
-  title: 'Mama Bloemetjes - Handcrafted Velvet Flowers',
+  title: 'Mama Bloemetjes - Handgemaakte Vilt Bloemen',
   description:
-    'Beautiful custom-made velvet flower arrangements and bouquets. Crafted with love for your special moments.',
+    'Prachtige op maat gemaakte vilt bloemenarrangementen en boeketten. Gemaakt met liefde voor jouw speciale momenten.',
   keywords:
-    'velvet flowers, handmade bouquets, custom arrangements, flower shop, boutique flowers',
+    'vilt bloemen, handgemaakte boeketten, custom arrangementen, bloemenshop, boutique bloemen',
   openGraph: {
-    title: 'Mama Bloemetjes - Handcrafted Velvet Flowers',
+    title: 'Mama Bloemetjes - Handgemaakte Vilt Bloemen',
     description:
-      'Beautiful custom-made velvet flower arrangements and bouquets. Crafted with love for your special moments.',
+      'Prachtige op maat gemaakte vilt bloemenarrangementen en boeketten. Gemaakt met liefde voor jouw speciale momenten.',
     type: 'website',
-    locale: 'en_US',
+    locale: 'nl_NL',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mama Bloemetjes - Handcrafted Velvet Flowers',
+    title: 'Mama Bloemetjes - Handgemaakte Vilt Bloemen',
     description:
-      'Beautiful custom-made velvet flower arrangements and bouquets. Crafted with love for your special moments.',
+      'Prachtige op maat gemaakte vilt bloemenarrangementen en boeketten. Gemaakt met liefde voor jouw speciale momenten.',
   },
 };
 
@@ -42,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='en' className={`${inter.variable} ${playfair.variable}`}>
+    <html lang='en' className={`${inter.variable}`}>
       <head>
         <link rel='icon' href='/favicon.ico' />
         <meta name='viewport' content='width=device-width, initial-scale=1' />

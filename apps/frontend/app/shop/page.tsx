@@ -294,7 +294,7 @@ const ShopComponent: React.FC = () => {
         <div className='mb-12'>
           <h1 className='heading-1 mb-4'>Onze Collectie</h1>
           <p className='text-lg text-[#7d6b55] max-w-2xl'>
-            Ontdek onze prachtige handgemaakte velvet bloemen, perfect voor elke
+            Ontdek onze prachtige handgemaakte vilt bloemen, perfect voor elke
             gelegenheid. Elk stuk is gemaakt met liefde en aandacht voor detail.
           </p>
         </div>

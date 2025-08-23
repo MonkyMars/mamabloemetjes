@@ -31,7 +31,7 @@ export default function RegisterPage() {
             <h1 className='text-2xl font-serif font-bold text-neutral-900 mb-2'>
               Mama Bloemetjes
             </h1>
-            <p className='text-neutral-600'>Handcrafted Velvet Flowers</p>
+            <p className='text-neutral-600'>Handgemaakte Vilt Bloemen</p>
           </div>
 
           {/* Register Form */}
