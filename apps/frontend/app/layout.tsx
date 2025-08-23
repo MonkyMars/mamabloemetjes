@@ -3,6 +3,7 @@ import './globals.css';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import { SearchProvider } from '../context/SearchContext';
+import { AuthProvider } from '../context/AuthContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,11 +49,13 @@ export default function RootLayout({
         <meta name='theme-color' content='#d4a574' />
       </head>
       <body className='min-h-screen flex flex-col bg-[#faf9f7] text-[#2d2820]'>
-        <SearchProvider>
-          <Navigation />
-          <main className='flex-1'>{children}</main>
-          <Footer />
-        </SearchProvider>
+        <AuthProvider>
+          <SearchProvider>
+            <Navigation />
+            <main className='flex-1'>{children}</main>
+            <Footer />
+          </SearchProvider>
+        </AuthProvider>
       </body>
     </html>
   );
