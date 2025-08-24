@@ -85,10 +85,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (email: string, password: string): Promise<void> => {
+  const register = async (
+    first_name: string,
+    preposition: string,
+    last_name: string,
+    email: string,
+    password: string,
+  ): Promise<void> => {
     setIsLoading(true);
     try {
-      const authResponse = await authService.register({ email, password });
+      const authResponse = await authService.register({
+        first_name,
+        preposition,
+        last_name,
+        email,
+        password,
+      });
       setUser(authResponse.user);
 
       // Merge guest cart after successful registration

@@ -121,7 +121,14 @@ impl AuthService {
         let password_hash = Self::hash_password(&create_user.password)?;
 
         // Create user
-        let mut user = User::new(create_user.email, password_hash, create_user.role);
+        let mut user = User::new(
+            create_user.email,
+            create_user.first_name,
+            Some(create_user.preposition).filter(|s| !s.is_empty()),
+            create_user.last_name,
+            password_hash,
+            create_user.role,
+        );
 
         // Generate tokens
         let access_token = Self::generate_access_token(&user)?;
@@ -139,6 +146,9 @@ impl AuthService {
             refresh_token,
             user: UserInfo {
                 id: user.id,
+                first_name: user.first_name.clone(),
+                preposition: user.preposition.clone(),
+                last_name: user.last_name.clone(),
                 email: user.email.clone(),
                 role: user.role.clone(),
                 created_at: user.created_at,
@@ -175,6 +185,9 @@ impl AuthService {
             refresh_token,
             user: UserInfo {
                 id: user.id,
+                first_name: user.first_name.clone(),
+                preposition: user.preposition.clone(),
+                last_name: user.last_name.clone(),
                 email: user.email.clone(),
                 role: user.role.clone(),
                 created_at: user.created_at,
@@ -276,14 +289,17 @@ impl AuthService {
         sqlx::query(
             r#"
             INSERT INTO users (
-                id, email, password_hash, role, refresh_token, refresh_token_expires_at,
+                id, email, first_name, preposition, last_name, password_hash, role, refresh_token, refresh_token_expires_at,
                 created_at, updated_at, email_verified, last_login
             )
-            VALUES ($1, $2, $3, $4::user_role, $5, $6, $7, $8, $9, $10)
+            VALUES ($1, $2, $3, $4, $5, $6, $7::user_role, $8, $9, $10, $11, $12, $13)
             "#,
         )
         .bind(user.id)
         .bind(&user.email)
+        .bind(&user.first_name)
+        .bind(&user.preposition)
+        .bind(&user.last_name)
         .bind(&user.password_hash)
         .bind(user.role.as_str())
         .bind(&user.refresh_token)
@@ -302,7 +318,7 @@ impl AuthService {
     async fn get_user_by_email(pool: &PgPool, email: &str) -> Result<User, AppError> {
         let row = sqlx::query(
             r#"
-            SELECT id, email, password_hash, role::text, refresh_token, refresh_token_expires_at,
+            SELECT id, email, first_name, preposition, last_name, password_hash, role::text, refresh_token, refresh_token_expires_at,
                    created_at, updated_at, email_verified, last_login
             FROM users
             WHERE email = $1
@@ -324,6 +340,9 @@ impl AuthService {
         Ok(User {
             id: row.get("id"),
             email: row.get("email"),
+            first_name: row.get("first_name"),
+            preposition: row.get("preposition"),
+            last_name: row.get("last_name"),
             password_hash: row.get("password_hash"),
             role,
             refresh_token: row.get("refresh_token"),
@@ -338,7 +357,7 @@ impl AuthService {
     async fn get_user_by_id_from_pool(pool: &PgPool, user_id: Uuid) -> Result<User, AppError> {
         let row = sqlx::query(
             r#"
-            SELECT id, email, password_hash, role::text, refresh_token, refresh_token_expires_at,
+            SELECT id, email, first_name, preposition, last_name, password_hash, role::text, refresh_token, refresh_token_expires_at,
                    created_at, updated_at, email_verified, last_login
             FROM users
             WHERE id = $1
@@ -360,6 +379,9 @@ impl AuthService {
         Ok(User {
             id: row.get("id"),
             email: row.get("email"),
+            first_name: row.get("first_name"),
+            preposition: row.get("preposition"),
+            last_name: row.get("last_name"),
             password_hash: row.get("password_hash"),
             role,
             refresh_token: row.get("refresh_token"),
@@ -377,7 +399,7 @@ impl AuthService {
     ) -> Result<User, AppError> {
         let row = sqlx::query(
             r#"
-            SELECT id, email, password_hash, role::text, refresh_token, refresh_token_expires_at,
+            SELECT id, email, first_name, preposition, last_name, password_hash, role::text, refresh_token, refresh_token_expires_at,
                    created_at, updated_at, email_verified, last_login
             FROM users
             WHERE refresh_token = $1
@@ -401,6 +423,9 @@ impl AuthService {
         Ok(User {
             id: row.get("id"),
             email: row.get("email"),
+            first_name: row.get("first_name"),
+            preposition: row.get("preposition"),
+            last_name: row.get("last_name"),
             password_hash: row.get("password_hash"),
             role,
             refresh_token: row.get("refresh_token"),

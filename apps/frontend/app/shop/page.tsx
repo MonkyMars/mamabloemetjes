@@ -126,6 +126,9 @@ const ShopComponent: React.FC = () => {
     };
   }, []);
 
+  const minPrice = filters.priceRange[0];
+  const maxPrice = filters.priceRange[1];
+
   // Filter and sort products
   useEffect(() => {
     const filtered = effectiveProducts.filter((product) => {
@@ -142,7 +145,6 @@ const ShopComponent: React.FC = () => {
       ) {
         return false;
       }
-
       // Product type filter
       if (
         filters.productType !== 'all' &&
@@ -150,7 +152,6 @@ const ShopComponent: React.FC = () => {
       ) {
         return false;
       }
-
       // Colors filter
       if (
         filters.colors.length > 0 &&
@@ -164,7 +165,6 @@ const ShopComponent: React.FC = () => {
       ) {
         return false;
       }
-
       // Sizes filter
       if (
         filters.sizes.length > 0 &&
@@ -176,20 +176,14 @@ const ShopComponent: React.FC = () => {
       ) {
         return false;
       }
-
       // Price range
-      if (
-        product.price < filters.priceRange[0] ||
-        product.price > filters.priceRange[1]
-      ) {
+      if (product.price < minPrice || product.price > maxPrice) {
         return false;
       }
-
       // Only show active products
       if (!product.is_active) {
         return false;
       }
-
       return true;
     });
 
@@ -212,7 +206,16 @@ const ShopComponent: React.FC = () => {
     });
 
     setFilteredProducts(filtered);
-  }, [effectiveProducts, effectiveSearchQuery, filters, sortBy]);
+  }, [
+    effectiveProducts,
+    effectiveSearchQuery,
+    filters.productType,
+    filters.colors,
+    filters.sizes,
+    minPrice,
+    maxPrice,
+    sortBy,
+  ]);
 
   const handleFilterChange = (
     key: keyof FilterState,

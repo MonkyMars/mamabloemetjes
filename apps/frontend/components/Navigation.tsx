@@ -19,6 +19,7 @@ import { useSearchContext } from '../context/SearchContext';
 import { SearchModal, SearchButton } from './Search';
 import { useAuth } from '../context/AuthContext';
 import { useCart, useGuestCart } from '../hooks/useCart';
+import { getFullName } from '@/lib/auth';
 
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -49,14 +50,12 @@ const Navigation: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = () => {
       if (isUserMenuOpen) {
-        setIsUserMenuOpen(false);
+        setTimeout(() => setIsUserMenuOpen(false), 100);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isUserMenuOpen]);
 
   const navigationLinks = [
@@ -178,11 +177,11 @@ const Navigation: React.FC = () => {
                       >
                         <div className='w-8 h-8 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center'>
                           <span className='text-white font-medium text-sm'>
-                            {user.email.charAt(0).toUpperCase()}
+                            {user.first_name.charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <span className='text-sm font-medium hidden xl:block'>
-                          {user.email.split('@')[0]}
+                          {getFullName(user)}
                         </span>
                       </button>
 

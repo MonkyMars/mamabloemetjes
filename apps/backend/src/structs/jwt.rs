@@ -4,6 +4,9 @@ use uuid::Uuid;
 
 #[derive(Deserialize)]
 pub struct Signup {
+    pub first_name: String,
+    pub preposition: String,
+    pub last_name: String,
     pub email: String,
     pub password: String,
 }
@@ -57,6 +60,9 @@ pub struct AuthResponse {
 pub struct UserInfo {
     pub id: Uuid,
     pub email: String,
+    pub first_name: String,
+    pub preposition: Option<String>,
+    pub last_name: String,
     pub role: UserRole,
     pub created_at: DateTime<Utc>,
 }
