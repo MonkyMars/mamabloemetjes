@@ -92,7 +92,9 @@ const ShopComponent: React.FC = () => {
   }, [searchParams, localSearchQuery]);
 
   // Get effective search query and products
-  const effectiveSearchQuery = searchParams.get('search') || localSearchQuery;
+  const effectiveSearchQuery = useMemo(() => {
+    return searchParams.get('search') || localSearchQuery;
+  }, [searchParams, localSearchQuery]);
   const effectiveProducts = useMemo(() => {
     // If we have global search results from navigation, use those
     if (hasSearched && globalSearchQuery && !effectiveSearchQuery) {
