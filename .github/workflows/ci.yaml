@@ -14,11 +14,6 @@ jobs:
         include:
           - name: rust
             paths: "apps/backend/**/*.rs"
-            cache_paths: |
-              ~/.cargo/registry/index
-              ~/.cargo/registry/cache
-              ~/.cargo/git/db
-              apps/backend/target
             build_script: |
               if ! echo "$CHANGED_FILES" | grep -q "apps/backend/.*\.rs"; then
                 echo "⏭️ No Rust changes detected"
@@ -35,10 +30,6 @@ jobs:
               echo "✅ Rust build complete"
           - name: nextjs
             paths: "apps/frontend/**/*.ts apps/frontend/**/*.tsx"
-            cache_paths: |
-              ~/.bun/install/cache
-              apps/frontend/node_modules
-              apps/frontend/.next/cache
             build_script: |
               if ! echo "$CHANGED_FILES" | grep -qE "apps/frontend/.*\.(ts|tsx)"; then
                 echo "⏭️ No NextJS changes detected"
@@ -76,14 +67,30 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
-      - name: Cache dependencies
+      - name: Cache Rust dependencies
+        if: matrix.name == 'rust'
         uses: actions/cache@v4
         with:
-          path: ${{ matrix.cache_paths }}
-          key: ${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('apps/backend/Cargo.lock', 'apps/frontend/bun.lock') }}-${{ github.sha }}
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            apps/backend/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('apps/backend/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('apps/backend/Cargo.lock', 'apps/frontend/bun.lock') }}-
-            ${{ runner.os }}-${{ matrix.name }}-
+            ${{ runner.os }}-cargo-
+
+      - name: Cache Node dependencies
+        if: matrix.name == 'nextjs'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            apps/frontend/node_modules
+            apps/frontend/.next/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('apps/frontend/bun.lockb', 'apps/frontend/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Build ${{ matrix.name }}
         run: ${{ matrix.build_script }}
