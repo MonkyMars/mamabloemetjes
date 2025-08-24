@@ -24,19 +24,15 @@ jobs:
                 echo "⏭️ No Rust changes detected"
                 exit 0
               fi
-
               echo "🦀 Rust build starting..."
               curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
               source ~/.cargo/env
-
               cd apps/backend
               cargo check --locked &
               cargo fetch --locked &
               wait
-
               cargo build --release --locked
               echo "✅ Rust build complete"
-
           - name: nextjs
             paths: "apps/frontend/**/*.ts apps/frontend/**/*.tsx"
             cache_paths: |
@@ -48,24 +44,19 @@ jobs:
                 echo "⏭️ No NextJS changes detected"
                 exit 0
               fi
-
               echo "⚡ NextJS build starting..."
               curl -fsSL https://bun.sh/install | bash
               export PATH="$HOME/.bun/bin:$PATH"
-
               cd apps/frontend
               bun install --frozen-lockfile --silent
-
               # Skip linting if no lint script exists
               if bun run --silent lint 2>/dev/null; then
                 echo "🧹 Linting passed"
               else
                 echo "ℹ️ No lint script found, skipping"
               fi
-
               bun run build
               echo "✅ NextJS build complete"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,7 +70,9 @@ jobs:
           else
             CHANGED_FILES=$(git diff --name-only HEAD~1)
           fi
-          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+          echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
+          echo "$CHANGED_FILES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
