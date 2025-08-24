@@ -8,6 +8,7 @@ import {
   User,
 } from '../types/auth';
 import { ApiResponse } from '../types/api';
+import { capitalize } from './utils';
 
 // Create axios instance with base configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -263,4 +264,20 @@ export const validatePassword = (password: string): string | null => {
   }
 
   return null;
+};
+
+export const getFullName = (user: User): string => {
+  if (!user.first_name && !user.last_name) {
+    return 'Gebruiker';
+  }
+  if (user.first_name && !user.last_name) {
+    return capitalize(user.first_name);
+  }
+  if (!user.first_name && user.last_name) {
+    return capitalize(user.last_name);
+  }
+  const fullName = user.preposition
+    ? `${capitalize(user.first_name)} ${user.preposition} ${capitalize(user.last_name)}`
+    : `${capitalize(user.first_name)} ${capitalize(user.last_name)}`;
+  return fullName.trim();
 };

@@ -1,5 +1,8 @@
 export interface User {
   id: string;
+  first_name: string;
+  preposition?: string;
+  last_name: string;
   email: string;
   role: 'user' | 'admin';
   created_at: string;
@@ -18,6 +21,9 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
+  first_name: string;
+  preposition: string;
+  last_name: string;
   email: string;
   password: string;
 }
@@ -36,7 +42,13 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (
+    first_name: string,
+    preposition: string,
+    last_name: string,
+    email: string,
+    password: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
 }
@@ -47,6 +59,8 @@ export interface AuthError {
 }
 
 export interface ValidationError {
+  firstName?: string;
+  lastName?: string;
   email?: string;
   password?: string;
   general?: string;

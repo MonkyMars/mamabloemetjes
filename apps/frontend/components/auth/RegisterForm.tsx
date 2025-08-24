@@ -24,6 +24,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   className = '',
 }) => {
   const [formData, setFormData] = useState({
+    firstName: '',
+    preposition: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -38,7 +41,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const router = useRouter();
 
   const validateForm = (): boolean => {
-    const newErrors: ValidationError & { confirmPassword?: string } = {};
+    const newErrors: ValidationError & {
+      confirmPassword?: string;
+      firstName?: string;
+      lastName?: string;
+    } = {};
+
+    // Validate first name
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'Voornaam is verplicht';
+    }
+
+    // Validate last name
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Achternaam is verplicht';
+    }
 
     // Validate email
     const emailError = validateEmail(formData.email);
@@ -109,7 +126,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     setSubmitError('');
 
     try {
-      await register(formData.email, formData.password);
+      await register(
+        formData.firstName,
+        formData.preposition,
+        formData.lastName,
+        formData.email,
+        formData.password,
+      );
 
       if (onSuccess) {
         onSuccess();
@@ -164,6 +187,47 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className='space-y-6'>
+          {/* Name Fields */}
+          <div className='space-y-4'>
+            <Input
+              type='text'
+              label='Voornaam'
+              placeholder='Voer je voornaam in'
+              value={formData.firstName}
+              onChange={handleInputChange('firstName')}
+              error={errors.firstName}
+              leftIcon={<FiUser className='w-5 h-5' />}
+              required
+              disabled={isSubmitting}
+              autoComplete='given-name'
+            />
+            <div className='grid grid-cols-3 gap-2'>
+              <Input
+                type='text'
+                label='Tussenvoegsel'
+                placeholder='van, de, der'
+                value={formData.preposition}
+                onChange={handleInputChange('preposition')}
+                disabled={isSubmitting}
+                autoComplete='additional-name'
+              />
+              <div className='col-span-2'>
+                <Input
+                  type='text'
+                  label='Achternaam'
+                  placeholder='Voer je achternaam in'
+                  value={formData.lastName}
+                  onChange={handleInputChange('lastName')}
+                  error={errors.lastName}
+                  leftIcon={<FiUser className='w-5 h-5' />}
+                  required
+                  disabled={isSubmitting}
+                  autoComplete='family-name'
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Email Field */}
           <Input
             type='email'

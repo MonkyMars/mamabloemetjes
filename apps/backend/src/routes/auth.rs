@@ -3,14 +3,13 @@ use crate::response::{ApiResponse, AppResponse, error::AppError};
 use crate::services::auth::AuthService;
 use crate::structs::jwt::{Login, RefreshTokenRequest, RoleUpdateRequest, Signup, UserRole};
 use crate::structs::user::CreateUser;
+use crate::structs::{AuthResponse, RefreshResponse, UserInfo};
 use crate::validate::auth::{validate_email, validate_password};
 use axum::{Extension, Json, extract::Path};
 use uuid::Uuid;
 
 /// Register a new user
-pub async fn register(
-    Json(signup): Json<Signup>,
-) -> ApiResponse<crate::structs::jwt::AuthResponse> {
+pub async fn register(Json(signup): Json<Signup>) -> ApiResponse<AuthResponse> {
     // Validate input
     if let Err(e) = validate_email(&signup.email) {
         return AppResponse::Error(AppError::BadRequest(e));
@@ -21,6 +20,9 @@ pub async fn register(
     }
 
     let create_user = CreateUser {
+        first_name: signup.first_name,
+        preposition: signup.preposition,
+        last_name: signup.last_name,
         email: signup.email,
         password: signup.password,
         role: Some(UserRole::User), // Default to user role
@@ -33,7 +35,7 @@ pub async fn register(
 }
 
 /// Login user
-pub async fn login(Json(login): Json<Login>) -> ApiResponse<crate::structs::jwt::AuthResponse> {
+pub async fn login(Json(login): Json<Login>) -> ApiResponse<AuthResponse> {
     // Validate input
     if let Err(e) = validate_email(&login.email) {
         return AppResponse::Error(AppError::BadRequest(e));
@@ -65,7 +67,7 @@ pub async fn logout(Extension(auth_user): Extension<AuthUser>) -> ApiResponse<()
 /// Refresh access token
 pub async fn refresh_token(
     Json(refresh_request): Json<RefreshTokenRequest>,
-) -> ApiResponse<crate::structs::jwt::RefreshResponse> {
+) -> ApiResponse<RefreshResponse> {
     if refresh_request.refresh_token.is_empty() {
         return AppResponse::Error(AppError::BadRequest(
             "Refresh token is required".to_string(),
@@ -79,17 +81,18 @@ pub async fn refresh_token(
 }
 
 /// Get current user profile
-pub async fn profile(
-    Extension(auth_user): Extension<AuthUser>,
-) -> ApiResponse<crate::structs::jwt::UserInfo> {
+pub async fn profile(Extension(auth_user): Extension<AuthUser>) -> ApiResponse<UserInfo> {
     let user_id = match auth_user.user_uuid() {
         Ok(id) => id,
         Err(e) => return AppResponse::Error(e),
     };
 
     match AuthService::get_user_by_id(user_id).await {
-        Ok(user) => AppResponse::Success(crate::structs::jwt::UserInfo {
+        Ok(user) => AppResponse::Success(UserInfo {
             id: user.id,
+            first_name: user.first_name,
+            preposition: user.preposition,
+            last_name: user.last_name,
             email: user.email,
             role: user.role,
             created_at: user.created_at,
@@ -99,17 +102,18 @@ pub async fn profile(
 }
 
 /// Verify token endpoint (useful for frontend to check if token is still valid)
-pub async fn verify(
-    Extension(auth_user): Extension<AuthUser>,
-) -> ApiResponse<crate::structs::jwt::UserInfo> {
+pub async fn verify(Extension(auth_user): Extension<AuthUser>) -> ApiResponse<UserInfo> {
     let user_id = match auth_user.user_uuid() {
         Ok(id) => id,
         Err(e) => return AppResponse::Error(e),
     };
 
     match AuthService::get_user_by_id(user_id).await {
-        Ok(user) => AppResponse::Success(crate::structs::jwt::UserInfo {
+        Ok(user) => AppResponse::Success(UserInfo {
             id: user.id,
+            first_name: user.first_name,
+            preposition: user.preposition,
+            last_name: user.last_name,
             email: user.email,
             role: user.role,
             created_at: user.created_at,
@@ -124,7 +128,7 @@ pub async fn verify(
 pub async fn create_admin(
     Extension(auth_user): Extension<AuthUser>,
     Json(signup): Json<Signup>,
-) -> ApiResponse<crate::structs::jwt::AuthResponse> {
+) -> ApiResponse<AuthResponse> {
     // Check if user is admin
     if !auth_user.is_admin() {
         return AppResponse::Error(AppError::Forbidden("Admin access required".to_string()));
@@ -141,6 +145,9 @@ pub async fn create_admin(
 
     let create_user = CreateUser {
         email: signup.email,
+        first_name: signup.first_name,
+        preposition: signup.preposition,
+        last_name: signup.last_name,
         password: signup.password,
         role: Some(UserRole::Admin), // Create as admin
     };
@@ -171,15 +178,18 @@ pub async fn update_user_role(
 pub async fn get_user(
     Extension(auth_user): Extension<AuthUser>,
     Path(user_id): Path<Uuid>,
-) -> ApiResponse<crate::structs::jwt::UserInfo> {
+) -> ApiResponse<UserInfo> {
     // Check if user is admin
     if !auth_user.is_admin() {
         return AppResponse::Error(AppError::Forbidden("Admin access required".to_string()));
     }
 
     match AuthService::get_user_by_id(user_id).await {
-        Ok(user) => AppResponse::Success(crate::structs::jwt::UserInfo {
+        Ok(user) => AppResponse::Success(UserInfo {
             id: user.id,
+            first_name: user.first_name,
+            preposition: user.preposition,
+            last_name: user.last_name,
             email: user.email,
             role: user.role,
             created_at: user.created_at,
