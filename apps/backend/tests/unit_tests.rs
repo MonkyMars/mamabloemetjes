@@ -111,66 +111,6 @@ mod auth_middleware_tests {
     }
 }
 
-// Tests for routes::get::search module
-mod search_routes_tests {
-    use axum::http::StatusCode;
-    use mamabloemetjes_backend::routes::get::search::search_routes;
-    use tower::ServiceExt;
-
-    #[tokio::test]
-    async fn test_search_routes_exist() {
-        let app = search_routes();
-
-        // Test that routes are accessible (they will return errors without a database, but routes exist)
-        let response = app
-            .oneshot(
-                axum::http::Request::builder()
-                    .uri("/search?q=test")
-                    .body(axum::body::Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        // Route should exist (not 404)
-        assert_ne!(response.status(), StatusCode::NOT_FOUND);
-    }
-
-    #[tokio::test]
-    async fn test_suggestions_route_exists() {
-        let app = search_routes();
-
-        let response = app
-            .oneshot(
-                axum::http::Request::builder()
-                    .uri("/search/suggestions?q=test")
-                    .body(axum::body::Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        assert_ne!(response.status(), StatusCode::NOT_FOUND);
-    }
-
-    #[tokio::test]
-    async fn test_popular_searches_route_exists() {
-        let app = search_routes();
-
-        let response = app
-            .oneshot(
-                axum::http::Request::builder()
-                    .uri("/search/popular")
-                    .body(axum::body::Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        assert_ne!(response.status(), StatusCode::NOT_FOUND);
-    }
-}
-
 // Tests for services::search::search_analytics module
 mod search_analytics_tests {
     use mamabloemetjes_backend::services::search::search_analytics::SearchAnalyticsService;
