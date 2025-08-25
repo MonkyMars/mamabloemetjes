@@ -10,6 +10,8 @@ export interface Product {
   name: string;
   sku: string;
   price: number;
+  tax: number;
+  subtotal: number;
   description: string;
   is_active: boolean;
   created_at: string;

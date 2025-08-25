@@ -79,6 +79,7 @@ impl CartService {
         match sqlx::query_as::<_, CartItemWithProduct>(
             "SELECT
                 ci.id, ci.cart_id, ci.product_id, ci.quantity, ci.unit_price_cents,
+                ci.unit_tax_cents, ci.unit_subtotal_cents,
                 ci.created_at, ci.updated_at, ci.metadata,
                 p.name as product_name, p.sku as product_sku
              FROM cart_items ci
@@ -125,15 +126,23 @@ impl CartService {
             )));
         }
 
-        // Calculate unit price in cents
+        // Calculate unit prices in cents
         let unit_price_cents = (product.price * Decimal::from(100))
+            .round()
+            .to_i32()
+            .unwrap_or(0);
+        let unit_tax_cents = (product.tax * Decimal::from(100))
+            .round()
+            .to_i32()
+            .unwrap_or(0);
+        let unit_subtotal_cents = (product.subtotal * Decimal::from(100))
             .round()
             .to_i32()
             .unwrap_or(0);
 
         // Check if item already exists in cart
         let existing_item = sqlx::query_as::<_, CartItem>(
-            "SELECT id, cart_id, product_id, quantity, unit_price_cents, created_at, updated_at, metadata
+            "SELECT id, cart_id, product_id, quantity, unit_price_cents, unit_tax_cents, unit_subtotal_cents, created_at, updated_at, metadata
              FROM cart_items WHERE cart_id = $1 AND product_id = $2",
         )
         .bind(cart.id)
@@ -159,14 +168,16 @@ impl CartService {
             Ok(_) => {
                 // Create new cart item
                 match sqlx::query_as::<_, CartItem>(
-                    "INSERT INTO cart_items (cart_id, product_id, quantity, unit_price_cents)
-                     VALUES ($1, $2, $3, $4)
-                     RETURNING id, cart_id, product_id, quantity, unit_price_cents, created_at, updated_at, metadata",
+                    "INSERT INTO cart_items (cart_id, product_id, quantity, unit_price_cents, unit_tax_cents, unit_subtotal_cents)
+                     VALUES ($1, $2, $3, $4, $5, $6)
+                     RETURNING id, cart_id, product_id, quantity, unit_price_cents, unit_tax_cents, unit_subtotal_cents, created_at, updated_at, metadata",
                 )
                 .bind(cart.id)
                 .bind(request.product_id)
                 .bind(request.quantity)
                 .bind(unit_price_cents)
+                .bind(unit_tax_cents)
+                .bind(unit_subtotal_cents)
                 .fetch_one(pool)
                 .await
                 {
@@ -177,6 +188,8 @@ impl CartService {
                             product_id: cart_item.product_id,
                             quantity: cart_item.quantity,
                             unit_price_cents: cart_item.unit_price_cents,
+                            unit_tax_cents: cart_item.unit_tax_cents,
+                            unit_subtotal_cents: cart_item.unit_subtotal_cents,
                             created_at: cart_item.created_at,
                             updated_at: cart_item.updated_at,
                             metadata: cart_item.metadata,
@@ -208,6 +221,7 @@ impl CartService {
         let item_with_product = match sqlx::query_as::<_, CartItemWithProduct>(
             "SELECT
                 ci.id, ci.cart_id, ci.product_id, ci.quantity, ci.unit_price_cents,
+                ci.unit_tax_cents, ci.unit_subtotal_cents,
                 ci.created_at, ci.updated_at, ci.metadata,
                 p.name as product_name, p.sku as product_sku
              FROM cart_items ci
@@ -327,8 +341,16 @@ impl CartService {
                 AppResponse::Error(_) => continue, // Skip invalid products
             };
 
-            // Calculate unit price in cents (use backend price, not client price)
+            // Calculate unit prices in cents (use backend prices, not client prices)
             let unit_price_cents = (product.price * Decimal::from(100))
+                .round()
+                .to_i32()
+                .unwrap_or(0);
+            let unit_tax_cents = (product.tax * Decimal::from(100))
+                .round()
+                .to_i32()
+                .unwrap_or(0);
+            let unit_subtotal_cents = (product.subtotal * Decimal::from(100))
                 .round()
                 .to_i32()
                 .unwrap_or(0);
@@ -358,11 +380,13 @@ impl CartService {
             if existing_quantity > 0 {
                 // Update existing item
                 let _ = sqlx::query(
-                    "UPDATE cart_items SET quantity = $1, unit_price_cents = $2, updated_at = now()
-                     WHERE cart_id = $3 AND product_id = $4",
+                    "UPDATE cart_items SET quantity = $1, unit_price_cents = $2, unit_tax_cents = $3, unit_subtotal_cents = $4, updated_at = now()
+                     WHERE cart_id = $5 AND product_id = $6",
                 )
                 .bind(final_quantity)
                 .bind(unit_price_cents)
+                .bind(unit_tax_cents)
+                .bind(unit_subtotal_cents)
                 .bind(cart.id)
                 .bind(guest_item.product_id)
                 .execute(pool)
@@ -370,13 +394,15 @@ impl CartService {
             } else {
                 // Insert new item
                 let _ = sqlx::query(
-                    "INSERT INTO cart_items (cart_id, product_id, quantity, unit_price_cents)
-                     VALUES ($1, $2, $3, $4)",
+                    "INSERT INTO cart_items (cart_id, product_id, quantity, unit_price_cents, unit_tax_cents, unit_subtotal_cents)
+                     VALUES ($1, $2, $3, $4, $5, $6)",
                 )
                 .bind(cart.id)
                 .bind(guest_item.product_id)
                 .bind(final_quantity)
                 .bind(unit_price_cents)
+                .bind(unit_tax_cents)
+                .bind(unit_subtotal_cents)
                 .execute(pool)
                 .await;
             }

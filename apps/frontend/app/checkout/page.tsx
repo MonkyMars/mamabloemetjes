@@ -23,9 +23,11 @@ import {
   FiHome,
 } from 'react-icons/fi';
 import { Product } from '@/types';
+import { getFullName } from '@/lib/auth';
 
 interface BillingInfo {
   firstName: string;
+  preposition: string;
   lastName: string;
   email: string;
   phone: string;
@@ -37,7 +39,7 @@ interface BillingInfo {
 
 interface OrderSummary {
   subtotal: number;
-  vatAmount: number;
+  tax: number;
   shipping: number;
   total: number;
   itemCount: number;
@@ -66,6 +68,7 @@ const CheckoutPage: React.FC = () => {
   const [products, setProducts] = useState<Record<string, Product>>({});
   const [billingInfo, setBillingInfo] = useState<BillingInfo>({
     firstName: user?.first_name || '',
+    preposition: user?.preposition || '',
     lastName: user?.last_name || '',
     email: user?.email || '',
     phone: '',
@@ -133,6 +136,7 @@ const CheckoutPage: React.FC = () => {
       setBillingInfo((prev) => ({
         ...prev,
         firstName: user.first_name || '',
+        preposition: user.preposition || '',
         lastName: user.last_name || '',
         email: user.email || '',
       }));
@@ -140,35 +144,48 @@ const CheckoutPage: React.FC = () => {
   }, [isAuthenticated, user]);
 
   const calculateOrderSummary = (): OrderSummary => {
+    let priceTotal = 0; // This is the total including tax (what customer pays)
     let subtotal = 0;
+    let tax = 0;
     let itemCount = 0;
 
     if (isAuthenticated && cart?.items) {
-      subtotal =
+      priceTotal =
         cart.items.reduce((sum, item) => {
           return sum + item.quantity * item.unit_price_cents;
         }, 0) / 100; // Convert from cents
+      subtotal =
+        cart.items.reduce((sum, item) => {
+          return sum + item.quantity * item.unit_subtotal_cents;
+        }, 0) / 100; // Convert from cents
+      tax =
+        cart.items.reduce((sum, item) => {
+          return sum + item.quantity * item.unit_tax_cents;
+        }, 0) / 100; // Convert from cents
       itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
     } else if (!isAuthenticated) {
-      subtotal = guestCart.items.reduce((sum, item) => {
+      priceTotal = guestCart.items.reduce((sum, item) => {
         const product = products[item.product_id];
         return sum + (product ? product.price * item.quantity : 0);
+      }, 0);
+      subtotal = guestCart.items.reduce((sum, item) => {
+        const product = products[item.product_id];
+        return sum + (product ? product.subtotal * item.quantity : 0);
+      }, 0);
+      tax = guestCart.items.reduce((sum, item) => {
+        const product = products[item.product_id];
+        return sum + (product ? product.tax * item.quantity : 0);
       }, 0);
       itemCount = guestCart.totalQuantity();
     }
 
     const shippingThreshold = 75;
-    const shipping = subtotal >= shippingThreshold ? 0 : 7.5;
-
-    // Calculate VAT (21% included in subtotal)
-    const vatRate = 0.21;
-    const vatAmount = (subtotal * vatRate) / (1 + vatRate);
-
-    const total = subtotal + shipping;
+    const shipping = priceTotal >= shippingThreshold ? 0 : 7.5;
+    const total = priceTotal + shipping;
 
     return {
       subtotal,
-      vatAmount,
+      tax,
       shipping,
       total,
       itemCount,
@@ -309,6 +326,7 @@ const CheckoutPage: React.FC = () => {
       const checkoutRequest = {
         billing_info: {
           first_name: billingInfo.firstName,
+          preposition: billingInfo.preposition,
           last_name: billingInfo.lastName,
           email: billingInfo.email,
           phone: billingInfo.phone,
@@ -442,9 +460,7 @@ const CheckoutPage: React.FC = () => {
               {isAuthenticated ? (
                 <div className='bg-green-50 border border-green-200 rounded-lg p-4'>
                   <p className='text-green-800'>
-                    <strong>
-                      {user?.first_name} {user?.last_name}
-                    </strong>
+                    <strong>{getFullName(user)}</strong>
                     <br />
                     {user?.email}
                   </p>
@@ -474,18 +490,35 @@ const CheckoutPage: React.FC = () => {
                 </h2>
               </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <Input
-                  label='Voornaam'
-                  value={billingInfo.firstName}
-                  onChange={(e) =>
-                    handleInputChange('firstName', e.target.value)
-                  }
-                  error={errors.firstName}
-                  leftIcon={<FiUser />}
-                  required
-                  disabled={isAuthenticated}
-                />
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                <div className='md:col-span-2'>
+                  <Input
+                    label='Voornaam'
+                    value={billingInfo.firstName}
+                    onChange={(e) =>
+                      handleInputChange('firstName', e.target.value)
+                    }
+                    error={errors.firstName}
+                    leftIcon={<FiUser />}
+                    required
+                    disabled={isAuthenticated}
+                  />
+                </div>
+                <div>
+                  <Input
+                    label='Tussenvoegsel'
+                    value={billingInfo.preposition}
+                    onChange={(e) =>
+                      handleInputChange('preposition', e.target.value)
+                    }
+                    error={errors.preposition}
+                    placeholder='van, de, etc.'
+                    disabled={isAuthenticated}
+                  />
+                </div>
+              </div>
+
+              <div className='mt-4'>
                 <Input
                   label='Achternaam'
                   value={billingInfo.lastName}
@@ -770,13 +803,15 @@ const CheckoutPage: React.FC = () => {
                 {/* Subtotal */}
                 <div className='flex justify-between text-neutral-700'>
                   <span>Subtotaal ({orderSummary.itemCount} items)</span>
-                  <span>€{orderSummary.subtotal.toFixed(2)}</span>
+                  <span>
+                    €{(orderSummary.subtotal + orderSummary.tax).toFixed(2)}
+                  </span>
                 </div>
 
-                {/* VAT */}
+                {/* Tax */}
                 <div className='flex justify-between text-neutral-700 text-sm'>
                   <span>Waarvan BTW (21%)</span>
-                  <span>€{orderSummary.vatAmount.toFixed(2)}</span>
+                  <span>€{orderSummary.tax.toFixed(2)}</span>
                 </div>
 
                 {/* Shipping */}

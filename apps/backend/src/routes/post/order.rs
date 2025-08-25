@@ -3,9 +3,9 @@ use crate::actions::post::order::{create_order_with_lines, get_order_with_lines}
 use crate::middleware::auth::AuthUser;
 use crate::response::{ApiResponse, AppResponse, error::AppError};
 use crate::services::{InventoryService, PricingResult, PricingService};
-use crate::structs::OrderStatus;
 use crate::structs::inventory::{InventoryReservation, InventoryUpdate};
 use crate::structs::order::{IncomingOrder, Order, OrderLine};
+use crate::structs::{Address, OrderContent, OrderStatus};
 use crate::validate::structs::validate_user_id;
 use crate::validate::{validate_address, validate_complete_order};
 use axum::{Extension, Json};
@@ -15,9 +15,9 @@ use uuid::Uuid;
 #[derive(serde::Deserialize, Debug, Clone)]
 pub struct AuthenticatedOrderRequest {
     pub price: Decimal,
-    pub items: Vec<crate::structs::order::OrderContent>,
-    pub shipping_address: crate::structs::Address,
-    pub billing_address: crate::structs::Address,
+    pub items: Vec<OrderContent>,
+    pub shipping_address: Address,
+    pub billing_address: Address,
     pub notes: Option<String>,
 }
 

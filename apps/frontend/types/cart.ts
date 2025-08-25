@@ -13,6 +13,8 @@ export interface CartItem {
   product_id: string;
   quantity: number;
   unit_price_cents: number;
+  unit_tax_cents: number;
+  unit_subtotal_cents: number;
   created_at: string;
   updated_at: string;
   metadata: Record<string, unknown>;
@@ -53,6 +55,8 @@ export interface CartContextType {
   clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
   totalCents: () => number;
+  totalTaxCents: () => number;
+  totalSubtotalCents: () => number;
   totalQuantity: () => number;
 }
 

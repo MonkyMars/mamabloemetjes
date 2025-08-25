@@ -266,16 +266,8 @@ export const validatePassword = (password: string): string | null => {
   return null;
 };
 
-export const getFullName = (user: User): string => {
-  if (!user.first_name && !user.last_name) {
-    return 'Gebruiker';
-  }
-  if (user.first_name && !user.last_name) {
-    return capitalize(user.first_name);
-  }
-  if (!user.first_name && user.last_name) {
-    return capitalize(user.last_name);
-  }
+export const getFullName = (user: User | null): string => {
+  if (!user) return '';
   const fullName = user.preposition
     ? `${capitalize(user.first_name)} ${user.preposition} ${capitalize(user.last_name)}`
     : `${capitalize(user.first_name)} ${capitalize(user.last_name)}`;

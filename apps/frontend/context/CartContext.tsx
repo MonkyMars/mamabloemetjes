@@ -12,6 +12,8 @@ interface CartContextType {
   isInCart: (productId: string) => boolean;
   getCartItemCount: () => number;
   getCartTotal: () => number;
+  getCartSubtotal: () => number;
+  getCartTax: () => number;
 }
 
 interface CartState {
@@ -158,7 +160,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     return state.items.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const getCartSubtotal = (): number => {
+    return state.items.reduce(
+      (total, item) => total + item.product.subtotal * item.quantity,
+      0,
+    );
+  };
+
+  const getCartTax = (): number => {
+    return state.items.reduce(
+      (total, item) => total + item.product.tax * item.quantity,
+      0,
+    );
+  };
+
   const getCartTotal = (): number => {
+    // Price already includes tax, so use price directly
     return state.items.reduce(
       (total, item) => total + item.product.price * item.quantity,
       0,
@@ -180,6 +197,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     isInCart,
     getCartItemCount,
     getCartTotal,
+    getCartSubtotal,
+    getCartTax,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

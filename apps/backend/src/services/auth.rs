@@ -15,10 +15,10 @@ use uuid::Uuid;
 pub struct AuthService;
 
 impl AuthService {
-    /// Get access token expiry from environment or default to 15 minutes
+    /// Get access token expiry from environment or default to 30 minutes
     fn get_access_token_expiry() -> i64 {
         env::var("ACCESS_TOKEN_EXPIRY")
-            .unwrap_or_else(|_| "3600".to_string()) // 15 minutes default
+            .unwrap_or_else(|_| "3600".to_string()) // 30 minutes default
             .parse()
             .unwrap_or(3600)
     }
@@ -26,7 +26,7 @@ impl AuthService {
     /// Get refresh token expiry from environment or default to 7 days
     fn get_refresh_token_expiry() -> i64 {
         env::var("REFRESH_TOKEN_EXPIRY")
-            .unwrap_or_else(|_| "86400".to_string()) // 7 days default
+            .unwrap_or_else(|_| "86400".to_string()) // 24 hours default
             .parse()
             .unwrap_or(86400)
     }

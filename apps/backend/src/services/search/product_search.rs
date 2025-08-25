@@ -629,6 +629,8 @@ impl ProductSearchService {
                 name: row.get("name"),
                 sku: row.get("sku"),
                 price: row.get("price"),
+                tax: row.get("tax"),
+                subtotal: row.get("subtotal"),
                 is_active: row.get("is_active"),
                 description: row.get("description"),
                 created_at: row.get("created_at"),

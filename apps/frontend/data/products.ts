@@ -124,28 +124,37 @@ const createMockProduct = (
   productType: 'flower' | 'bouquet',
   size?: string,
   colors?: string[],
-): Product => ({
-  id,
-  name,
-  sku: `SKU-${id.slice(0, 8).toUpperCase()}`,
-  price,
-  description,
-  is_active: true,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  stock: 100,
-  images: [
-    {
-      product_id: id,
-      url: `/images/products/${id}/main.jpg`,
-      alt_text: name,
-      is_primary: true,
-    },
-  ],
-  size: size || null,
-  colors: colors || null,
-  product_type: productType,
-});
+): Product => {
+  // Calculate tax and subtotal from price (price = subtotal + tax)
+  // Assuming 21% VAT rate: tax = price * 0.21 / 1.21, subtotal = price / 1.21
+  const tax = (price * 0.21) / 1.21;
+  const subtotal = price / 1.21;
+
+  return {
+    id,
+    name,
+    sku: `SKU-${id.slice(0, 8).toUpperCase()}`,
+    price,
+    tax: Number(tax.toFixed(2)),
+    subtotal: Number(subtotal.toFixed(2)),
+    description,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    stock: 100,
+    images: [
+      {
+        product_id: id,
+        url: `/images/products/${id}/main.jpg`,
+        alt_text: name,
+        is_primary: true,
+      },
+    ],
+    size: size || null,
+    colors: colors || null,
+    product_type: productType,
+  };
+};
 
 // Temporary mock data - replace with actual API calls
 export const mockProducts: Product[] = [

@@ -12,6 +12,8 @@ pub struct Product {
     pub name: String,
     pub sku: String, // Stock Keeping Unit for better inventory tracking
     pub price: Decimal,
+    pub tax: Decimal,
+    pub subtotal: Decimal,
     pub description: String,
     pub is_active: bool,
     pub created_at: DateTime<Utc>,

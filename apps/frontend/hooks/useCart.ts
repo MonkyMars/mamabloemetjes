@@ -154,6 +154,20 @@ export const useCart = (): CartContextType => {
     return cart.items.reduce((total, item) => total + item.quantity, 0);
   }, [cart]);
 
+  const totalTaxCents = useCallback(() => {
+    if (!cart) return 0;
+    return cart.items.reduce((total, item) => {
+      return total + item.quantity * item.unit_tax_cents;
+    }, 0);
+  }, [cart]);
+
+  const totalSubtotalCents = useCallback(() => {
+    if (!cart) return 0;
+    return cart.items.reduce((total, item) => {
+      return total + item.quantity * item.unit_subtotal_cents;
+    }, 0);
+  }, [cart]);
+
   // Helper function to merge guest cart on login (called from auth context)
   const mergeGuestCart = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -202,6 +216,8 @@ export const useCart = (): CartContextType => {
     clearCart,
     refreshCart,
     totalCents,
+    totalTaxCents,
+    totalSubtotalCents,
     totalQuantity,
   };
 };
