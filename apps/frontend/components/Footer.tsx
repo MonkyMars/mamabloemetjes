@@ -1,13 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  FiPhone,
-  FiMail,
-  FiInstagram,
-  FiFacebook,
-  FiHeart,
-} from 'react-icons/fi';
+import { FiPhone, FiMail } from 'react-icons/fi';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -104,28 +98,6 @@ const Footer: React.FC = () => {
                 <span>hello@mamabloemetjes.nl</span>
               </div>
             </div>
-
-            {/* Social Media */}
-            <div className='flex space-x-4 mt-6'>
-              <a
-                href='https://instagram.com/mamabloemetjes'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='w-10 h-10 bg-[#453d30] hover:bg-[#d4a574] text-[#d6ccc0] hover:text-white rounded-lg flex items-center justify-center transition-all duration-300 hover:-translate-y-1'
-                aria-label='Volg ons op Instagram'
-              >
-                <FiInstagram className='w-5 h-5' />
-              </a>
-              <a
-                href='https://facebook.com/mamabloemetjes'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='w-10 h-10 bg-[#453d30] hover:bg-[#d4a574] text-[#d6ccc0] hover:text-white rounded-lg flex items-center justify-center transition-all duration-300 hover:-translate-y-1'
-                aria-label='Volg ons op Facebook'
-              >
-                <FiFacebook className='w-5 h-5' />
-              </a>
-            </div>
           </div>
 
           {/* Shop Links */}
@@ -207,12 +179,6 @@ const Footer: React.FC = () => {
               >
                 Algemene Voorwaarden
               </Link>
-            </div>
-
-            <div className='flex items-center space-x-2 text-sm text-[#9a8470]'>
-              <span>Gemaakt met</span>
-              <FiHeart className='w-4 h-4 text-[#ddb7ab]' />
-              <span>in Amsterdam</span>
             </div>
           </div>
         </div>

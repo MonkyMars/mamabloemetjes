@@ -15,6 +15,8 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
             p.name,
             p.sku,
             p.price,
+            p.tax,
+            p.subtotal,
             p.is_active,
             p.description,
             p.created_at,
@@ -56,6 +58,8 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
     let available_stock: Decimal = first_row.get::<Decimal, _>("quantity_on_hand")
         - first_row.get::<Decimal, _>("quantity_reserved");
     let price = first_row.get("price");
+    let tax = first_row.get("tax");
+    let subtotal = first_row.get("subtotal");
     let description = first_row.get("description");
     let created_at = first_row.get("created_at");
     let updated_at = first_row.get("updated_at");
@@ -77,6 +81,8 @@ pub async fn get_product_by_id(id: Uuid) -> Result<Option<Product>, SqlxError> {
         name,
         sku,
         price,
+        tax,
+        subtotal,
         is_active,
         description,
         product_type,

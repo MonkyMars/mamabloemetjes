@@ -20,6 +20,8 @@ pub struct CartItem {
     pub product_id: Uuid,
     pub quantity: i32,
     pub unit_price_cents: i32,
+    pub unit_tax_cents: i32,
+    pub unit_subtotal_cents: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub metadata: serde_json::Value,
@@ -40,6 +42,20 @@ impl CartWithItems {
         self.items
             .iter()
             .map(|item| item.quantity * item.unit_price_cents)
+            .sum()
+    }
+
+    pub fn total_tax_cents(&self) -> i32 {
+        self.items
+            .iter()
+            .map(|item| item.quantity * item.unit_tax_cents)
+            .sum()
+    }
+
+    pub fn total_subtotal_cents(&self) -> i32 {
+        self.items
+            .iter()
+            .map(|item| item.quantity * item.unit_subtotal_cents)
             .sum()
     }
 
@@ -83,6 +99,8 @@ pub struct CartItemWithProduct {
     pub product_id: Uuid,
     pub quantity: i32,
     pub unit_price_cents: i32,
+    pub unit_tax_cents: i32,
+    pub unit_subtotal_cents: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub metadata: serde_json::Value,
@@ -99,6 +117,20 @@ impl CartResponse {
         self.items
             .iter()
             .map(|item| item.quantity * item.unit_price_cents)
+            .sum()
+    }
+
+    pub fn total_tax_cents(&self) -> i32 {
+        self.items
+            .iter()
+            .map(|item| item.quantity * item.unit_tax_cents)
+            .sum()
+    }
+
+    pub fn total_subtotal_cents(&self) -> i32 {
+        self.items
+            .iter()
+            .map(|item| item.quantity * item.unit_subtotal_cents)
             .sum()
     }
 
