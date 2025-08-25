@@ -1,3 +1,5 @@
+import { Decimal } from '../lib/currency';
+
 export interface Cart {
   id: string;
   user_id?: string;
@@ -58,6 +60,9 @@ export interface CartContextType {
   totalTaxCents: () => number;
   totalSubtotalCents: () => number;
   totalQuantity: () => number;
+  totalDecimal: () => Decimal;
+  totalTaxDecimal: () => Decimal;
+  totalSubtotalDecimal: () => Decimal;
 }
 
 export interface LocalCartItem {

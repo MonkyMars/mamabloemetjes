@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Button } from '../../components/Button';
 import { useCart, useGuestCart } from '../../hooks/useCart';
 import { useAuth } from '../../context/AuthContext';
+import { CurrencyCalculator, Decimal } from '../../lib/currency';
 import {
   FiMinus,
   FiPlus,
@@ -131,52 +132,24 @@ const CartPage: React.FC = () => {
   };
 
   const calculateOrderSummary = () => {
-    let priceTotal = 0; // This is the total including tax (what customer pays)
-    let subtotal = 0;
-    let tax = 0;
-    let itemCount = 0;
-
     if (isAuthenticated && cart?.items) {
-      priceTotal =
-        cart.items.reduce((sum, item) => {
-          return sum + item.quantity * item.unit_price_cents;
-        }, 0) / 100; // Convert from cents
-      subtotal =
-        cart.items.reduce((sum, item) => {
-          return sum + item.quantity * item.unit_subtotal_cents;
-        }, 0) / 100; // Convert from cents
-      tax =
-        cart.items.reduce((sum, item) => {
-          return sum + item.quantity * item.unit_tax_cents;
-        }, 0) / 100; // Convert from cents
-      itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+      return CurrencyCalculator.calculateAuthenticatedCartSummary(cart.items);
     } else if (!isAuthenticated) {
-      priceTotal = guestCart.items.reduce((sum, item) => {
-        const product = products[item.product_id];
-        return sum + (product ? product.price * item.quantity : 0);
-      }, 0);
-      subtotal = guestCart.items.reduce((sum, item) => {
-        const product = products[item.product_id];
-        return sum + (product ? product.subtotal * item.quantity : 0);
-      }, 0);
-      tax = guestCart.items.reduce((sum, item) => {
-        const product = products[item.product_id];
-        return sum + (product ? product.tax * item.quantity : 0);
-      }, 0);
-      itemCount = guestCart.totalQuantity();
+      const guestItems = guestCart.items.map((item) => ({
+        productId: item.product_id,
+        quantity: item.quantity,
+      }));
+      return CurrencyCalculator.calculateGuestCartSummary(guestItems, products);
     }
 
-    const shippingThreshold = 75;
-    const shipping = priceTotal >= shippingThreshold ? 0 : 7.5;
-    const total = priceTotal + shipping;
-
+    // Fallback for empty cart
     return {
-      subtotal,
-      tax,
-      shipping,
-      total,
-      itemCount,
-      priceTotal,
+      subtotal: new Decimal(0),
+      tax: new Decimal(0),
+      shipping: new Decimal(0),
+      total: new Decimal(0),
+      itemCount: 0,
+      priceTotal: new Decimal(0),
     };
   };
 
@@ -299,9 +272,15 @@ const CartPage: React.FC = () => {
                         id: item.product_id,
                         name: item.product_name,
                         sku: item.product_sku,
-                        price: item.unit_price_cents / 100,
-                        subtotal: item.unit_subtotal_cents / 100,
-                        tax: item.unit_tax_cents / 100,
+                        price: CurrencyCalculator.centsToDecimal(
+                          item.unit_price_cents,
+                        ),
+                        subtotal: CurrencyCalculator.centsToDecimal(
+                          item.unit_subtotal_cents,
+                        ),
+                        tax: CurrencyCalculator.centsToDecimal(
+                          item.unit_tax_cents,
+                        ),
                         images: products[item.product_id]?.images || null,
                       };
                       const itemId = item.id;
@@ -342,7 +321,7 @@ const CartPage: React.FC = () => {
                                   </h3>
 
                                   <p className='text-lg font-semibold text-neutral-900 mt-2'>
-                                    €{product.price.toFixed(2)}
+                                    {CurrencyCalculator.format(product.price)}
                                   </p>
                                 </div>
 
@@ -405,7 +384,12 @@ const CartPage: React.FC = () => {
                               {/* Line Total */}
                               <div className='mt-4 text-right'>
                                 <span className='text-lg font-semibold'>
-                                  €{(product.price * quantity).toFixed(2)}
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.multiply(
+                                      product.price,
+                                      quantity,
+                                    ),
+                                  )}
                                 </span>
                               </div>
                             </div>
@@ -455,7 +439,11 @@ const CartPage: React.FC = () => {
                                   </h3>
 
                                   <p className='text-lg font-semibold text-neutral-900 mt-2'>
-                                    €{product.price}
+                                    {CurrencyCalculator.format(
+                                      CurrencyCalculator.numberToDecimal(
+                                        product.price,
+                                      ),
+                                    )}
                                   </p>
                                 </div>
 
@@ -518,7 +506,14 @@ const CartPage: React.FC = () => {
                               {/* Line Total */}
                               <div className='mt-4 text-right'>
                                 <span className='text-lg font-semibold'>
-                                  €{(product.price * quantity).toFixed(2)}
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.multiply(
+                                      CurrencyCalculator.numberToDecimal(
+                                        product.price,
+                                      ),
+                                      quantity,
+                                    ),
+                                  )}
                                 </span>
                               </div>
                             </div>
@@ -539,37 +534,52 @@ const CartPage: React.FC = () => {
                 <div className='flex justify-between'>
                   <span>Subtotaal (incl. BTW)</span>
                   <span>
-                    €{(orderSummary.subtotal + orderSummary.tax).toFixed(2)}
+                    {CurrencyCalculator.format(
+                      CurrencyCalculator.add(
+                        orderSummary.subtotal,
+                        orderSummary.tax,
+                      ),
+                    )}
                   </span>
                 </div>
                 <div className='flex justify-between text-sm text-neutral-600'>
                   <span>Waarvan BTW (21%)</span>
-                  <span>€{orderSummary.tax.toFixed(2)}</span>
+                  <span>{CurrencyCalculator.format(orderSummary.tax)}</span>
                 </div>
                 <div className='flex justify-between'>
                   <span>Verzending</span>
                   <span>
-                    {orderSummary.shipping === 0 ? (
-                      <span className='text-green-600 font-medium'>Gratis</span>
-                    ) : (
-                      `€${orderSummary.shipping.toFixed(2)}`
-                    )}
+                    {CurrencyCalculator.isEqual(
+                      orderSummary.shipping,
+                      new Decimal(0),
+                    )
+                      ? 'Gratis'
+                      : CurrencyCalculator.format(orderSummary.shipping)}
                   </span>
                 </div>
                 <div className='border-t border-neutral-200 pt-4'>
                   <div className='flex justify-between font-semibold text-lg'>
                     <span>Totaal</span>
-                    <span>€{orderSummary.total.toFixed(2)}</span>
+                    <span>{CurrencyCalculator.format(orderSummary.total)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Shipping Info */}
-              {orderSummary.shipping > 0 && (
+              {/* Free Shipping Notice */}
+              {CurrencyCalculator.isGreaterThan(
+                orderSummary.shipping,
+                new Decimal(0),
+              ) && (
                 <div className='bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6'>
                   <p className='text-sm text-amber-800'>
-                    Voeg nog €{(75 - orderSummary.priceTotal).toFixed(2)} toe
-                    voor gratis verzending!
+                    Voeg nog{' '}
+                    {CurrencyCalculator.format(
+                      CurrencyCalculator.calculateShippingRemaining(
+                        orderSummary.priceTotal,
+                      ),
+                    )}{' '}
+                    toe voor gratis verzending!
                   </p>
                 </div>
               )}
