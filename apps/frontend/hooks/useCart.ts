@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { CartResponse, CartContextType, GuestCartItem } from '../types/cart';
+import { CurrencyCalculator, Decimal } from '../lib/currency';
 import * as cartApi from '../lib/cart';
 
 export const useCart = (): CartContextType => {
@@ -168,6 +169,43 @@ export const useCart = (): CartContextType => {
     }, 0);
   }, [cart]);
 
+  // New decimal-based calculation methods
+  const totalDecimal = useCallback(() => {
+    if (!cart) return new Decimal(0);
+    return CurrencyCalculator.sum(
+      cart.items.map((item) =>
+        CurrencyCalculator.multiply(
+          CurrencyCalculator.centsToDecimal(item.unit_price_cents),
+          item.quantity,
+        ),
+      ),
+    );
+  }, [cart]);
+
+  const totalTaxDecimal = useCallback(() => {
+    if (!cart) return new Decimal(0);
+    return CurrencyCalculator.sum(
+      cart.items.map((item) =>
+        CurrencyCalculator.multiply(
+          CurrencyCalculator.centsToDecimal(item.unit_tax_cents),
+          item.quantity,
+        ),
+      ),
+    );
+  }, [cart]);
+
+  const totalSubtotalDecimal = useCallback(() => {
+    if (!cart) return new Decimal(0);
+    return CurrencyCalculator.sum(
+      cart.items.map((item) =>
+        CurrencyCalculator.multiply(
+          CurrencyCalculator.centsToDecimal(item.unit_subtotal_cents),
+          item.quantity,
+        ),
+      ),
+    );
+  }, [cart]);
+
   // Helper function to merge guest cart on login (called from auth context)
   const mergeGuestCart = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -219,6 +257,9 @@ export const useCart = (): CartContextType => {
     totalTaxCents,
     totalSubtotalCents,
     totalQuantity,
+    totalDecimal,
+    totalTaxDecimal,
+    totalSubtotalDecimal,
   };
 };
 
