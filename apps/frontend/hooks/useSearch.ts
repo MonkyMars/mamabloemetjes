@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Product } from '../types';
 import api from '../lib/axios';
+import { ApiResponse } from '@/types/api';
 
 interface UseSearchOptions {
   searchFields?: (keyof Product)[];
@@ -65,12 +66,11 @@ export const useSearch = (
         setIsLoading(true);
         setError(null);
 
-        const response = await api.get<{
-          status: string;
-          data: BackendSearchResult;
-        }>(`/products/search?q=${encodeURIComponent(debouncedQuery)}`);
+        const response = await api.get<ApiResponse<BackendSearchResult>>(
+          `/products/search?q=${encodeURIComponent(debouncedQuery)}`,
+        );
 
-        if (response.status === 200 && response.data.status === 'success') {
+        if (response.status === 200 && response.data.success) {
           const searchData = response.data.data;
           setResults(searchData.products);
           setTotalResults(searchData.total_count);

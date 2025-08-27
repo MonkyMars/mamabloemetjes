@@ -2,13 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSearchContext } from '../../context/SearchContext';
-import {
-  useSearchSuggestions,
-  usePopularSearches,
-} from '../../hooks/useSearch';
-import { Product } from '../../types';
-import ProductCard from '../ProductCard';
+import { useSearchContext } from '@/context/SearchContext';
+import { useSearchSuggestions, usePopularSearches } from '@/hooks/useSearch';
+import { Product } from '@/types';
+import ProductCard from '@/components/ProductCard';
 import {
   FiSearch,
   FiX,
