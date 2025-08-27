@@ -135,6 +135,7 @@ const createMockProduct = (
     name,
     sku: `SKU-${id.slice(0, 8).toUpperCase()}`,
     price,
+    discounted_price: price, // Default to same as price, will be updated if promotion exists
     tax: Number(tax.toFixed(2)),
     subtotal: Number(subtotal.toFixed(2)),
     description,

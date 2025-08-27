@@ -10,6 +10,7 @@ export interface Product {
   name: string;
   sku: string;
   price: number;
+  discounted_price: number;
   tax: number;
   subtotal: number;
   description: string;
@@ -75,3 +76,6 @@ export interface Order {
   estimatedDelivery?: Date;
   specialInstructions?: string;
 }
+
+export * from './promotion';
+export * from './cart';

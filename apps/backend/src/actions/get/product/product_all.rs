@@ -10,11 +10,25 @@ pub async fn get_all_products() -> Result<Vec<Product>, SqlxError> {
     // Single JOIN query to get all products with their images
     let rows = sqlx::query(
         r#"
-        SELECT
+        SELECT DISTINCT ON (p.id)
             p.id,
             p.name,
             p.sku,
             p.price,
+            COALESCE((
+                CASE
+                    WHEN d.id IS NOT NULL
+                         AND d.start_date <= now()
+                         AND d.end_date >= now()
+                    THEN
+                        CASE
+                            WHEN d.discount_type = 'percentage'
+                            THEN ROUND(p.price - (p.price * d.discount_value / 100), 2)
+                            ELSE p.price - d.discount_value
+                        END
+                    ELSE NULL
+                END
+            ), p.price) AS discounted_price,
             p.tax,
             p.subtotal,
             p.is_active,
@@ -31,10 +45,25 @@ pub async fn get_all_products() -> Result<Vec<Product>, SqlxError> {
             i.quantity_on_hand,
             i.quantity_reserved
         FROM products p
-        LEFT JOIN product_images pi ON p.id = pi.product_id
         JOIN inventory i ON p.id = i.product_id
+        LEFT JOIN product_images pi ON p.id = pi.product_id
+        LEFT JOIN discount_promotions_products dp ON dp.product_id = p.id
+        LEFT JOIN discount_promotions d
+               ON d.id = dp.discount_id
+              AND d.start_date <= now()
+              AND d.end_date >= now()
         WHERE p.is_active = true
-        ORDER BY p.created_at DESC, pi.is_primary DESC
+        ORDER BY
+            p.id,
+            CASE
+                WHEN d.id IS NOT NULL AND d.discount_type = 'percentage'
+                THEN (p.price * d.discount_value / 100)
+                WHEN d.id IS NOT NULL AND d.discount_type = 'fixed_amount'
+                THEN d.discount_value
+                ELSE 0
+            END DESC,
+            pi.is_primary DESC,
+            p.created_at DESC;
         "#,
     )
     .fetch_all(pool)
@@ -62,6 +91,7 @@ pub async fn get_all_products() -> Result<Vec<Product>, SqlxError> {
             name: row.get("name"),
             sku: row.get("sku"),
             price: row.get("price"),
+            discounted_price: row.get("discounted_price"),
             tax: row.get("tax"),
             subtotal: row.get("subtotal"),
             is_active: row.get("is_active"),
