@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
-    // Image optimization settings
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -24,15 +23,25 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  // Performance optimizations
+  typedRoutes: true,
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['react-icons'],
   },
-  // Compression
   compress: true,
-  // Headers for better caching
+
   async headers() {
+    if (process.env.NODE_ENV === 'development') {
+      // Disable caching in dev so HMR always works
+      return [
+        {
+          source: '/:path*',
+          headers: [{ key: 'Cache-Control', value: 'no-store' }],
+        },
+      ];
+    }
+
+    // Production headers
     return [
       {
         source: '/_next/static/(.*)',

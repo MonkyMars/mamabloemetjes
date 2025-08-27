@@ -190,27 +190,3 @@ export const CompactPriceDisplay: React.FC<CompactPriceDisplayProps> = ({
     </div>
   );
 };
-
-interface SavingsBadgeProps {
-  originalPrice: number;
-  discountedPrice: number;
-  className?: string;
-}
-
-export const SavingsBadge: React.FC<SavingsBadgeProps> = ({
-  originalPrice,
-  discountedPrice,
-  className = '',
-}) => {
-  const savings = originalPrice - discountedPrice;
-  const savingsPercentage = Math.round((savings / originalPrice) * 100);
-
-  return (
-    <div
-      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 ${className}`}
-    >
-      <span className='mr-1'>💰</span>
-      Bespaar {savingsPercentage}% (€{savings.toFixed(2)})
-    </div>
-  );
-};
