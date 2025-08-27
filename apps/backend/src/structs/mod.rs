@@ -7,6 +7,7 @@ pub mod inventory;
 pub mod jwt;
 pub mod order;
 pub mod product;
+pub mod promotion;
 pub mod user;
 
 pub use cart::{
@@ -21,4 +22,8 @@ pub use jwt::{
     UserInfo, UserRole,
 };
 pub use order::{IncomingOrder, Order, OrderContent, OrderLine, OrderWithLines, ProductEntry};
+pub use promotion::{
+    CreateDiscountPromotion, DiscountPromotion, PriceValidationItem, PriceValidationRequest,
+    PriceValidationResponse, ValidatedPriceItem,
+};
 pub use user::{CreateUser, UpdateUser, User};

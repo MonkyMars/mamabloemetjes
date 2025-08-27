@@ -1,14 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Button } from '../../components/Button';
-import { Input } from '../../components/Input';
-import { useCart, useGuestCart } from '../../hooks/useCart';
-import { useAuth } from '../../context/AuthContext';
-import { CurrencyCalculator, Decimal } from '../../lib/currency';
-import api from '../../lib/axios';
+import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
+import { useCart, useGuestCart } from '@/hooks/useCart';
+import { useAuth } from '@/context/AuthContext';
+import { CurrencyCalculator, Decimal } from '@/lib/currency';
+import api from '@//lib/axios';
+import { PriceValidationComponent } from '@/components/PriceValidationComponent';
+import {
+  PriceValidationItem,
+  PriceValidationResponse,
+} from '@/types/promotion';
+import { useIsClient } from '@/hooks/useIsClient';
+import {
+  TAX_RATE,
+  FREE_SHIPPING_THRESHOLD,
+  STANDARD_SHIPPING_COST,
+} from '@/lib/constants';
 import {
   FiArrowLeft,
   FiShoppingBag,
@@ -25,6 +36,7 @@ import {
 } from 'react-icons/fi';
 import { Product } from '@/types';
 import { getFullName } from '@/lib/auth';
+import { ApiResponse } from '@/types/api';
 
 interface BillingInfo {
   firstName: string;
@@ -68,6 +80,7 @@ const CheckoutPage: React.FC = () => {
   const guestCart = useGuestCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [products, setProducts] = useState<Record<string, Product>>({});
+  const isClient = useIsClient();
   const [billingInfo, setBillingInfo] = useState<BillingInfo>({
     firstName: user?.first_name || '',
     preposition: user?.preposition || '',
@@ -85,6 +98,14 @@ const CheckoutPage: React.FC = () => {
     useState<AddressValidationResponse | null>(null);
   const [isValidatingAddress, setIsValidatingAddress] = useState(false);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+
+  // Helper function to check if prices are close enough (within 1 cent tolerance)
+  const isPriceCloseEnough = useCallback(
+    (expected: number, actual: number, tolerance: number = 1): boolean => {
+      return Math.abs(expected - actual) <= tolerance;
+    },
+    [],
+  );
 
   // Use authenticated or guest cart based on auth status
   const cart = isAuthenticated ? authenticatedCart.cart : null;
@@ -109,7 +130,9 @@ const CheckoutPage: React.FC = () => {
       // Fetch product details for all unique product IDs
       const productPromises = Array.from(productIds).map(async (productId) => {
         try {
-          const response = await api.get(`/products/${productId}`);
+          const response = await api.get<ApiResponse<Product>>(
+            `/products/${productId}`,
+          );
           return { id: productId, data: response.data.data };
         } catch (error) {
           console.error(`Failed to load product ${productId}:`, error);
@@ -145,15 +168,137 @@ const CheckoutPage: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
-  const calculateOrderSummary = (): OrderSummary => {
+  const calculateOrderSummary = useCallback((): OrderSummary => {
     if (isAuthenticated && cart?.items) {
+      // Check if any cart items have outdated prices compared to current product discounts
+      const hasOutdatedPrices = cart.items.some((item) => {
+        const product = products[item.product_id];
+        if (!product) return false;
+
+        const currentDiscountedPrice =
+          product.discounted_price && product.discounted_price < product.price
+            ? product.discounted_price
+            : product.price;
+
+        const cartItemPrice = CurrencyCalculator.centsToDecimal(
+          item.unit_price_cents,
+        );
+        const currentPrice = CurrencyCalculator.numberToDecimal(
+          currentDiscountedPrice,
+        );
+
+        return !CurrencyCalculator.isEqual(cartItemPrice, currentPrice);
+      });
+
+      // If prices are outdated, calculate with current product prices (including discounts)
+      if (hasOutdatedPrices && Object.keys(products).length > 0) {
+        let subtotal = new Decimal(0);
+        let tax = new Decimal(0);
+        let priceTotal = new Decimal(0);
+        let itemCount = 0;
+
+        cart.items.forEach((item) => {
+          const product = products[item.product_id];
+          if (product) {
+            const priceToUse =
+              product.discounted_price &&
+              product.discounted_price < product.price
+                ? product.discounted_price
+                : product.price;
+
+            // Use Decimal arithmetic for precision (matching backend)
+            const priceDecimal = new Decimal(priceToUse);
+            const quantityDecimal = new Decimal(item.quantity);
+
+            // Calculate tax and subtotal (tax = price * 0.21, subtotal = price - tax)
+            const taxPerItem = priceDecimal.times(TAX_RATE);
+            const subtotalPerItem = priceDecimal.minus(taxPerItem);
+
+            const itemSubtotal = subtotalPerItem.times(quantityDecimal);
+            const itemTax = taxPerItem.times(quantityDecimal);
+            const itemPriceTotal = priceDecimal.times(quantityDecimal);
+
+            subtotal = subtotal.plus(itemSubtotal);
+            tax = tax.plus(itemTax);
+            priceTotal = priceTotal.plus(itemPriceTotal);
+            itemCount += item.quantity;
+          }
+        });
+
+        // Calculate shipping
+        const shipping = CurrencyCalculator.isGreaterThanOrEqual(
+          priceTotal,
+          new Decimal(FREE_SHIPPING_THRESHOLD),
+        )
+          ? new Decimal(0)
+          : new Decimal(STANDARD_SHIPPING_COST);
+
+        const total = CurrencyCalculator.add(priceTotal, shipping);
+
+        return {
+          subtotal,
+          tax,
+          shipping,
+          total,
+          itemCount,
+          priceTotal,
+        };
+      }
+
+      // Use backend cart prices if they're current
       return CurrencyCalculator.calculateAuthenticatedCartSummary(cart.items);
     } else if (!isAuthenticated) {
-      const guestItems = guestCart.items.map((item) => ({
-        productId: item.product_id,
-        quantity: item.quantity,
-      }));
-      return CurrencyCalculator.calculateGuestCartSummary(guestItems, products);
+      // Calculate guest cart with discounted prices
+      let subtotal = new Decimal(0);
+      let tax = new Decimal(0);
+      let priceTotal = new Decimal(0);
+      let itemCount = 0;
+
+      guestCart.items.forEach((item) => {
+        const product = products[item.product_id];
+        if (product) {
+          const priceToUse =
+            product.discounted_price && product.discounted_price < product.price
+              ? product.discounted_price
+              : product.price;
+
+          // Use Decimal arithmetic for precision (matching backend)
+          const priceDecimal = new Decimal(priceToUse);
+          const quantityDecimal = new Decimal(item.quantity);
+
+          // Calculate tax and subtotal (tax = price * 0.21, subtotal = price - tax)
+          const taxPerItem = priceDecimal.times(TAX_RATE);
+          const subtotalPerItem = priceDecimal.minus(taxPerItem);
+
+          const itemSubtotal = subtotalPerItem.times(quantityDecimal);
+          const itemTax = taxPerItem.times(quantityDecimal);
+          const itemPriceTotal = priceDecimal.times(quantityDecimal);
+
+          subtotal = subtotal.plus(itemSubtotal);
+          tax = tax.plus(itemTax);
+          priceTotal = priceTotal.plus(itemPriceTotal);
+          itemCount += item.quantity;
+        }
+      });
+
+      // Calculate shipping
+      const shipping = CurrencyCalculator.isGreaterThanOrEqual(
+        priceTotal,
+        new Decimal(FREE_SHIPPING_THRESHOLD),
+      )
+        ? new Decimal(0)
+        : new Decimal(STANDARD_SHIPPING_COST);
+
+      const total = CurrencyCalculator.add(priceTotal, shipping);
+
+      return {
+        subtotal,
+        tax,
+        shipping,
+        total,
+        itemCount,
+        priceTotal,
+      };
     }
 
     // Fallback for empty cart
@@ -165,7 +310,7 @@ const CheckoutPage: React.FC = () => {
       itemCount: 0,
       priceTotal: new Decimal(0),
     };
-  };
+  }, [isAuthenticated, cart, guestCart.items, products]);
 
   const validateBillingInfo = (): boolean => {
     const newErrors: Partial<BillingInfo> = {};
@@ -220,15 +365,18 @@ const CheckoutPage: React.FC = () => {
 
     setIsValidatingAddress(true);
     try {
-      const response = await api.post('/api/checkout/validate-address', {
-        street:
-          billingInfo.address.split(' ').slice(1).join(' ') ||
-          billingInfo.address,
-        house_number: billingInfo.address.split(' ')[0] || '1',
-        postal_code: billingInfo.postalCode,
-        city: billingInfo.city,
-        province: 'Noord-Holland', // Should be dynamic
-      });
+      const response = await api.post<ApiResponse<AddressValidationResponse>>(
+        '/api/checkout/validate-address',
+        {
+          street:
+            billingInfo.address.split(' ').slice(1).join(' ') ||
+            billingInfo.address,
+          house_number: billingInfo.address.split(' ')[0] || '1',
+          postal_code: billingInfo.postalCode,
+          city: billingInfo.city,
+          province: 'Noord-Holland', // Should be dynamic
+        },
+      );
 
       setAddressValidation(response.data.data);
       setShowAddressSuggestions(response.data.data.suggestions.length > 0);
@@ -243,20 +391,25 @@ const CheckoutPage: React.FC = () => {
     if (!billingInfo.postalCode) return;
 
     try {
-      const response = await api.post('/api/checkout/address-suggestions', {
+      const response = await api.post<
+        ApiResponse<{
+          house_number: string;
+          street: string;
+          postal_code: string;
+          city: string;
+          province: string;
+        }>
+      >('/api/checkout/address-suggestions', {
         postal_code: billingInfo.postalCode,
         house_number: billingInfo.address.split(' ')[0] || undefined,
       });
 
-      const suggestions = response.data.data;
-      if (suggestions.length > 0) {
-        const suggestion = suggestions[0];
-        setBillingInfo((prev) => ({
-          ...prev,
-          address: `${suggestion.house_number} ${suggestion.street}`,
-          city: suggestion.city,
-        }));
-      }
+      const suggestion = response.data.data;
+      setBillingInfo((prev) => ({
+        ...prev,
+        address: `${suggestion.house_number} ${suggestion.street}`,
+        city: suggestion.city,
+      }));
     } catch (error) {
       console.error('Failed to get address suggestions:', error);
     }
@@ -284,80 +437,236 @@ const CheckoutPage: React.FC = () => {
     }
 
     setIsProcessing(true);
-
-    try {
-      // Prepare cart items for checkout
-      const cartItems = isAuthenticated
-        ? cart?.items.map((item) => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-          })) || []
-        : guestCart.items.map((item) => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-          }));
-
-      // Prepare checkout request
-      const checkoutRequest = {
-        billing_info: {
-          first_name: billingInfo.firstName,
-          preposition: billingInfo.preposition,
-          last_name: billingInfo.lastName,
-          email: billingInfo.email,
-          phone: billingInfo.phone,
-          address: {
-            street: billingInfo.address,
-            house_number: billingInfo.address.split(' ')[0] || '1', // Simple extraction
-            postal_code: billingInfo.postalCode,
-            city: billingInfo.city,
-            province: 'Noord-Holland', // Default province, should be dynamic
-            country: billingInfo.country,
-          },
-        },
-        shipping_info: {
-          same_as_billing: true,
-          address: null,
-        },
-        gdpr_consent: {
-          terms_and_conditions: acceptTerms,
-          privacy_policy: acceptTerms,
-          marketing_communications: false,
-          data_processing: acceptTerms,
-          consent_timestamp: new Date().toISOString(),
-          ip_address: '127.0.0.1', // This should be determined server-side
-          user_agent: navigator.userAgent,
-        },
-        guest_account_creation: !isAuthenticated,
-        notes: null,
-        cart_items: cartItems,
-      };
-
-      // Send checkout request to backend
-      const response = await api.post('/checkout/process', checkoutRequest);
-
-      // Redirect to payment URL
-      if (response.data.data.payment_url) {
-        window.location.href = response.data.data.payment_url;
-      } else {
-        throw new Error('No payment URL received');
-      }
-    } catch (error: unknown) {
-      console.error('Failed to place order:', error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : (error as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message || 'Onbekende fout';
-      alert(
-        'Er is een fout opgetreden bij het plaatsen van je bestelling: ' +
-          errorMessage,
-      );
-    } finally {
-      setIsProcessing(false);
-    }
   };
 
-  const orderSummary = calculateOrderSummary();
+  // State for promotion validation with explicit type annotation
+  const [promotionValidation, setPromotionValidation] =
+    useState<PriceValidationResponse | null>(null);
+
+  // Validation function to check PriceValidationResponse structure
+  const isValidPromotionResponse = useCallback(
+    (response: unknown): response is PriceValidationResponse => {
+      try {
+        if (!response || typeof response !== 'object') return false;
+        const typedResponse = response as Record<string, unknown>;
+
+        return (
+          typeof typedResponse.is_valid === 'boolean' &&
+          Array.isArray(typedResponse.items) &&
+          typeof typedResponse.total_original_price_cents === 'number' &&
+          typeof typedResponse.total_discounted_price_cents === 'number' &&
+          typeof typedResponse.total_discount_amount_cents === 'number' &&
+          typeof typedResponse.total_tax_cents === 'number' &&
+          typeof typedResponse.total_subtotal_cents === 'number' &&
+          typedResponse.items.every((item: unknown) => {
+            if (!item || typeof item !== 'object') return false;
+            const typedItem = item as Record<string, unknown>;
+            return (
+              typeof typedItem.product_id === 'string' &&
+              typeof typedItem.quantity === 'number' &&
+              typeof typedItem.original_unit_price_cents === 'number' &&
+              typeof typedItem.discounted_unit_price_cents === 'number' &&
+              typeof typedItem.discount_amount_cents === 'number' &&
+              typeof typedItem.unit_tax_cents === 'number' &&
+              typeof typedItem.unit_subtotal_cents === 'number' &&
+              (typedItem.applied_promotion_id === null ||
+                typeof typedItem.applied_promotion_id === 'string') &&
+              typeof typedItem.is_price_valid === 'boolean'
+            );
+          })
+        );
+      } catch (error) {
+        console.error('Error validating promotion response:', error);
+        return false;
+      }
+    },
+    [],
+  );
+
+  // Utility functions for safe promotion checking
+  const getPromotedItem = useCallback(
+    (productId: string) => {
+      if (
+        !promotionValidation ||
+        !isValidPromotionResponse(promotionValidation)
+      ) {
+        return null;
+      }
+
+      const item = promotionValidation.items.find(
+        (validatedItem) =>
+          validatedItem.product_id === productId &&
+          validatedItem.applied_promotion_id !== null,
+      );
+
+      return item || null;
+    },
+    [promotionValidation, isValidPromotionResponse],
+  );
+
+  // Helper to detect if product has discount from product data (before API validation)
+  const hasProductDiscount = useCallback(
+    (productId: string) => {
+      const product = products[productId];
+      return !!(
+        product?.discounted_price && product.discounted_price < product.price
+      );
+    },
+    [products],
+  );
+
+  const hasPromotion = useCallback(
+    (productId: string) => {
+      const promotedItem = getPromotedItem(productId);
+      return promotedItem !== null && promotedItem !== undefined;
+    },
+    [getPromotedItem],
+  );
+
+  // Prepare price validation items for promotion checking
+  const priceValidationItems: PriceValidationItem[] = React.useMemo(() => {
+    if (!isClient) return [];
+
+    if (isAuthenticated && cart?.items) {
+      return cart.items
+        .map((item) => {
+          const product = products[item.product_id];
+          if (product) {
+            const priceToUse =
+              product.discounted_price &&
+              product.discounted_price < product.price
+                ? product.discounted_price
+                : product.price;
+            return {
+              product_id: item.product_id,
+              quantity: item.quantity,
+              expected_unit_price_cents: new Decimal(priceToUse)
+                .times(100)
+                .round()
+                .toNumber(),
+            };
+          }
+          return null;
+        })
+        .filter(Boolean) as PriceValidationItem[];
+    } else if (!isAuthenticated && guestCart.items.length > 0) {
+      return guestCart.items
+        .map((item) => {
+          const product = products[item.product_id];
+          if (product) {
+            const priceToUse =
+              product.discounted_price &&
+              product.discounted_price < product.price
+                ? product.discounted_price
+                : product.price;
+            return {
+              product_id: item.product_id,
+              quantity: item.quantity,
+              expected_unit_price_cents: new Decimal(priceToUse)
+                .times(100)
+                .round()
+                .toNumber(),
+            };
+          }
+          return null;
+        })
+        .filter(Boolean) as PriceValidationItem[];
+    }
+    return [];
+  }, [isClient, isAuthenticated, cart?.items, guestCart.items, products]);
+
+  // State to control when validation should occur
+  const [shouldValidate, setShouldValidate] = useState(false);
+
+  // Trigger validation only when cart is stable
+  useEffect(() => {
+    if (
+      isClient &&
+      priceValidationItems.length > 0 &&
+      !isLoading &&
+      !isProcessing
+    ) {
+      const timer = setTimeout(() => {
+        setShouldValidate(true);
+      }, 1000); // Wait 1 second after cart becomes stable
+
+      return () => clearTimeout(timer);
+    } else {
+      setShouldValidate(false);
+    }
+  }, [isClient, priceValidationItems.length, isLoading, isProcessing]);
+
+  // Enhanced order summary calculation that uses promotion-validated prices when available
+  const orderSummary = useMemo(() => {
+    // If we have promotion validation data, use the validated totals
+    if (
+      promotionValidation &&
+      promotionValidation.is_valid &&
+      isValidPromotionResponse(promotionValidation)
+    ) {
+      const priceTotalFromValidation = CurrencyCalculator.centsToDecimal(
+        promotionValidation.total_discounted_price_cents,
+      );
+
+      // Use backend's corrected tax and subtotal values
+      const subtotalFromValidation = CurrencyCalculator.centsToDecimal(
+        promotionValidation.total_subtotal_cents,
+      );
+      const taxFromValidation = CurrencyCalculator.centsToDecimal(
+        promotionValidation.total_tax_cents,
+      );
+
+      // Debug order summary calculations
+      console.log('Order summary using validated prices:', {
+        total_discounted_price_cents:
+          promotionValidation.total_discounted_price_cents,
+        total_subtotal_cents: promotionValidation.total_subtotal_cents,
+        total_tax_cents: promotionValidation.total_tax_cents,
+        priceTotal: CurrencyCalculator.format(priceTotalFromValidation),
+        subtotal: CurrencyCalculator.format(subtotalFromValidation),
+        tax: CurrencyCalculator.format(taxFromValidation),
+      });
+
+      // Calculate shipping (free if order is over threshold)
+      const shippingCost = CurrencyCalculator.isGreaterThanOrEqual(
+        priceTotalFromValidation,
+        new Decimal(FREE_SHIPPING_THRESHOLD),
+      )
+        ? new Decimal(0)
+        : new Decimal(STANDARD_SHIPPING_COST);
+
+      const totalWithShipping = CurrencyCalculator.add(
+        priceTotalFromValidation,
+        shippingCost,
+      );
+
+      const finalSummary = {
+        subtotal: subtotalFromValidation,
+        tax: taxFromValidation,
+        shipping: shippingCost,
+        total: totalWithShipping,
+        itemCount:
+          promotionValidation.items?.reduce(
+            (sum, item) => sum + item.quantity,
+            0,
+          ) || 0,
+        priceTotal: priceTotalFromValidation,
+      };
+
+      console.log('Final order summary:', {
+        subtotal: CurrencyCalculator.format(finalSummary.subtotal),
+        tax: CurrencyCalculator.format(finalSummary.tax),
+        shipping: CurrencyCalculator.format(finalSummary.shipping),
+        total: CurrencyCalculator.format(finalSummary.total),
+        priceTotal: CurrencyCalculator.format(finalSummary.priceTotal),
+      });
+
+      return finalSummary;
+    }
+
+    // Fallback to regular calculation
+    return calculateOrderSummary();
+  }, [promotionValidation, calculateOrderSummary, isValidPromotionResponse]);
   const hasItems = isAuthenticated
     ? (cart?.items?.length || 0) > 0
     : guestCart.items.length > 0;
@@ -696,6 +1005,102 @@ const CheckoutPage: React.FC = () => {
                 Bestelling Overzicht
               </h2>
 
+              {/* Price Validation and Promotion Display */}
+              {isClient &&
+                priceValidationItems.length > 0 &&
+                shouldValidate && (
+                  <div className='mb-6'>
+                    <PriceValidationComponent
+                      items={priceValidationItems}
+                      autoValidate={true}
+                      onValidationError={(error) => {
+                        console.error('Price validation error:', error);
+                      }}
+                      onValidationComplete={(response) => {
+                        // Type validation to ensure response matches expected structure
+                        if (isValidPromotionResponse(response)) {
+                          // Add debugging for price validation
+                          console.log('Price validation response:', response);
+                          console.log(
+                            'Frontend validation items:',
+                            priceValidationItems,
+                          );
+
+                          // Check if price discrepancies are within tolerance
+                          if (!response.is_valid) {
+                            const hasTolerableDiscrepancies =
+                              response.items.every((item) => {
+                                if (item.is_price_valid) return true;
+
+                                // Find corresponding frontend item
+                                const frontendItem = priceValidationItems.find(
+                                  (frontItem) =>
+                                    frontItem.product_id === item.product_id,
+                                );
+
+                                if (!frontendItem) {
+                                  console.log(
+                                    'No frontend item found for product:',
+                                    item.product_id,
+                                  );
+                                  return false;
+                                }
+
+                                const difference = Math.abs(
+                                  frontendItem.expected_unit_price_cents -
+                                    item.discounted_unit_price_cents,
+                                );
+
+                                console.log(
+                                  `Price comparison for ${item.product_id}:`,
+                                  {
+                                    frontend_expected:
+                                      frontendItem.expected_unit_price_cents,
+                                    backend_discounted:
+                                      item.discounted_unit_price_cents,
+                                    difference: difference,
+                                    within_tolerance: difference <= 1,
+                                  },
+                                );
+
+                                // Check if price difference is within tolerance (1 cent)
+                                return isPriceCloseEnough(
+                                  frontendItem.expected_unit_price_cents,
+                                  item.discounted_unit_price_cents,
+                                );
+                              });
+
+                            if (hasTolerableDiscrepancies) {
+                              console.log(
+                                'Price discrepancies are within tolerance, accepting backend prices',
+                              );
+                              // Accept the backend prices as valid when within tolerance
+                              const adjustedResponse = {
+                                ...response,
+                                is_valid: true,
+                                items: response.items.map((item) => ({
+                                  ...item,
+                                  is_price_valid: true,
+                                })),
+                              };
+                              setPromotionValidation(adjustedResponse);
+                            } else {
+                              console.log(
+                                'Price discrepancies exceed tolerance, showing validation error',
+                              );
+                              setPromotionValidation(response);
+                            }
+                          } else {
+                            setPromotionValidation(response);
+                          }
+                        } else {
+                          setPromotionValidation(null);
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+
               {/* Order Items */}
               <div className='space-y-4 mb-6'>
                 {isAuthenticated &&
@@ -717,6 +1122,13 @@ const CheckoutPage: React.FC = () => {
                               className='object-cover'
                             />
                           )}
+                          {/* Promotion Badge */}
+                          {(hasPromotion(item.product_id) ||
+                            hasProductDiscount(item.product_id)) && (
+                            <div className='absolute -top-1 -right-1 bg-red-500 text-white px-1 py-0.5 rounded-full text-xs font-bold'>
+                              SALE
+                            </div>
+                          )}
                         </div>
                         <div className='flex-1'>
                           <div className='font-medium text-neutral-800 line-clamp-1'>
@@ -724,21 +1136,107 @@ const CheckoutPage: React.FC = () => {
                           </div>
                           <div className='text-sm text-neutral-600'>
                             {item.quantity}x{' '}
-                            {CurrencyCalculator.format(
-                              CurrencyCalculator.centsToDecimal(
-                                item.unit_price_cents,
-                              ),
+                            {hasPromotion(item.product_id) ? (
+                              <>
+                                <span className='text-green-600 font-semibold'>
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.centsToDecimal(
+                                      getPromotedItem(item.product_id)
+                                        ?.discounted_unit_price_cents || 0,
+                                    ),
+                                  )}
+                                </span>
+                                <span className='line-through text-neutral-400 ml-1'>
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.centsToDecimal(
+                                      item.unit_price_cents,
+                                    ),
+                                  )}
+                                </span>
+                              </>
+                            ) : hasProductDiscount(item.product_id) ? (
+                              <>
+                                <span className='text-green-600 font-semibold'>
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.discounted_price!,
+                                    ),
+                                  )}
+                                </span>
+                                <span className='line-through text-neutral-400 ml-1'>
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.price,
+                                    ),
+                                  )}
+                                </span>
+                              </>
+                            ) : (
+                              CurrencyCalculator.format(
+                                CurrencyCalculator.centsToDecimal(
+                                  item.unit_price_cents,
+                                ),
+                              )
                             )}
                           </div>
                         </div>
                         <div className='font-semibold text-neutral-800'>
-                          {CurrencyCalculator.format(
-                            CurrencyCalculator.multiply(
-                              CurrencyCalculator.centsToDecimal(
-                                item.unit_price_cents,
+                          {hasPromotion(item.product_id) ? (
+                            <div className='text-right'>
+                              <div className='text-green-600'>
+                                {CurrencyCalculator.format(
+                                  CurrencyCalculator.multiply(
+                                    CurrencyCalculator.centsToDecimal(
+                                      getPromotedItem(item.product_id)
+                                        ?.discounted_unit_price_cents || 0,
+                                    ),
+                                    item.quantity,
+                                  ),
+                                )}
+                              </div>
+                              <div className='text-xs text-neutral-400 line-through'>
+                                {CurrencyCalculator.format(
+                                  CurrencyCalculator.multiply(
+                                    CurrencyCalculator.centsToDecimal(
+                                      item.unit_price_cents,
+                                    ),
+                                    item.quantity,
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          ) : hasProductDiscount(item.product_id) ? (
+                            <div className='text-right'>
+                              <div className='text-green-600'>
+                                {CurrencyCalculator.format(
+                                  CurrencyCalculator.multiply(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.discounted_price!,
+                                    ),
+                                    item.quantity,
+                                  ),
+                                )}
+                              </div>
+                              <div className='text-xs text-neutral-400 line-through'>
+                                {CurrencyCalculator.format(
+                                  CurrencyCalculator.multiply(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.price,
+                                    ),
+                                    item.quantity,
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            CurrencyCalculator.format(
+                              CurrencyCalculator.multiply(
+                                CurrencyCalculator.centsToDecimal(
+                                  item.unit_price_cents,
+                                ),
+                                item.quantity,
                               ),
-                              item.quantity,
-                            ),
+                            )
                           )}
                         </div>
                       </div>
@@ -764,6 +1262,13 @@ const CheckoutPage: React.FC = () => {
                               className='object-cover'
                             />
                           )}
+                          {/* Promotion Badge for Guest Cart */}
+                          {(hasPromotion(item.product_id) ||
+                            hasProductDiscount(item.product_id)) && (
+                            <div className='absolute -top-1 -right-1 bg-red-500 text-white px-1 py-0.5 rounded-full text-xs font-bold'>
+                              SALE
+                            </div>
+                          )}
                         </div>
                         <div className='flex-1'>
                           <div className='font-medium text-neutral-800 line-clamp-1'>
@@ -771,17 +1276,107 @@ const CheckoutPage: React.FC = () => {
                           </div>
                           <div className='text-sm text-neutral-600'>
                             {item.quantity}x{' '}
-                            {CurrencyCalculator.format(
-                              CurrencyCalculator.numberToDecimal(product.price),
+                            {hasPromotion(item.product_id) ? (
+                              <>
+                                <span className='text-green-600 font-semibold'>
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.centsToDecimal(
+                                      getPromotedItem(item.product_id)
+                                        ?.discounted_unit_price_cents || 0,
+                                    ),
+                                  )}
+                                </span>
+                                <span className='line-through text-neutral-400 ml-1'>
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.price,
+                                    ),
+                                  )}
+                                </span>
+                              </>
+                            ) : hasProductDiscount(item.product_id) ? (
+                              <>
+                                <span className='text-green-600 font-semibold'>
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.discounted_price!,
+                                    ),
+                                  )}
+                                </span>
+                                <span className='line-through text-neutral-400 ml-1'>
+                                  {CurrencyCalculator.format(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.price,
+                                    ),
+                                  )}
+                                </span>
+                              </>
+                            ) : (
+                              CurrencyCalculator.format(
+                                CurrencyCalculator.numberToDecimal(
+                                  product.price,
+                                ),
+                              )
                             )}
                           </div>
                         </div>
                         <div className='font-semibold text-neutral-800'>
-                          {CurrencyCalculator.format(
-                            CurrencyCalculator.multiply(
-                              CurrencyCalculator.numberToDecimal(product.price),
-                              item.quantity,
-                            ),
+                          {hasPromotion(item.product_id) ? (
+                            <div className='text-right'>
+                              <div className='text-green-600'>
+                                {CurrencyCalculator.format(
+                                  CurrencyCalculator.multiply(
+                                    CurrencyCalculator.centsToDecimal(
+                                      getPromotedItem(item.product_id)
+                                        ?.discounted_unit_price_cents || 0,
+                                    ),
+                                    item.quantity,
+                                  ),
+                                )}
+                              </div>
+                              <div className='text-xs text-neutral-400 line-through'>
+                                {CurrencyCalculator.format(
+                                  CurrencyCalculator.multiply(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.price,
+                                    ),
+                                    item.quantity,
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          ) : hasProductDiscount(item.product_id) ? (
+                            <div className='text-right'>
+                              <div className='text-green-600'>
+                                {CurrencyCalculator.format(
+                                  CurrencyCalculator.multiply(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.discounted_price!,
+                                    ),
+                                    item.quantity,
+                                  ),
+                                )}
+                              </div>
+                              <div className='text-xs text-neutral-400 line-through'>
+                                {CurrencyCalculator.format(
+                                  CurrencyCalculator.multiply(
+                                    CurrencyCalculator.numberToDecimal(
+                                      product.price,
+                                    ),
+                                    item.quantity,
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            CurrencyCalculator.format(
+                              CurrencyCalculator.multiply(
+                                CurrencyCalculator.numberToDecimal(
+                                  product.price,
+                                ),
+                                item.quantity,
+                              ),
+                            )
                           )}
                         </div>
                       </div>
@@ -794,12 +1389,7 @@ const CheckoutPage: React.FC = () => {
                 <div className='flex justify-between text-neutral-700'>
                   <span>Subtotaal ({orderSummary.itemCount} items)</span>
                   <span>
-                    {CurrencyCalculator.format(
-                      CurrencyCalculator.add(
-                        orderSummary.subtotal,
-                        orderSummary.tax,
-                      ),
-                    )}
+                    {CurrencyCalculator.format(orderSummary.priceTotal)}
                   </span>
                 </div>
 
