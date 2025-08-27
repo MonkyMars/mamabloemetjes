@@ -4,10 +4,10 @@ module.exports = {
   roots: ['<rootDir>'],
   testMatch: [
     '**/__tests__/**/*.+(ts|tsx|js)',
-    '**/*.(test|spec).+(ts|tsx|js)'
+    '**/*.(test|spec).+(ts|tsx|js)',
   ],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
   collectCoverageFrom: [
     '**/*.{ts,tsx}',
@@ -15,10 +15,9 @@ module.exports = {
     '!**/node_modules/**',
     '!**/.next/**',
     '!**/coverage/**',
-    '!jest.config.js'
+    '!jest.config.js',
   ],
-  moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/$1'
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
   },
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
 };
