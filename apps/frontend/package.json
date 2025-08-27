@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "repo": "concurrently \"cargo run --manifest-path ../../apps/backend/Cargo.toml\" \"bun run dev\"",
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",
     "build:prod": "NODE_ENV=production next build",
@@ -25,13 +24,12 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "decimal.js": "^10.6.0",
-    "next": "15.4.5",
+    "next": "^15.5.0",
     "prettier": "3.6.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-icons": "^5.5.0",
-    "tailwind-merge": "^3.3.1",
-    "web-vitals": "^5.1.0"
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

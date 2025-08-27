@@ -11,22 +11,17 @@ The monorepo for the Mamabloemetjes project, which includes the frontend built i
 
 2. Install the dependencies:
    ```bash
-   bun i
+   bun i # Run this within apps/frontend
     ```
 
 3. Start the development servers:
 
-For only the frontend
+For the frontend
 ```bash
     bun run dev # Run this within apps/frontend
 ```
 
-For only the backend
+For the backend
 ```bash
     cargo run # Run this within apps/backend
-```
-
-For both frontend and backend
-```bash
-    bun run repo # Run this within apps/frontend
 ```
