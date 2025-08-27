@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { RegisterForm } from '../../components/auth/RegisterForm';
-import FloatingElements from '../../components/FloatingElements';
+import { RegisterForm } from '@//components/auth/RegisterForm';
+import FloatingElements from '@//components/FloatingElements';
 
 export default function RegisterPage() {
   return (
