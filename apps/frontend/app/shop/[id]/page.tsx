@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getProductById } from '../../../data/products';
-import { Product } from '../../../types';
-import { Button } from '../../../components/Button';
-import { useCart, useGuestCart } from '../../../hooks/useCart';
-import { useAuth } from '../../../context/AuthContext';
+import { getProductById } from '@/data/products';
+import { Product } from '@/types';
+import { Button } from '@/components/Button';
+import { useProductPromotion } from '@/hooks/usePromotion';
+import { useCart, useGuestCart } from '@/hooks/useCart';
+import { useAuth } from '@/context/AuthContext';
+import { useNotification } from '@/context/NotificationContext';
 import {
-  FiHeart,
   FiShoppingBag,
   FiArrowLeft,
   FiCheck,
@@ -26,7 +27,7 @@ import {
   getColorClass,
   getProductTypeIcon,
   getProductTypeDescription,
-} from '../../../lib/translations';
+} from '@/lib/translations';
 import Image from 'next/image';
 import Link from 'next/link';
 import { NextPage } from 'next';
@@ -37,11 +38,12 @@ const ProductComponent: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const authenticatedCart = useCart();
   const guestCart = useGuestCart();
+  const { showStockError } = useNotification();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const { data: promotion } = useProductPromotion(product?.id || null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [addToCartSuccess, setAddToCartSuccess] = useState(false);
@@ -73,29 +75,74 @@ const ProductComponent: React.FC = () => {
     }).format(price);
   };
 
+  // Discount logic
+  const hasDiscount =
+    promotion && product && product.discounted_price < product.price;
+  const savings = hasDiscount ? product.price - product.discounted_price : 0;
+  const savingsPercentage = hasDiscount
+    ? Math.round((savings / product.price) * 100)
+    : 0;
+
+  // Render price with discount
+  const renderPrice = () => {
+    if (!product) return null;
+
+    if (!hasDiscount) {
+      return (
+        <div className='text-3xl font-bold text-primary-600 mb-4'>
+          {formatPrice(product.price)}
+        </div>
+      );
+    }
+
+    return (
+      <div className='mb-4'>
+        <div className='flex items-center gap-3 flex-wrap mb-2'>
+          <span className='text-3xl font-bold text-green-600'>
+            {formatPrice(product.discounted_price)}
+          </span>
+          <span className='text-xl text-gray-500 line-through'>
+            {formatPrice(product.price)}
+          </span>
+        </div>
+        <div className='text-sm text-green-600 font-medium'>
+          Bespaar €{savings.toFixed(2)} ({savingsPercentage}%)
+        </div>
+      </div>
+    );
+  };
+
   const handleAddToCart = async () => {
     if (!product) return;
+
+    // Check if enough stock is available
+    if (selectedQuantity > product.stock) {
+      showStockError();
+      return;
+    }
 
     setIsAddingToCart(true);
     try {
       if (isAuthenticated) {
-        await authenticatedCart.addItem(product.id, selectedQuantity);
+        await authenticatedCart.addItem(
+          product.id,
+          selectedQuantity,
+          product.stock,
+        );
       } else {
-        guestCart.addItem(product.id, selectedQuantity);
+        guestCart.addItem(product.id, selectedQuantity, product.stock);
       }
 
       setAddToCartSuccess(true);
       setTimeout(() => setAddToCartSuccess(false), 3000);
     } catch (error) {
       console.error('Failed to add to cart:', error);
+      if (error instanceof Error && error.message.includes('voorraad')) {
+        showStockError();
+      }
     } finally {
       setIsAddingToCart(false);
     }
-  };
-
-  const handleToggleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    // TODO: Implement wishlist functionality
   };
 
   const isOutOfStock = product && product.stock <= 0;
@@ -222,10 +269,7 @@ const ProductComponent: React.FC = () => {
               <h1 className='heading-2 text-neutral-900 mb-3'>
                 {product.name}
               </h1>
-              <div className='text-3xl font-bold text-primary-600 mb-4'>
-                {formatPrice(product.price)}
-              </div>
-              <p className='text-sm text-neutral-600'>SKU: {product.sku}</p>
+              {renderPrice()}
             </div>
 
             {/* Description */}
@@ -243,7 +287,7 @@ const ProductComponent: React.FC = () => {
               {product.colors && product.colors.length > 0 && (
                 <div className='space-y-2'>
                   <h4 className='text-xs font-medium text-neutral-600 uppercase tracking-wide'>
-                    Colors:
+                    {product.colors.length > 1 ? 'Kleuren' : 'Kleur'}:
                   </h4>
                   <div className='flex flex-wrap gap-2'>
                     {product.colors.map((color, index) => (
@@ -265,7 +309,7 @@ const ProductComponent: React.FC = () => {
               {product.size && (
                 <div className='space-y-2'>
                   <h4 className='text-xs font-medium text-neutral-600 uppercase tracking-wide'>
-                    Size:
+                    Maat:
                   </h4>
                   <span className='inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-white border border-neutral-300'>
                     {translateSize(product.size)}
@@ -276,17 +320,17 @@ const ProductComponent: React.FC = () => {
               {/* Stock Info */}
               <div className='space-y-2'>
                 <h4 className='text-xs font-medium text-neutral-600 uppercase tracking-wide'>
-                  Availability:
+                  Beschikbaarheid:
                 </h4>
                 <p className='text-sm text-neutral-700'>
                   {isOutOfStock ? (
-                    <span className='text-red-600'>Out of stock</span>
+                    <span className='text-red-600'>Niet beschikbaar</span>
                   ) : product.stock <= 5 ? (
                     <span className='text-amber-600'>
-                      Only {product.stock} left in stock
+                      Nog maar {product.stock} beschikbaar!
                     </span>
                   ) : (
-                    <span className='text-green-600'>In stock</span>
+                    <span className='text-green-600'>Beschikbaar</span>
                   )}
                 </p>
               </div>
@@ -312,12 +356,21 @@ const ProductComponent: React.FC = () => {
                     {selectedQuantity}
                   </span>
                   <button
-                    onClick={() =>
-                      setSelectedQuantity(
-                        Math.min(maxQuantity, selectedQuantity + 1),
-                      )
+                    onClick={() => {
+                      const newQuantity = Math.min(
+                        maxQuantity,
+                        selectedQuantity + 1,
+                      );
+                      if (newQuantity > product.stock) {
+                        showStockError();
+                        return;
+                      }
+                      setSelectedQuantity(newQuantity);
+                    }}
+                    disabled={
+                      selectedQuantity >= maxQuantity ||
+                      selectedQuantity >= product.stock
                     }
-                    disabled={selectedQuantity >= maxQuantity}
                     className='w-10 h-10 rounded-lg border border-neutral-300 flex items-center justify-center hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     <FiPlus className='w-4 h-4' />
@@ -363,19 +416,6 @@ const ProductComponent: React.FC = () => {
                               : 'Add to Cart'}
                   </span>
                 </Button>
-
-                <button
-                  onClick={handleToggleWishlist}
-                  className={`w-12 h-12 rounded-lg border flex items-center justify-center transition-colors ${
-                    isWishlisted
-                      ? 'border-red-300 bg-red-50 text-red-600'
-                      : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600'
-                  }`}
-                >
-                  <FiHeart
-                    className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`}
-                  />
-                </button>
               </div>
 
               {addToCartSuccess && (

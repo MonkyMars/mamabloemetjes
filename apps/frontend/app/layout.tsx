@@ -4,6 +4,8 @@ import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import { SearchProvider } from '../context/SearchContext';
 import { AuthProvider } from '../context/AuthContext';
+import { PromotionProvider } from '../context/PromotionContext';
+import { NotificationProvider } from '../context/NotificationContext';
 import { QueryProvider } from '../providers/QueryProvider';
 
 const inter = Inter({
@@ -47,11 +49,15 @@ export default function RootLayout({
       <body className='min-h-screen flex flex-col bg-[#faf9f7] text-[#2d2820]'>
         <QueryProvider>
           <AuthProvider>
-            <SearchProvider>
-              <Navigation />
-              <main className='flex-1'>{children}</main>
-              <Footer />
-            </SearchProvider>
+            <PromotionProvider>
+              <NotificationProvider>
+                <SearchProvider>
+                  <Navigation />
+                  <main className='flex-1'>{children}</main>
+                  <Footer />
+                </SearchProvider>
+              </NotificationProvider>
+            </PromotionProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

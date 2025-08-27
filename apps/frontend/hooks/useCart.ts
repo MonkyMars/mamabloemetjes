@@ -46,7 +46,26 @@ export const useCart = (): CartContextType => {
   }, [isAuthenticated]);
 
   const addItem = useCallback(
-    async (product_id: string, quantity: number) => {
+    async (product_id: string, quantity: number, productStock?: number) => {
+      // Check stock limits if provided
+      if (productStock !== undefined) {
+        // Check current cart quantity
+        let currentQuantity = 0;
+        if (isAuthenticated && cart?.items) {
+          const cartItem = cart.items.find(
+            (item) => item.product_id === product_id,
+          );
+          currentQuantity = cartItem?.quantity || 0;
+        }
+
+        // Check if adding this quantity would exceed stock
+        if (currentQuantity + quantity > productStock) {
+          const errorMessage = 'Onvoldoende voorraad beschikbaar';
+          setError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      }
+
       if (!isAuthenticated) {
         // For guest users, manage cart locally
         cartApi.addToLocalCart(product_id, quantity);
@@ -68,18 +87,24 @@ export const useCart = (): CartContextType => {
         setIsLoading(false);
       }
     },
-    [isAuthenticated, refreshCart],
+    [isAuthenticated, refreshCart, cart],
   );
 
   const updateItem = useCallback(
-    async (item_id: string, quantity: number) => {
+    async (item_id: string, quantity: number, productStock?: number) => {
       if (!isAuthenticated) {
         // For guest users, we don't have item_id, so this would need product_id
         // This method is primarily for authenticated users
         throw new Error('Cannot update items for guest users');
       }
 
-      setIsLoading(true);
+      // Check stock limits if provided
+      if (productStock !== undefined && quantity > productStock) {
+        const errorMessage = 'Onvoldoende voorraad beschikbaar';
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      }
+
       setError(null);
 
       try {
@@ -90,8 +115,6 @@ export const useCart = (): CartContextType => {
           err instanceof Error ? err.message : 'Failed to update cart item';
         setError(errorMessage);
         throw err;
-      } finally {
-        setIsLoading(false);
       }
     },
     [isAuthenticated, refreshCart],
@@ -103,7 +126,6 @@ export const useCart = (): CartContextType => {
         throw new Error('Cannot remove items for guest users');
       }
 
-      setIsLoading(true);
       setError(null);
 
       try {
@@ -114,8 +136,6 @@ export const useCart = (): CartContextType => {
           err instanceof Error ? err.message : 'Failed to remove cart item';
         setError(errorMessage);
         throw err;
-      } finally {
-        setIsLoading(false);
       }
     },
     [isAuthenticated, refreshCart],
@@ -267,19 +287,65 @@ export const useCart = (): CartContextType => {
 export const useGuestCart = () => {
   const [localCart, setLocalCart] = useState(cartApi.getLocalCart());
 
-  const addItem = useCallback((product_id: string, quantity: number) => {
-    cartApi.addToLocalCart(product_id, quantity);
-    setLocalCart(cartApi.getLocalCart());
+  // Listen for custom cart update events
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      setLocalCart(cartApi.getLocalCart());
+    };
+
+    // Listen for storage events (only triggers for other tabs)
+    window.addEventListener('storage', handleCartUpdate);
+    // Listen for custom cart update events (same tab)
+    window.addEventListener('localCartUpdated', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleCartUpdate);
+      window.removeEventListener('localCartUpdated', handleCartUpdate);
+    };
   }, []);
 
-  const updateItem = useCallback((product_id: string, quantity: number) => {
-    cartApi.updateLocalCartItem(product_id, quantity);
-    setLocalCart(cartApi.getLocalCart());
-  }, []);
+  const addItem = useCallback(
+    (product_id: string, quantity: number, productStock?: number) => {
+      // Check stock limits if provided
+      if (productStock !== undefined) {
+        const currentItem = localCart.items.find(
+          (item) => item.product_id === product_id,
+        );
+        const currentQuantity = currentItem?.quantity || 0;
+
+        if (currentQuantity + quantity > productStock) {
+          throw new Error('Onvoldoende voorraad beschikbaar');
+        }
+      }
+
+      cartApi.addToLocalCart(product_id, quantity);
+      setLocalCart(cartApi.getLocalCart());
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('localCartUpdated'));
+    },
+    [localCart.items],
+  );
+
+  const updateItem = useCallback(
+    (product_id: string, quantity: number, productStock?: number) => {
+      // Check stock limits if provided
+      if (productStock !== undefined && quantity > productStock) {
+        throw new Error('Onvoldoende voorraad beschikbaar');
+      }
+
+      cartApi.updateLocalCartItem(product_id, quantity);
+      setLocalCart(cartApi.getLocalCart());
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('localCartUpdated'));
+    },
+    [],
+  );
 
   const removeItem = useCallback((product_id: string) => {
     cartApi.removeFromLocalCart(product_id);
     setLocalCart(cartApi.getLocalCart());
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('localCartUpdated'));
   }, []);
 
   const clearCart = useCallback(() => {
