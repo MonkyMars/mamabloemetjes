@@ -53,6 +53,13 @@ export class CurrencyCalculator {
   }
 
   /**
+   * Divide two decimal values
+   */
+  static divide(a: Decimal, b: Decimal): Decimal {
+    return a.div(b);
+  }
+
+  /**
    * Sum an array of decimal values
    */
   static sum(values: Decimal[]): Decimal {
@@ -67,14 +74,22 @@ export class CurrencyCalculator {
   }
 
   /**
-   * Calculate tax amount (21% VAT)
+   * Calculate tax amount (21% VAT) from tax-inclusive price
    */
-  static calculateTax(subtotal: Decimal): Decimal {
-    return subtotal.mul(new Decimal('0.21'));
+  static calculateTax(priceIncludingTax: Decimal): Decimal {
+    return priceIncludingTax.mul(new Decimal('0.21'));
   }
 
   /**
-   * Calculate total with tax
+   * Calculate subtotal (tax-exclusive) from tax-inclusive price
+   */
+  static calculateSubtotal(priceIncludingTax: Decimal): Decimal {
+    return priceIncludingTax.minus(this.calculateTax(priceIncludingTax));
+  }
+
+  /**
+   * Calculate total with tax (backward compatibility)
+   * @deprecated Use calculateTax for tax-inclusive prices instead
    */
   static addTax(subtotal: Decimal): Decimal {
     return subtotal.mul(new Decimal('1.21'));
@@ -83,7 +98,11 @@ export class CurrencyCalculator {
   /**
    * Calculate shipping cost based on threshold
    */
-  static calculateShipping(total: Decimal, threshold: number = 75, shippingCost: number = 7.5): Decimal {
+  static calculateShipping(
+    total: Decimal,
+    threshold: number = 75,
+    shippingCost: number = 7.5,
+  ): Decimal {
     return total.gte(new Decimal(threshold))
       ? new Decimal(0)
       : new Decimal(shippingCost);
@@ -118,26 +137,30 @@ export class CurrencyCalculator {
   /**
    * Calculate order summary with precision
    */
-  static calculateOrderSummary(items: Array<{
-    price: Decimal;
-    quantity: number;
-  }>): {
+  static calculateOrderSummary(
+    items: Array<{
+      price: Decimal;
+      quantity: number;
+    }>,
+  ): {
     subtotal: Decimal;
     tax: Decimal;
     shipping: Decimal;
     total: Decimal;
     itemCount: number;
+    priceTotal: Decimal;
   } {
-    // Calculate subtotal
-    const subtotal = this.sum(
-      items.map(item => this.calculateLineTotal(item.price, item.quantity))
+    // Calculate price total (tax-inclusive)
+    const priceTotal = this.sum(
+      items.map((item) => this.calculateLineTotal(item.price, item.quantity)),
     );
 
-    // Calculate tax
-    const tax = this.calculateTax(subtotal);
+    // Calculate tax and subtotal from tax-inclusive price
+    const tax = this.calculateTax(priceTotal);
+    const subtotal = this.calculateSubtotal(priceTotal);
 
-    // Calculate total before shipping
-    const totalBeforeShipping = this.add(subtotal, tax);
+    // Total before shipping is the same as price total
+    const totalBeforeShipping = priceTotal;
 
     // Calculate shipping
     const shipping = this.calculateShipping(totalBeforeShipping);
@@ -154,20 +177,27 @@ export class CurrencyCalculator {
       shipping,
       total,
       itemCount,
+      priceTotal,
     };
   }
 
   /**
    * Calculate guest cart summary from products and quantities
    */
-  static calculateGuestCartSummary(items: Array<{
-    productId: string;
-    quantity: number;
-  }>, products: Record<string, {
-    price: number;
-    tax: number;
-    subtotal: number;
-  }>): {
+  static calculateGuestCartSummary(
+    items: Array<{
+      productId: string;
+      quantity: number;
+    }>,
+    products: Record<
+      string,
+      {
+        price: number;
+        tax: number;
+        subtotal: number;
+      }
+    >,
+  ): {
     subtotal: Decimal;
     tax: Decimal;
     shipping: Decimal;
@@ -176,7 +206,7 @@ export class CurrencyCalculator {
     priceTotal: Decimal;
   } {
     // Convert to decimal items
-    const decimalItems = items.map(item => {
+    const decimalItems = items.map((item) => {
       const product = products[item.productId];
       if (!product) {
         return {
@@ -197,15 +227,15 @@ export class CurrencyCalculator {
 
     // Calculate totals
     const priceTotal = this.sum(
-      decimalItems.map(item => this.multiply(item.price, item.quantity))
+      decimalItems.map((item) => this.multiply(item.price, item.quantity)),
     );
 
     const subtotal = this.sum(
-      decimalItems.map(item => this.multiply(item.subtotal, item.quantity))
+      decimalItems.map((item) => this.multiply(item.subtotal, item.quantity)),
     );
 
     const tax = this.sum(
-      decimalItems.map(item => this.multiply(item.tax, item.quantity))
+      decimalItems.map((item) => this.multiply(item.tax, item.quantity)),
     );
 
     // Calculate shipping
@@ -230,12 +260,14 @@ export class CurrencyCalculator {
   /**
    * Calculate authenticated cart summary from cart items
    */
-  static calculateAuthenticatedCartSummary(items: Array<{
-    quantity: number;
-    unit_price_cents: number;
-    unit_tax_cents: number;
-    unit_subtotal_cents: number;
-  }>): {
+  static calculateAuthenticatedCartSummary(
+    items: Array<{
+      quantity: number;
+      unit_price_cents: number;
+      unit_tax_cents: number;
+      unit_subtotal_cents: number;
+    }>,
+  ): {
     subtotal: Decimal;
     tax: Decimal;
     shipping: Decimal;
@@ -245,30 +277,27 @@ export class CurrencyCalculator {
   } {
     // Convert cents to decimals and calculate
     const priceTotal = this.sum(
-      items.map(item =>
+      items.map((item) =>
         this.multiply(
           this.centsToDecimal(item.unit_price_cents),
-          item.quantity
-        )
-      )
+          item.quantity,
+        ),
+      ),
     );
 
     const subtotal = this.sum(
-      items.map(item =>
+      items.map((item) =>
         this.multiply(
           this.centsToDecimal(item.unit_subtotal_cents),
-          item.quantity
-        )
-      )
+          item.quantity,
+        ),
+      ),
     );
 
     const tax = this.sum(
-      items.map(item =>
-        this.multiply(
-          this.centsToDecimal(item.unit_tax_cents),
-          item.quantity
-        )
-      )
+      items.map((item) =>
+        this.multiply(this.centsToDecimal(item.unit_tax_cents), item.quantity),
+      ),
     );
 
     // Calculate shipping
@@ -293,7 +322,10 @@ export class CurrencyCalculator {
   /**
    * Calculate remaining amount for free shipping
    */
-  static calculateShippingRemaining(currentTotal: Decimal, threshold: number = 75): Decimal {
+  static calculateShippingRemaining(
+    currentTotal: Decimal,
+    threshold: number = 75,
+  ): Decimal {
     const thresholdDecimal = new Decimal(threshold);
     return this.isLessThan(currentTotal, thresholdDecimal)
       ? this.subtract(thresholdDecimal, currentTotal)

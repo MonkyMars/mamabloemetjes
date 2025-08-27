@@ -4,6 +4,7 @@ use crate::structs::cart::{
     AddCartItemRequest, Cart, CartItem, CartItemWithProduct, CartResponse, GuestCartItem,
 };
 use crate::structs::product::Product;
+use crate::utils::tax::Tax;
 use rust_decimal::Decimal;
 use rust_decimal::prelude::ToPrimitive;
 use uuid::Uuid;
@@ -131,11 +132,15 @@ impl CartService {
             .round()
             .to_i32()
             .unwrap_or(0);
-        let unit_tax_cents = (product.tax * Decimal::from(100))
+
+        // Calculate tax and subtotal correctly (tax = price * 0.21, subtotal = price - tax)
+        let unit_tax = product.price * Tax::RATE;
+        let unit_subtotal = product.price - unit_tax;
+        let unit_tax_cents = (unit_tax * Decimal::from(100))
             .round()
             .to_i32()
             .unwrap_or(0);
-        let unit_subtotal_cents = (product.subtotal * Decimal::from(100))
+        let unit_subtotal_cents = (unit_subtotal * Decimal::from(100))
             .round()
             .to_i32()
             .unwrap_or(0);
@@ -346,11 +351,15 @@ impl CartService {
                 .round()
                 .to_i32()
                 .unwrap_or(0);
-            let unit_tax_cents = (product.tax * Decimal::from(100))
+
+            // Calculate tax and subtotal correctly (tax = price * 0.21, subtotal = price - tax)
+            let unit_tax = product.price * Tax::RATE;
+            let unit_subtotal = product.price - unit_tax;
+            let unit_tax_cents = (unit_tax * Decimal::from(100))
                 .round()
                 .to_i32()
                 .unwrap_or(0);
-            let unit_subtotal_cents = (product.subtotal * Decimal::from(100))
+            let unit_subtotal_cents = (unit_subtotal * Decimal::from(100))
                 .round()
                 .to_i32()
                 .unwrap_or(0);
