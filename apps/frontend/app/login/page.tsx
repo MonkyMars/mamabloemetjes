@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { LoginForm } from '../../components/auth/LoginForm';
-import FloatingElements from '../../components/FloatingElements';
+import { LoginForm } from '@//components/auth/LoginForm';
+import FloatingElements from '@//components/FloatingElements';
 
 export default function LoginPage() {
   return (

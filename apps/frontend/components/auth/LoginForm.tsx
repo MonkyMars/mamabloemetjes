@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { FiMail, FiLock, FiLoader } from 'react-icons/fi';
 import { Button } from '../Button';
 import { Input } from '../Input';
-import { useAuth } from '../../context/AuthContext';
-import { validateEmail } from '../../lib/auth';
-import { ValidationError } from '../../types/auth';
+import { useAuth } from '@//context/AuthContext';
+import { validateEmail } from '@//lib/auth';
+import { ValidationError } from '@//types/auth';
 
 export interface LoginFormProps {
   onSuccess?: () => void;
