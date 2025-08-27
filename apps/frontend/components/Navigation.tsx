@@ -25,6 +25,7 @@ const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
   const pathname = usePathname();
 
   const { isSearchOpen, closeSearch } = useSearchContext();
@@ -33,9 +34,12 @@ const Navigation: React.FC = () => {
   const guestCart = useGuestCart();
 
   // Get cart item count based on authentication status
-  const cartItemCount = isAuthenticated
-    ? authenticatedCart.totalQuantity()
-    : guestCart.totalQuantity();
+  useEffect(() => {
+    const cartItemCount = isAuthenticated
+      ? authenticatedCart.totalQuantity()
+      : guestCart.totalQuantity();
+    setCartItemCount(cartItemCount);
+  }, [isAuthenticated, authenticatedCart, guestCart]);
 
   useEffect(() => {
     const handleScroll = () => {
