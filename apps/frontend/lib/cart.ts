@@ -157,6 +157,8 @@ export const setLocalCart = (cart: {
         updated_at: new Date().toISOString(),
       }),
     );
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new CustomEvent('localCartUpdated'));
   } catch (error) {
     console.warn('Failed to save cart to localStorage:', error);
   }
@@ -165,6 +167,8 @@ export const setLocalCart = (cart: {
 export const clearLocalCart = (): void => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(CART_STORAGE_KEY);
+  // Dispatch custom event to notify components
+  window.dispatchEvent(new CustomEvent('localCartUpdated'));
 };
 
 export const addToLocalCart = (productId: string, quantity: number): void => {
@@ -192,6 +196,7 @@ export const updateLocalCartItem = (
   );
 
   if (existingItemIndex >= 0) {
+    console.log('QUANTITY', quantity);
     if (quantity <= 0) {
       cart.items.splice(existingItemIndex, 1);
     } else {
