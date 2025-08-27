@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Button } from '../../components/Button';
-import { getProductById } from '../../data/products';
-import { ContactForm, Product } from '../../types';
+import { Button } from '@//components/Button';
+import { getProductById } from '@//data/products';
+import { ContactForm, Product } from '@//types';
 import {
   FiPhone,
   FiMail,
