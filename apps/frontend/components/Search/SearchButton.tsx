@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useSearchContext } from '../../context/SearchContext';
+import { useSearchContext } from '@//context/SearchContext';
 import { FiSearch } from 'react-icons/fi';
 
 interface SearchButtonProps {
@@ -17,7 +17,8 @@ const SearchButton: React.FC<SearchButtonProps> = ({
 }) => {
   const { openSearch } = useSearchContext();
 
-  const baseClasses = 'flex items-center gap-2 transition-colors focus:outline-none';
+  const baseClasses =
+    'flex items-center gap-2 transition-colors focus:outline-none';
 
   const variantClasses = {
     default: 'px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200',
@@ -29,11 +30,11 @@ const SearchButton: React.FC<SearchButtonProps> = ({
     <button
       onClick={openSearch}
       className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-      aria-label="Open search"
+      aria-label='Open search'
     >
-      <FiSearch className="w-5 h-5" />
+      <FiSearch className='w-5 h-5' />
       {showText && variant === 'default' && (
-        <span className="text-sm">Zoeken...</span>
+        <span className='text-sm'>Zoeken...</span>
       )}
     </button>
   );

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchContext } from '../context/SearchContext';
 import { useSearchSuggestions } from '../hooks/useSearch';
+import { useProductPromotion } from '../hooks/usePromotion';
 import {
   FiSearch,
   FiX,
@@ -163,13 +164,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     inputRef.current?.focus();
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('nl-NL', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(price);
-  };
-
   const highlightText = (text: string, query: string) => {
     if (!query.trim()) return text;
 
@@ -273,9 +267,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                         <div className='text-sm font-medium text-[#2d2820] truncate'>
                           {highlightText(product.name, searchQuery)}
                         </div>
-                        <div className='text-sm font-medium text-[#d4a574]'>
-                          {formatPrice(product.price)}
-                        </div>
+                        <ProductPrice product={product} />
                       </div>
                       {product.stock < 5 && (
                         <span className='text-xs text-orange-600 font-medium'>
@@ -320,6 +312,41 @@ const SearchBar: React.FC<SearchBarProps> = ({
           )}
         </div>
       )}
+    </div>
+  );
+};
+
+// Product Price Component for Search Results
+const ProductPrice: React.FC<{
+  product: { id: string; price: number; discounted_price: number };
+}> = ({ product }) => {
+  const { data: promotion } = useProductPromotion(product.id);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('nl-NL', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(price);
+  };
+
+  const hasDiscount = promotion && product.discounted_price < product.price;
+
+  if (!hasDiscount) {
+    return (
+      <div className='text-sm font-medium text-[#d4a574]'>
+        {formatPrice(product.price)}
+      </div>
+    );
+  }
+
+  return (
+    <div className='flex items-center gap-2'>
+      <span className='text-sm font-medium text-green-600'>
+        {formatPrice(product.discounted_price)}
+      </span>
+      <span className='text-xs text-gray-500 line-through'>
+        {formatPrice(product.price)}
+      </span>
     </div>
   );
 };
