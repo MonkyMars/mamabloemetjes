@@ -51,8 +51,16 @@ export interface CartContextType {
   cart: CartResponse | null;
   isLoading: boolean;
   error: string | null;
-  addItem: (product_id: string, quantity: number) => Promise<void>;
-  updateItem: (item_id: string, quantity: number) => Promise<void>;
+  addItem: (
+    product_id: string,
+    quantity: number,
+    productStock?: number,
+  ) => Promise<void>;
+  updateItem: (
+    item_id: string,
+    quantity: number,
+    productStock?: number,
+  ) => Promise<void>;
   removeItem: (item_id: string) => Promise<void>;
   clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
