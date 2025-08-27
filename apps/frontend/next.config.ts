@@ -23,7 +23,9 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  typedRoutes: true,
+  // TODO
+  // Nice to have when in production:)
+  // typedRoutes: true,
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['react-icons'],
