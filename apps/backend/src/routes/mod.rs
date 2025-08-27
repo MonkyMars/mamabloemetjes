@@ -3,6 +3,7 @@ pub mod cart;
 pub mod get;
 pub mod health_check;
 pub mod post;
+pub mod promotion;
 
 use crate::middleware::{admin_middleware, auth_middleware, optional_auth_middleware};
 use crate::response::{ApiResponse, AppResponse, error::AppError};
@@ -64,6 +65,23 @@ fn public_routes() -> Router {
         .route(
             "/inventory/{id}",
             get(get::inventory::get_inventory_by_product),
+        )
+        // Promotion routes (public for both guest and authenticated users)
+        .route(
+            "/promotions/validate-price",
+            post(promotion::validate_price),
+        )
+        .route(
+            "/promotions/product/{product_id}",
+            get(promotion::get_product_promotions),
+        )
+        .route(
+            "/promotions/active",
+            get(promotion::get_all_active_promotions),
+        )
+        .route(
+            "/promotions/products",
+            post(promotion::get_active_promotions_for_products),
         )
         // Add optional auth middleware to capture user context if available
         .layer(middleware::from_fn(optional_auth_middleware))
