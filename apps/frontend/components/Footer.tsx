@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FiPhone, FiMail } from 'react-icons/fi';
+import NameBanner from './NameBanner';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -66,21 +67,10 @@ const Footer: React.FC = () => {
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12'>
           {/* Brand Section */}
           <div className='lg:col-span-2'>
-            <div className='flex items-center space-x-3 mb-6'>
-              <div className='w-12 h-12 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center'>
-                <span className='text-white font-family-serif font-bold text-xl'>
-                  M
-                </span>
-              </div>
-              <div>
-                <h2 className='text-xl font-family-serif font-bold text-[#e8c4a0]'>
-                  Mama Bloemetjes
-                </h2>
-                <p className='text-sm text-[#9a8470] -mt-1'>
-                  Handgemaakte Fluwelen Bloemen
-                </p>
-              </div>
-            </div>
+            <NameBanner
+              className='flex items-center space-x-3 mb-6'
+              Parent='Footer'
+            />
             <p className='text-[#d6ccc0] mb-6 leading-relaxed'>
               Het creëren van prachtige, blijvende herinneringen met
               handgemaakte fluwelen bloemen. Elk stuk wordt met liefde gemaakt
