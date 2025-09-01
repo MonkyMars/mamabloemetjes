@@ -1,4 +1,5 @@
 import axios from 'axios';
+import api from './axios';
 import {
   AuthResponse,
   LoginRequest,
@@ -10,18 +11,8 @@ import {
 import { ApiResponse } from '../types/api';
 import { capitalize } from './utils';
 
-// Create axios instance with base configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-const authApi = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
 // Add request interceptor to include auth token
-authApi.interceptors.request.use(
+api.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
     if (token) {
@@ -35,7 +26,7 @@ authApi.interceptors.request.use(
 );
 
 // Add response interceptor to handle token refresh
-authApi.interceptors.response.use(
+api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
@@ -49,7 +40,7 @@ authApi.interceptors.response.use(
         if (token) {
           originalRequest.headers.Authorization = `Bearer ${token}`;
         }
-        return authApi(originalRequest);
+        return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed, redirect to login
         clearTokens();
@@ -107,7 +98,7 @@ export const login = async (
   credentials: LoginRequest,
 ): Promise<AuthResponse> => {
   try {
-    const response = await authApi.post<ApiResponse<AuthResponse>>(
+    const response = await api.post<ApiResponse<AuthResponse>>(
       '/auth/login',
       credentials,
     );
@@ -130,7 +121,7 @@ export const register = async (
   credentials: RegisterRequest,
 ): Promise<AuthResponse> => {
   try {
-    const response = await authApi.post<ApiResponse<AuthResponse>>(
+    const response = await api.post<ApiResponse<AuthResponse>>(
       '/auth/register',
       credentials,
     );
@@ -151,7 +142,7 @@ export const register = async (
 
 export const logout = async (): Promise<void> => {
   try {
-    await authApi.post('/auth/logout');
+    await api.post('/auth/logout');
   } catch (error) {
     // Even if logout fails on server, clear local tokens
     console.warn('Server logout failed:', error);
@@ -168,7 +159,7 @@ export const refreshAccessToken = async (): Promise<RefreshResponse> => {
   }
 
   try {
-    const response = await authApi.post<ApiResponse<RefreshResponse>>(
+    const response = await api.post<ApiResponse<RefreshResponse>>(
       '/auth/refresh',
       {
         refresh_token: refreshToken,
@@ -191,7 +182,7 @@ export const refreshAccessToken = async (): Promise<RefreshResponse> => {
 
 export const verifyToken = async (): Promise<User> => {
   try {
-    const response = await authApi.get<ApiResponse<User>>('/auth/verify');
+    const response = await api.get<ApiResponse<User>>('/auth/verify');
     const user = response.data.data;
     setUser(user);
     return user;
@@ -203,7 +194,7 @@ export const verifyToken = async (): Promise<User> => {
 
 export const getProfile = async (): Promise<User> => {
   try {
-    const response = await authApi.get<ApiResponse<User>>('/auth/profile');
+    const response = await api.get<ApiResponse<User>>('/auth/profile');
     const user = response.data.data;
     setUser(user);
     return user;

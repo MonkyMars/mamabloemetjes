@@ -1,5 +1,6 @@
 use crate::pool::connect::pool;
 use crate::response::error::AppError;
+use crate::secrets;
 use crate::structs::jwt::{AuthResponse, Claims, RefreshResponse, UserInfo, UserRole};
 use crate::structs::user::{CreateUser, User};
 use argon2::{
@@ -9,24 +10,23 @@ use argon2::{
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use sqlx::{PgPool, Row};
-use std::env;
 use uuid::Uuid;
 
 pub struct AuthService;
 
 impl AuthService {
-    /// Get access token expiry from environment or default to 30 minutes
+    /// Get access token expiry from secrets or default to 1 hour
     fn get_access_token_expiry() -> i64 {
-        env::var("ACCESS_TOKEN_EXPIRY")
-            .unwrap_or_else(|_| "3600".to_string()) // 30 minutes default
+        secrets::get_secret("ACCESS_TOKEN_EXPIRY")
+            .unwrap_or_else(|| "3600".to_string())
             .parse()
             .unwrap_or(3600)
     }
 
-    /// Get refresh token expiry from environment or default to 7 days
+    /// Get refresh token expiry from secrets or default to 24 hours
     fn get_refresh_token_expiry() -> i64 {
-        env::var("REFRESH_TOKEN_EXPIRY")
-            .unwrap_or_else(|_| "86400".to_string()) // 24 hours default
+        secrets::get_secret("REFRESH_TOKEN_EXPIRY")
+            .unwrap_or_else(|| "86400".to_string())
             .parse()
             .unwrap_or(86400)
     }
@@ -53,8 +53,7 @@ impl AuthService {
 
     /// Generate JWT access token
     pub fn generate_access_token(user: &User) -> Result<String, AppError> {
-        let secret = env::var("JWT_SECRET")
-            .map_err(|_| AppError::InternalServerError("JWT_SECRET not set".to_string()))?;
+        let secret = secrets::get_jwt_secret().map_err(|e| AppError::InternalServerError(e))?;
 
         let now = Utc::now().timestamp() as usize;
         let exp = now + Self::get_access_token_expiry() as usize;
@@ -93,8 +92,7 @@ impl AuthService {
 
     /// Verify JWT token and extract claims
     pub fn verify_token(token: &str) -> Result<Claims, AppError> {
-        let secret = env::var("JWT_SECRET")
-            .map_err(|_| AppError::InternalServerError("JWT_SECRET not set".to_string()))?;
+        let secret = secrets::get_jwt_secret().map_err(|e| AppError::InternalServerError(e))?;
 
         let mut validation = Validation::default();
         validation.validate_exp = true;

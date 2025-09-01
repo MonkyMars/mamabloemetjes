@@ -1,0 +1,14 @@
+[package]
+name = "mamabloemetjes_backend"
+
+[[deployment]]
+name = "mamabloemetjes-backend"
+
+# Environment variables for Shuttle deployment
+# Set these in your Shuttle dashboard or via shuttle project vars set
+[env]
+JWT_SECRET = "my-jwt-secret-key"
+ACCESS_TOKEN_EXPIRY = "3600"
+REFRESH_TOKEN_EXPIRY = "86400"
+RUST_LOG = "info"
+POSTGRES_URL = "my-supabase-database-url"
