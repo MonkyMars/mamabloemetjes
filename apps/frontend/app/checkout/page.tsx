@@ -1122,13 +1122,6 @@ const CheckoutPage: React.FC = () => {
                               className='object-cover'
                             />
                           )}
-                          {/* Promotion Badge */}
-                          {(hasPromotion(item.product_id) ||
-                            hasProductDiscount(item.product_id)) && (
-                            <div className='absolute -top-1 -right-1 bg-red-500 text-white px-1 py-0.5 rounded-full text-xs font-bold'>
-                              SALE
-                            </div>
-                          )}
                         </div>
                         <div className='flex-1'>
                           <div className='font-medium text-neutral-800 line-clamp-1'>
@@ -1261,13 +1254,6 @@ const CheckoutPage: React.FC = () => {
                               fill
                               className='object-cover'
                             />
-                          )}
-                          {/* Promotion Badge for Guest Cart */}
-                          {(hasPromotion(item.product_id) ||
-                            hasProductDiscount(item.product_id)) && (
-                            <div className='absolute -top-1 -right-1 bg-red-500 text-white px-1 py-0.5 rounded-full text-xs font-bold'>
-                              SALE
-                            </div>
                           )}
                         </div>
                         <div className='flex-1'>

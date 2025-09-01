@@ -20,6 +20,7 @@ import { SearchModal, SearchButton } from './Search';
 import { useAuth } from '../context/AuthContext';
 import { useCart, useGuestCart } from '../hooks/useCart';
 import { getFullName } from '@/lib/auth';
+import NameBanner from './NameBanner';
 
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -106,20 +107,11 @@ const Navigation: React.FC = () => {
         <div className='container'>
           <div className='flex items-center justify-between h-20'>
             {/* Logo */}
-            <Link href='/' className='flex items-center space-x-3 group'>
-              <div className='w-12 h-12 bg-gradient-to-br from-[#d4a574] to-[#ddb7ab] rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-300'>
-                <span className='text-white font-family-serif font-bold text-xl'>
-                  M
-                </span>
-              </div>
-              <div className='hidden sm:block'>
-                <h1 className='text-xl mb-0.5 font-family-serif font-bold text-[#2d2820] group-hover:text-[#d4a574] transition-colors duration-300'>
-                  Mama Bloemetjes
-                </h1>
-                <p className='text-sm text-[#7d6b55] -mt-1'>
-                  Handgemaakte Vilt Bloemen
-                </p>
-              </div>
+            <Link href='/'>
+              <NameBanner
+                className='flex items-center space-x-3 group'
+                Parent='Navigation'
+              />
             </Link>
 
             {/* Desktop Navigation */}

@@ -31,6 +31,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { NextPage } from 'next';
+import NotFound from '@/app/not-found';
 
 const ProductComponent: React.FC = () => {
   const params = useParams();
@@ -160,18 +161,7 @@ const ProductComponent: React.FC = () => {
   }
 
   if (!product) {
-    return (
-      <div className='min-h-screen pt-24 pb-16 flex items-center justify-center'>
-        <div className='text-center'>
-          <h1 className='heading-3 mb-4'>Product not found</h1>
-          <p className='text-neutral-600 mb-8'>
-            The product you&qout;re looking for doesn&qout;t exist or has been
-            removed.
-          </p>
-          <Button onClick={() => router.push('/shop')}>Back to Shop</Button>
-        </div>
-      </div>
-    );
+    return NotFound();
   }
 
   // Get product images
