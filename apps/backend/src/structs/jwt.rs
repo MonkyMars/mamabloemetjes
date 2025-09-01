@@ -31,7 +31,8 @@ pub struct Claims {
     pub iat: usize,     // Issued at
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "user_role", rename_all = "lowercase")]
 pub enum UserRole {
     #[serde(rename = "user")]
     User,

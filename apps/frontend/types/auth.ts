@@ -5,6 +5,7 @@ export interface User {
   last_name: string;
   email: string;
   role: 'user' | 'admin';
+  email_verified?: boolean;
   created_at: string;
 }
 

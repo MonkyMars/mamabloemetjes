@@ -4,6 +4,7 @@ pub mod get;
 pub mod health_check;
 pub mod post;
 pub mod promotion;
+pub mod user;
 
 use crate::middleware::{admin_middleware, auth_middleware, optional_auth_middleware};
 use crate::response::{ApiResponse, AppResponse, error::AppError};
@@ -121,7 +122,11 @@ fn authenticated_routes() -> Router {
         .route("/cart/items/{item_id}", delete(cart::remove_cart_item))
         .route("/cart/merge", post(cart::merge_cart))
         // User profile and account management
-        .route("/profile", get(auth::profile))
+        .route("/profile", get(user::get_profile))
+        .route("/account", patch(user::update_account))
+        .route("/account/password", post(user::change_password))
+        .route("/account/delete", delete(user::delete_account))
+        .route("/account/verify-email", post(user::verify_email))
         .route("/logout", post(auth::logout))
         // Add auth middleware to all routes in this group
         .layer(middleware::from_fn(auth_middleware))
@@ -145,8 +150,11 @@ fn admin_routes() -> Router {
             get(get::order::get_orders_by_user_admin),
         )
         // User management
-        .route("/users/{id}", get(auth::get_user))
-        .route("/users/role", post(auth::update_user_role))
+        .route("/users", get(user::list_users))
+        .route("/users/{id}", get(user::get_user_by_id))
+        .route("/users/{id}", patch(user::admin_update_user))
+        .route("/users/{id}", delete(user::admin_delete_user))
+        .route("/users/{id}/role", post(user::update_user_role))
         .route("/users/create-admin", post(auth::create_admin))
         // Advanced inventory management
         .route("/inventory/manage", get(get::inventory::get_all_inventory))

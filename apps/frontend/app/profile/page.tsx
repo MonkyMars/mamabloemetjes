@@ -1,10 +1,5 @@
 'use client';
 
-// TODO:
-// 1. Refactor to smaller components
-// 2. Create logic and endpoints in backend for profile and account management
-// 3. Rename profile to account throughout the app
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
@@ -22,6 +17,7 @@ import {
 } from '@/lib/profile';
 import {
   FiUser,
+  FiUsers,
   FiSettings,
   FiShoppingBag,
   FiEdit3,
@@ -34,6 +30,10 @@ import {
   FiCalendar,
   FiCheckCircle,
   FiHeart,
+  FiAlertTriangle,
+  FiTrash2,
+  FiShield,
+  FiXCircle,
 } from 'react-icons/fi';
 
 type ActiveTab = 'profile' | 'orders' | 'settings';
@@ -49,8 +49,16 @@ const ProfilePage: React.FC = () => {
     changePassword,
     isChangingPassword: isChangingPasswordHook,
     passwordSuccess,
+    deleteAccount,
+    isDeletingAccount,
+    deleteAccountSuccess,
+    verifyEmail,
+    isVerifyingEmail,
+    verifyEmailSuccess,
     resetUpdateStatus,
     resetPasswordStatus,
+    resetDeleteAccountStatus,
+    resetVerifyEmailStatus,
   } = useProfileManagement();
 
   const {
@@ -64,6 +72,7 @@ const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('profile');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isChangingPasswordState, setIsChangingPasswordState] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   // Form states - initialize with profile data if available
   const [profileForm, setProfileForm] = useState<UpdateProfileRequest>(() => {
@@ -93,9 +102,6 @@ const ProfilePage: React.FC = () => {
 
   // Initialize form when profile loads
   React.useEffect(() => {
-    console.log('Profile data changed:', profile);
-    console.log('Profile loading state:', profileLoading);
-    console.log('Is authenticated:', isAuthenticated);
     if (profile) {
       const newFormData = {
         first_name: profile.first_name || '',
@@ -103,28 +109,32 @@ const ProfilePage: React.FC = () => {
         last_name: profile.last_name || '',
         email: profile.email || '',
       };
-      console.log('Setting profile form data:', newFormData);
       setProfileForm(newFormData);
-    } else {
-      console.log('No profile data available yet');
     }
   }, [profile, profileLoading, isAuthenticated]);
+
+  // Handle successful account deletion
+  React.useEffect(() => {
+    if (deleteAccountSuccess) {
+      logout();
+    }
+  }, [deleteAccountSuccess, logout]);
 
   // Handle tab changes
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
     resetUpdateStatus();
     resetPasswordStatus();
+    resetDeleteAccountStatus();
+    resetVerifyEmailStatus();
     setIsEditingProfile(false);
     setIsChangingPasswordState(false);
+    setShowDeleteConfirmation(false);
     setFormErrors({});
   };
 
   // Profile update handlers
   const handleProfileEdit = () => {
-    console.log('Starting edit mode with profile:', profile);
-    console.log('Current profileForm state:', profileForm);
-    // Ensure form is populated with latest profile data
     if (profile) {
       const formData = {
         first_name: profile.first_name || '',
@@ -132,10 +142,7 @@ const ProfilePage: React.FC = () => {
         last_name: profile.last_name || '',
         email: profile.email || '',
       };
-      console.log('Setting form data for editing:', formData);
       setProfileForm(formData);
-    } else {
-      console.log('No profile data available for editing');
     }
     setIsEditingProfile(true);
     resetUpdateStatus();
@@ -208,6 +215,31 @@ const ProfilePage: React.FC = () => {
     });
   };
 
+  // Email verification handler
+  const handleVerifyEmail = () => {
+    verifyEmail(undefined, {
+      onSuccess: () => {
+        resetVerifyEmailStatus();
+      },
+      onError: (error) => {
+        setFormErrors({ general: error.message });
+      },
+    });
+  };
+
+  // Account deletion handlers
+  const handleDeleteAccount = () => {
+    deleteAccount(undefined, {
+      onSuccess: () => {
+        // The useEffect will handle logout
+      },
+      onError: (error) => {
+        setFormErrors({ general: error.message });
+        setShowDeleteConfirmation(false);
+      },
+    });
+  };
+
   // Redirect if not authenticated
   if (!isAuthenticated && !isLoading) {
     return (
@@ -255,6 +287,47 @@ const ProfilePage: React.FC = () => {
             aan.
           </p>
         </div>
+
+        {/* Email Verification Banner */}
+        {profile.email_verified === false && (
+          <div className='mb-8 bg-yellow-50 border border-yellow-200 rounded-xl p-4'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center'>
+                <FiAlertTriangle className='w-5 h-5 text-yellow-600 mr-3' />
+                <div>
+                  <h3 className='text-sm font-medium text-yellow-800'>
+                    E-mailadres niet geverifieerd
+                  </h3>
+                  <p className='text-sm text-yellow-700'>
+                    Verifieer je e-mailadres om alle functies te kunnen
+                    gebruiken.
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={handleVerifyEmail}
+                loading={isVerifyingEmail}
+                className='text-yellow-700 hover:text-yellow-800'
+              >
+                Verifiëren
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Success Messages */}
+        {verifyEmailSuccess && (
+          <div className='mb-8 bg-green-50 border border-green-200 rounded-xl p-4'>
+            <div className='flex items-center'>
+              <FiCheckCircle className='w-5 h-5 text-green-600 mr-3' />
+              <p className='text-sm text-green-800'>
+                Verificatie-e-mail verzonden! Controleer je inbox.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className='mb-8'>
@@ -437,10 +510,23 @@ const ProfilePage: React.FC = () => {
                           )}
                         </div>
                       ) : (
-                        <p className='text-[#2d2820] flex items-center'>
-                          <FiMail className='w-4 h-4 mr-2 text-[#7d6b55]' />
-                          {profile?.email}
-                        </p>
+                        <div className='flex items-center justify-between'>
+                          <p className='text-[#2d2820] flex items-center'>
+                            <FiMail className='w-4 h-4 mr-2 text-[#7d6b55]' />
+                            {profile?.email}
+                          </p>
+                          {profile.email_verified === true ? (
+                            <FiCheckCircle
+                              className='w-4 h-4 text-green-500'
+                              title='Geverifieerd'
+                            />
+                          ) : (
+                            <FiXCircle
+                              className='w-4 h-4 text-red-500'
+                              title='Niet geverifieerd'
+                            />
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -492,6 +578,23 @@ const ProfilePage: React.FC = () => {
                         </span>
                       </div>
                       <span className='text-[#2d2820]'>{getOrderCount()}</span>
+                    </div>
+                    <div className='flex items-center justify-between py-3 border-b border-[#e8e2d9]'>
+                      <div className='flex items-center'>
+                        <FiShield className='w-4 h-4 text-[#7d6b55] mr-3' />
+                        <span className='text-[#7d6b55]'>Account rol</span>
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          profile.role === 'admin'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {profile.role === 'admin'
+                          ? 'Administrator'
+                          : 'Gebruiker'}
+                      </span>
                     </div>
                     <div className='flex items-center justify-between py-3'>
                       <div className='flex items-center'>
@@ -588,7 +691,7 @@ const ProfilePage: React.FC = () => {
                 <div className='bg-white rounded-2xl shadow-soft border border-[#e8e2d9] p-6'>
                   <div className='flex items-center justify-between mb-6'>
                     <h2 className='text-xl font-medium text-[#2d2820] font-family-serif'>
-                      Wachtwoord
+                      Wachtwoord Wijzigen
                     </h2>
                     {!isChangingPasswordState && (
                       <Button
@@ -608,12 +711,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   )}
 
-                  {!isChangingPasswordState ? (
-                    <p className='text-[#7d6b55]'>
-                      Klik op &quot;Wijzigen&quot; om je wachtwoord te
-                      veranderen.
-                    </p>
-                  ) : (
+                  {isChangingPasswordState && (
                     <div className='space-y-4'>
                       {formErrors.general && (
                         <div className='p-3 bg-red-100 border border-red-300 rounded-lg text-red-800 text-sm'>
@@ -623,7 +721,7 @@ const ProfilePage: React.FC = () => {
 
                       <div>
                         <label className='block text-sm font-medium text-[#7d6b55] mb-2'>
-                          Huidig wachtwoord
+                          Huidig Wachtwoord
                         </label>
                         <input
                           type='password'
@@ -636,7 +734,6 @@ const ProfilePage: React.FC = () => {
                           }
                           className='input-field'
                           placeholder='Voer je huidige wachtwoord in'
-                          autoComplete='current-password'
                         />
                         {formErrors.current_password && (
                           <p className='mt-1 text-sm text-red-600'>
@@ -647,7 +744,7 @@ const ProfilePage: React.FC = () => {
 
                       <div>
                         <label className='block text-sm font-medium text-[#7d6b55] mb-2'>
-                          Nieuw wachtwoord
+                          Nieuw Wachtwoord
                         </label>
                         <input
                           type='password'
@@ -660,7 +757,6 @@ const ProfilePage: React.FC = () => {
                           }
                           className='input-field'
                           placeholder='Voer je nieuwe wachtwoord in'
-                          autoComplete='new-password'
                         />
                         {formErrors.new_password && (
                           <p className='mt-1 text-sm text-red-600'>
@@ -671,7 +767,7 @@ const ProfilePage: React.FC = () => {
 
                       <div>
                         <label className='block text-sm font-medium text-[#7d6b55] mb-2'>
-                          Bevestig nieuw wachtwoord
+                          Bevestig Nieuw Wachtwoord
                         </label>
                         <input
                           type='password'
@@ -684,7 +780,6 @@ const ProfilePage: React.FC = () => {
                           }
                           className='input-field'
                           placeholder='Bevestig je nieuwe wachtwoord'
-                          autoComplete='new-password'
                         />
                         {formErrors.confirm_password && (
                           <p className='mt-1 text-sm text-red-600'>
@@ -693,14 +788,14 @@ const ProfilePage: React.FC = () => {
                         )}
                       </div>
 
-                      <div className='flex space-x-3 pt-4 border-t border-[#e8e2d9]'>
+                      <div className='flex space-x-3 pt-4'>
                         <Button
                           variant='primary'
                           onClick={handlePasswordSave}
                           loading={isChangingPasswordHook}
                           leftIcon={<FiSave className='w-4 h-4' />}
                         >
-                          Wachtwoord Wijzigen
+                          Wachtwoord Opslaan
                         </Button>
                         <Button
                           variant='ghost'
@@ -712,32 +807,71 @@ const ProfilePage: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  {!isChangingPasswordState && (
+                    <p className='text-[#7d6b55] text-sm'>
+                      Klik op &qout;Wijzigen&qout; om je wachtwoord te
+                      veranderen. Zorg ervoor dat je nieuwe wachtwoord veilig
+                      is.
+                    </p>
+                  )}
                 </div>
 
-                {/* Account Actions */}
-                <div className='bg-white rounded-2xl shadow-soft border border-[#e8e2d9] p-6'>
-                  <h2 className='text-xl font-medium text-[#2d2820] font-family-serif mb-6'>
-                    Account Acties
-                  </h2>
-                  <div className='space-y-4'>
-                    <div className='flex items-center justify-between py-3 border-b border-[#e8e2d9]'>
-                      <div>
-                        <h3 className='font-medium text-[#2d2820]'>
-                          Uitloggen
-                        </h3>
-                        <p className='text-sm text-[#7d6b55]'>
-                          Log uit van je account op dit apparaat
-                        </p>
-                      </div>
-                      <Button
-                        variant='ghost'
-                        onClick={logout}
-                        leftIcon={<FiLogOut className='w-4 h-4' />}
-                      >
-                        Uitloggen
-                      </Button>
-                    </div>
+                {/* Account Deletion */}
+                <div className='bg-white rounded-2xl shadow-soft border border-red-200 p-6'>
+                  <div className='flex items-center mb-4'>
+                    <FiAlertTriangle className='w-5 h-5 text-red-500 mr-3' />
+                    <h2 className='text-xl font-medium text-red-700 font-family-serif'>
+                      Account Verwijderen
+                    </h2>
                   </div>
+
+                  <p className='text-[#7d6b55] text-sm mb-6'>
+                    Het verwijderen van je account is permanent en kan niet
+                    ongedaan worden gemaakt. Al je gegevens, bestellingen en
+                    voorkeuren worden definitief verwijderd.
+                  </p>
+
+                  {!showDeleteConfirmation ? (
+                    <Button
+                      variant='ghost'
+                      onClick={() => setShowDeleteConfirmation(true)}
+                      leftIcon={<FiTrash2 className='w-4 h-4' />}
+                      className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                    >
+                      Account Verwijderen
+                    </Button>
+                  ) : (
+                    <div className='space-y-4'>
+                      <div className='p-4 bg-red-50 border border-red-200 rounded-lg'>
+                        <h3 className='font-medium text-red-800 mb-2'>
+                          Weet je het zeker?
+                        </h3>
+                        <p className='text-red-700 text-sm mb-4'>
+                          Deze actie kan niet ongedaan worden gemaakt. Je
+                          account en alle gegevens worden permanent verwijderd.
+                        </p>
+                        <div className='flex space-x-3'>
+                          <Button
+                            variant='ghost'
+                            onClick={handleDeleteAccount}
+                            loading={isDeletingAccount}
+                            leftIcon={<FiTrash2 className='w-4 h-4' />}
+                            className='text-red-600 hover:text-red-700 hover:bg-red-100'
+                          >
+                            Ja, Verwijder Account
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            onClick={() => setShowDeleteConfirmation(false)}
+                            leftIcon={<FiX className='w-4 h-4' />}
+                          >
+                            Annuleren
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -745,31 +879,40 @@ const ProfilePage: React.FC = () => {
 
           {/* Sidebar */}
           <div className='space-y-6'>
-            {/* Quick Stats */}
+            {/* Quick Actions */}
             <div className='bg-white rounded-2xl shadow-soft border border-[#e8e2d9] p-6'>
               <h3 className='text-lg font-medium text-[#2d2820] font-family-serif mb-4'>
-                Account Overzicht
+                Snelle Acties
               </h3>
-              <div className='space-y-4'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-[#7d6b55]'>Bestellingen</span>
-                  <span className='font-medium text-[#2d2820]'>
-                    {getOrderCount()}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-[#7d6b55]'>Uitgegeven</span>
-                  <span className='font-medium text-[#2d2820]'>
-                    {formatCurrency(getTotalSpent())}
-                  </span>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <span className='text-[#7d6b55]'>Status</span>
-                  <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800'>
-                    <FiCheckCircle className='w-3 h-3 mr-1' />
-                    Actief
-                  </span>
-                </div>
+              <div className='space-y-3'>
+                {profile.role === 'admin' && (
+                  <Link href='/admin/users' className='block'>
+                    <Button
+                      variant='ghost'
+                      className='w-full justify-start'
+                      leftIcon={<FiUsers className='w-4 h-4' />}
+                    >
+                      Gebruikersbeheer
+                    </Button>
+                  </Link>
+                )}
+                <Link href='/shop' className='block'>
+                  <Button
+                    variant='ghost'
+                    className='w-full justify-start'
+                    leftIcon={<FiShoppingBag className='w-4 h-4' />}
+                  >
+                    Verder Winkelen
+                  </Button>
+                </Link>
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start'
+                  onClick={logout}
+                  leftIcon={<FiLogOut className='w-4 h-4' />}
+                >
+                  Uitloggen
+                </Button>
               </div>
             </div>
 
@@ -783,62 +926,37 @@ const ProfilePage: React.FC = () => {
                   {recentOrders.map((order) => (
                     <div
                       key={order.id}
-                      className='flex items-center justify-between py-2 border-b border-[#e8e2d9] last:border-b-0'
+                      className='border border-[#e8e2d9] rounded-lg p-3'
                     >
-                      <div>
-                        <p className='text-sm font-medium text-[#2d2820]'>
+                      <div className='flex items-center justify-between mb-1'>
+                        <span className='text-sm font-medium text-[#2d2820]'>
                           #{order.order_number}
-                        </p>
-                        <p className='text-xs text-[#7d6b55]'>
-                          {formatDate(order.created_at)}
-                        </p>
-                      </div>
-                      <div className='text-right'>
-                        <p className='text-sm font-medium text-[#2d2820]'>
-                          {formatCurrency(order.total_amount)}
-                        </p>
+                        </span>
                         <span
-                          className={`text-xs px-2 py-1 rounded-full ${getOrderStatusColor(
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(
                             order.status,
                           )}`}
                         >
                           {formatOrderStatus(order.status)}
                         </span>
                       </div>
+                      <div className='flex items-center justify-between text-sm text-[#7d6b55]'>
+                        <span>{formatDate(order.created_at)}</span>
+                        <span>{formatCurrency(order.total_amount)}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
-                <div className='mt-4 pt-4 border-t border-[#e8e2d9]'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    fullWidth
-                    onClick={() => setActiveTab('orders')}
-                  >
-                    Alle bestellingen bekijken
-                  </Button>
-                </div>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='w-full mt-4'
+                  onClick={() => setActiveTab('orders')}
+                >
+                  Alle Bestellingen
+                </Button>
               </div>
             )}
-
-            {/* Quick Actions */}
-            <div className='bg-white rounded-2xl shadow-soft border border-[#e8e2d9] p-6'>
-              <h3 className='text-lg font-medium text-[#2d2820] font-family-serif mb-4'>
-                Snelle Acties
-              </h3>
-              <div className='space-y-3'>
-                <Link href='/shop' className='block'>
-                  <Button variant='outline' size='sm' fullWidth>
-                    Verder Winkelen
-                  </Button>
-                </Link>
-                <Link href='/contact' className='block'>
-                  <Button variant='ghost' size='sm' fullWidth>
-                    Contact Opnemen
-                  </Button>
-                </Link>
-              </div>
-            </div>
           </div>
         </div>
       </div>

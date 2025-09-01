@@ -32,14 +32,24 @@ pub struct CreateUser {
     pub role: Option<UserRole>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
 pub struct UpdateUser {
+    pub id: Uuid,
     pub email: Option<String>,
     pub first_name: Option<String>,
     pub preposition: Option<String>,
     pub last_name: Option<String>,
     pub role: Option<UserRole>,
     pub email_verified: Option<bool>,
+}
+
+#[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
+pub struct Address {
+    pub street: String,
+    pub house_number: String,
+    pub postal_code: String, // Dutch format: 1234AB
+    pub city: String,
+    pub province: String, // Dutch provinces
 }
 
 impl User {

@@ -1,6 +1,5 @@
 pub mod cart;
 pub mod contact;
-pub mod customer;
 pub mod enums;
 pub mod implementations;
 pub mod inventory;
@@ -14,7 +13,6 @@ pub use cart::{
     AddCartItemRequest, Cart, CartItem, CartItemWithProduct, CartResponse, CartWithItems,
     GuestCartItem, MergeCartRequest, UpdateCartItemRequest,
 };
-pub use customer::Address;
 pub use enums::OrderStatus;
 pub use inventory::{Inventory, InventoryReservation, InventoryUpdate};
 pub use jwt::{
@@ -26,4 +24,5 @@ pub use promotion::{
     CreateDiscountPromotion, DiscountPromotion, PriceValidationItem, PriceValidationRequest,
     PriceValidationResponse, ValidatedPriceItem,
 };
+pub use user::Address;
 pub use user::{CreateUser, UpdateUser, User};

@@ -16,6 +16,30 @@ export interface ChangePasswordRequest {
   confirm_password: string;
 }
 
+export interface UserProfile extends User {
+  email_verified?: boolean;
+}
+
+export interface DeleteAccountRequest {
+  password: string;
+}
+
+export interface PaginatedUsersResponse {
+  users: UserProfile[];
+  pagination: {
+    page: number;
+    limit: number;
+    total_count: number;
+    total_pages: number;
+  };
+}
+
+export interface UserListQuery {
+  page?: number;
+  limit?: number;
+  role?: 'user' | 'admin';
+}
+
 export interface Order {
   id: string;
   order_number: string;
@@ -62,9 +86,9 @@ export interface OrderWithLines extends Order {
 }
 
 // Profile API functions
-export const getProfile = async (): Promise<User> => {
+export const getProfile = async (): Promise<UserProfile> => {
   try {
-    const response = await api.get<ApiResponse<User>>('/auth/profile');
+    const response = await api.get<ApiResponse<UserProfile>>('/api/profile');
     return response.data.data;
   } catch (error) {
     console.error('Error fetching profile:', error);
@@ -74,10 +98,12 @@ export const getProfile = async (): Promise<User> => {
 
 export const updateProfile = async (
   updates: UpdateProfileRequest,
-): Promise<User> => {
+): Promise<UserProfile> => {
   try {
-    // Note: This endpoint might need to be implemented in the backend
-    const response = await api.put<ApiResponse<User>>('/auth/profile', updates);
+    const response = await api.patch<ApiResponse<UserProfile>>(
+      '/api/account',
+      updates,
+    );
     return response.data.data;
   } catch (error) {
     console.error('Error updating profile:', error);
@@ -94,14 +120,104 @@ export const changePassword = async (
       throw new Error('Wachtwoorden komen niet overeen.');
     }
 
-    // Note: This endpoint might need to be implemented in the backend
-    await api.post('/auth/change-password', {
+    await api.post('/api/account/password', {
       current_password: passwordData.current_password,
       new_password: passwordData.new_password,
     });
   } catch (error) {
     console.error('Error changing password:', error);
     throw new Error('Wachtwoord wijzigen mislukt. Probeer het opnieuw.');
+  }
+};
+
+// New account management functions
+export const deleteAccount = async (): Promise<void> => {
+  try {
+    await api.delete('/api/account/delete');
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    throw new Error('Account verwijderen mislukt. Probeer het opnieuw.');
+  }
+};
+
+export const verifyEmail = async (): Promise<void> => {
+  try {
+    await api.post('/api/account/verify-email');
+  } catch (error) {
+    console.error('Error verifying email:', error);
+    throw new Error('E-mail verificatie mislukt. Probeer het opnieuw.');
+  }
+};
+
+// Admin-only functions
+export const getUserById = async (userId: string): Promise<UserProfile> => {
+  try {
+    const response = await api.get<ApiResponse<UserProfile>>(
+      `/admin/users/${userId}`,
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    throw new Error('Gebruiker ophalen mislukt. Probeer het opnieuw.');
+  }
+};
+
+export const getUsers = async (
+  query: UserListQuery = {},
+): Promise<PaginatedUsersResponse> => {
+  try {
+    const params = new URLSearchParams();
+    if (query.page) params.append('page', query.page.toString());
+    if (query.limit) params.append('limit', query.limit.toString());
+    if (query.role) params.append('role', query.role);
+
+    const response = await api.get<ApiResponse<PaginatedUsersResponse>>(
+      `/admin/users?${params.toString()}`,
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw new Error('Gebruikers ophalen mislukt. Probeer het opnieuw.');
+  }
+};
+
+export const updateUserRole = async (
+  userId: string,
+  role: 'user' | 'admin',
+): Promise<void> => {
+  try {
+    await api.post(`/admin/users/${userId}/role`, { role });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    throw new Error('Gebruikersrol bijwerken mislukt. Probeer het opnieuw.');
+  }
+};
+
+export const adminUpdateUser = async (
+  userId: string,
+  updates: UpdateProfileRequest & {
+    role?: 'user' | 'admin';
+    email_verified?: boolean;
+  },
+): Promise<UserProfile> => {
+  try {
+    const response = await api.patch<ApiResponse<UserProfile>>(
+      `/admin/users/${userId}`,
+      updates,
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw new Error('Gebruiker bijwerken mislukt. Probeer het opnieuw.');
+  }
+};
+
+export const adminDeleteUser = async (userId: string): Promise<void> => {
+  try {
+    await api.delete(`/admin/users/${userId}`);
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw new Error('Gebruiker verwijderen mislukt. Probeer het opnieuw.');
   }
 };
 
