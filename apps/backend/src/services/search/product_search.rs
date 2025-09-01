@@ -31,7 +31,39 @@ impl ProductSearchService {
             r#"
             WITH search_results AS (
                 SELECT
-                    p.*,
+                    p.id,
+                    p.name,
+                    p.sku,
+                    p.price,
+                    COALESCE((
+                        SELECT CASE
+                            WHEN dp.discount_type = 'percentage' THEN
+                                p.price * (1 - dp.discount_value / 100)
+                            WHEN dp.discount_type = 'fixed_amount' THEN
+                                GREATEST(p.price - dp.discount_value, 0)
+                            ELSE NULL
+                        END
+                        FROM discount_promotions dp
+                        JOIN discount_promotions_products dpp ON dp.id = dpp.discount_id
+                        WHERE dpp.product_id = p.id
+                        AND dp.start_date <= NOW()
+                        AND dp.end_date >= NOW()
+                        ORDER BY
+                            CASE
+                                WHEN dp.discount_type = 'percentage' THEN dp.discount_value
+                                ELSE (dp.discount_value / p.price) * 100
+                            END DESC
+                        LIMIT 1
+                    ), p.price) AS discounted_price,
+                    p.tax,
+                    p.subtotal,
+                    p.is_active,
+                    p.description,
+                    p.created_at,
+                    p.updated_at,
+                    p.size,
+                    p.colors,
+                    p.product_type,
                     i.quantity_on_hand,
                     i.quantity_reserved,
                     (i.quantity_on_hand - i.quantity_reserved) as available_stock,
@@ -253,7 +285,39 @@ impl ProductSearchService {
         let mut sql_query = String::from(
             r#"
             SELECT
-                p.*,
+                p.id,
+                p.name,
+                p.sku,
+                p.price,
+                COALESCE((
+                    SELECT CASE
+                        WHEN dp.discount_type = 'percentage' THEN
+                            p.price * (1 - dp.discount_value / 100)
+                        WHEN dp.discount_type = 'fixed_amount' THEN
+                            GREATEST(p.price - dp.discount_value, 0)
+                        ELSE NULL
+                    END
+                    FROM discount_promotions dp
+                    JOIN discount_promotions_products dpp ON dp.id = dpp.discount_id
+                    WHERE dpp.product_id = p.id
+                    AND dp.start_date <= NOW()
+                    AND dp.end_date >= NOW()
+                    ORDER BY
+                        CASE
+                            WHEN dp.discount_type = 'percentage' THEN dp.discount_value
+                            ELSE (dp.discount_value / p.price) * 100
+                        END DESC
+                    LIMIT 1
+                ), p.price) AS discounted_price,
+                p.tax,
+                p.subtotal,
+                p.is_active,
+                p.description,
+                p.created_at,
+                p.updated_at,
+                p.size,
+                p.colors,
+                p.product_type,
                 i.quantity_on_hand,
                 i.quantity_reserved,
                 (i.quantity_on_hand - i.quantity_reserved) as available_stock,

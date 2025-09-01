@@ -43,7 +43,7 @@ const ContactComponent: React.FC = () => {
           setProduct(foundProduct);
           setFormData((prev) => ({
             ...prev,
-            message: `Hallo! Ik ben geïnteresseerd in "${foundProduct.name}" en zou graag meer willen weten over aanpassingsmogelijkheden.`,
+            message: `Hallo! Ik ben geïnteresseerd in "${foundProduct.name}" en zou graag meer willen weten over aanpassingsmogelijkheden voor mijn speciale gelegenheid.`,
           }));
         } catch (error) {
           console.error('Failed to load product:', error);
@@ -52,7 +52,7 @@ const ContactComponent: React.FC = () => {
       } else if (type === 'custom') {
         setFormData((prev) => ({
           ...prev,
-          message: `Hallo! Ik ben geïnteresseerd in een aangepast bloemstuk. Hier zijn enkele details over wat ik zoek:\n\n- Gelegenheid:\n- Gewenste bloemen:\n- Kleurenschema:\n- Budget:\n- Aanvullende opmerkingen:`,
+          message: `Hallo Francis! Ik ben geïnteresseerd in een maatwerk bloemstuk. Hier zijn enkele details over wat ik zoek:\n\n- Gelegenheid (bruiloft/memorial/etc):\n- Type arrangement (bruidsbouquet/ceremonie/etc):\n- Gewenste stijl en kleuren:\n- Datum van het evenement:\n- Budget indicatie:\n- Aanvullende wensen:`,
         }));
       } else {
         setProduct(null);
@@ -123,27 +123,30 @@ const ContactComponent: React.FC = () => {
   const contactInfo = [
     {
       icon: <FiPhone className='w-6 h-6' />,
-      title: 'Bel Ons',
-      details: ['+31 6 00 00 00 00', 'Beschikbaar tijdens kantooruren'],
+      title: 'Bel Mij',
+      details: ['+31 6 00 00 00 00', 'Ik ben beschikbaar tijdens kantooruren'],
     },
     {
       icon: <FiMail className='w-6 h-6' />,
-      title: 'Mail Ons',
-      details: ['hello@mamabloemetjes.nl', 'We reageren binnen 24 uur'],
+      title: 'Mail Mij',
+      details: ['hello@mamabloemetjes.nl', 'Ik reageer binnen 24 uur'],
     },
   ];
 
   const occasions = [
-    'Bruiloft',
+    'Bruiloft - Bruidsbouquet',
+    'Bruiloft - Ceremonie decoratie',
+    'Bruiloft - Receptie arrangementen',
+    'Memorial - Condoleance',
+    'Memorial - Herdenking',
+    'Memorial - In memoriam',
     'Jubileum',
     'Verjaardag',
     'Moederdag',
     'Valentijnsdag',
-    'Afstuderen',
-    'Housewarming',
-    'Condoleance',
     'Bedrijfsevenement',
-    'Zomaar',
+    'Housewarming',
+    'Fotoshoot',
     'Anders',
   ];
 
@@ -157,11 +160,11 @@ const ContactComponent: React.FC = () => {
             </div>
             <h1 className='heading-2 mb-4'>Bedankt!</h1>
             <p className='text-lg text-[#7d6b55] mb-8 leading-relaxed'>
-              We hebben uw bericht ontvangen en nemen zo snel mogelijk contact
-              met u op.
+              Ik heb uw bericht ontvangen en neem zo snel mogelijk contact met u
+              op.
               {product && (
                 <span className='block mt-2'>
-                  We helpen u graag met &quot;{product.name}&quot;!
+                  Ik help u graag met &quot;{product.name}&quot;!
                 </span>
               )}
             </p>
@@ -190,11 +193,13 @@ const ContactComponent: React.FC = () => {
       <div className='container'>
         {/* Page Header */}
         <div className='text-center mb-16'>
-          <h1 className='heading-1 mb-4'>Neem Contact Op</h1>
+          <h1 className='heading-1 mb-4'>
+            {type === 'custom' ? 'Maatwerk Aanvragen' : 'Neem Contact Op'}
+          </h1>
           <p className='text-lg text-[#7d6b55] max-w-2xl mx-auto leading-relaxed'>
-            We horen graag van u! Of u nu vragen heeft over onze producten, hulp
-            nodig heeft bij een maatwerk bestelling, of gewoon hallo wilt zeggen
-            – wij zijn er om te helpen.
+            {type === 'custom'
+              ? 'Vertel mij over jullie dromen en wensen. Ik help graag bij het creëren van het perfecte arrangement voor jullie speciale moment.'
+              : 'Ik hoor graag van u! Of u nu vragen heeft over mijn producten, hulp nodig heeft bij een maatwerk bestelling, of gewoon hallo wilt zeggen – ik ben er om te helpen.'}
           </p>
         </div>
 
@@ -211,8 +216,48 @@ const ContactComponent: React.FC = () => {
                     </span>
                   </div>
                   <p className='text-sm text-[#7d6b55]'>
-                    We bieden persoonlijke assistentie voor dit product
+                    Ik kan dit product aanpassen naar jouw wensen voor een
+                    perfecte match bij jouw gelegenheid
                   </p>
+                </div>
+              )}
+
+              {type === 'custom' && (
+                <div className='mb-8 p-6 bg-gradient-to-br from-[#d4a574]/10 to-[#ddb7ab]/10 rounded-xl border border-[#d4a574]/20'>
+                  <div className='flex items-center space-x-2 mb-3'>
+                    <FiHeart className='w-5 h-5 text-[#d4a574]' />
+                    <span className='font-medium text-[#2d2820]'>
+                      Maatwerk Consultatie
+                    </span>
+                  </div>
+                  <p className='text-sm text-[#7d6b55] mb-3'>
+                    Ik bied een gratis consultatie om jullie wensen te bespreken
+                    en een uniek ontwerp te creëren.
+                  </p>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs'>
+                    <div className='flex items-center space-x-2'>
+                      <FiCheckCircle className='w-3 h-3 text-[#d4a574]' />
+                      <span className='text-[#7d6b55]'>
+                        Gratis ontwerpconsultatie
+                      </span>
+                    </div>
+                    <div className='flex items-center space-x-2'>
+                      <FiCheckCircle className='w-3 h-3 text-[#d4a574]' />
+                      <span className='text-[#7d6b55]'>Persoonlijk advies</span>
+                    </div>
+                    <div className='flex items-center space-x-2'>
+                      <FiCheckCircle className='w-3 h-3 text-[#d4a574]' />
+                      <span className='text-[#7d6b55]'>
+                        Kleur & stijl matching
+                      </span>
+                    </div>
+                    <div className='flex items-center space-x-2'>
+                      <FiCheckCircle className='w-3 h-3 text-[#d4a574]' />
+                      <span className='text-[#7d6b55]'>
+                        Geen verplichtingen
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -289,7 +334,7 @@ const ContactComponent: React.FC = () => {
                     htmlFor='occasion'
                     className='block text-sm font-medium text-[#2d2820] mb-2'
                   >
-                    Gelegenheid
+                    Type Arrangement {type === 'custom' ? '*' : ''}
                   </label>
                   <select
                     id='occasion'
@@ -297,20 +342,46 @@ const ContactComponent: React.FC = () => {
                     value={formData.occasion || ''}
                     onChange={handleInputChange}
                     className='input-field'
+                    required={type === 'custom'}
                   >
                     <option value=''>
-                      Selecteer een gelegenheid (optioneel)
+                      {type === 'custom'
+                        ? 'Selecteer het type arrangement'
+                        : 'Selecteer een gelegenheid (optioneel)'}
                     </option>
                     {occasions.map((occasion) => (
                       <option
                         key={occasion}
-                        value={occasion.toLowerCase().replace(' ', '-')}
+                        value={occasion.toLowerCase().replace(/\s+/g, '-')}
                       >
                         {occasion}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                {/* Event Date for Custom Orders */}
+                {type === 'custom' && (
+                  <div>
+                    <label
+                      htmlFor='eventDate'
+                      className='block text-sm font-medium text-[#2d2820] mb-2'
+                    >
+                      Datum van het Evenement
+                    </label>
+                    <input
+                      type='date'
+                      id='eventDate'
+                      name='eventDate'
+                      className='input-field'
+                      min={new Date().toISOString().split('T')[0]}
+                      placeholder='Wanneer is jullie speciale dag?'
+                    />
+                    <p className='text-xs text-[#7d6b55] mt-1'>
+                      Dit helpt ons bij de planning van jullie arrangement
+                    </p>
+                  </div>
+                )}
 
                 {/* Preferred Contact Method */}
                 <div>
@@ -356,9 +427,13 @@ const ContactComponent: React.FC = () => {
                     name='message'
                     value={formData.message}
                     onChange={handleInputChange}
-                    rows={6}
+                    rows={type === 'custom' ? 8 : 6}
                     className={`textarea-field ${errors.message ? 'border-red-500 focus:border-red-500' : ''}`}
-                    placeholder='Vertel ons over uw project, vragen, of hoe we kunnen helpen...'
+                    placeholder={
+                      type === 'custom'
+                        ? 'Vertel ons over jullie dromen en wensen. Beschrijf de stijl, kleuren, grootte en sfeer die jullie voor ogen hebben...'
+                        : 'Vertel ons over uw project, vragen, of hoe we kunnen helpen...'
+                    }
                   />
                   {errors.message && (
                     <p className='text-red-600 text-sm mt-1'>
@@ -378,11 +453,19 @@ const ContactComponent: React.FC = () => {
                     !isSubmitting ? <FiSend className='w-5 h-5' /> : undefined
                   }
                 >
-                  {isSubmitting ? 'Bericht Versturen...' : 'Bericht Versturen'}
+                  {isSubmitting
+                    ? type === 'custom'
+                      ? 'Consultatie Aanvragen...'
+                      : 'Bericht Versturen...'
+                    : type === 'custom'
+                      ? 'Vraag Gratis Consultatie Aan'
+                      : 'Bericht Versturen'}
                 </Button>
 
                 <p className='text-sm text-[#9a8470] text-center'>
-                  We reageren doorgaans binnen 24 uur tijdens werkdagen.
+                  {type === 'custom'
+                    ? 'Ik neem binnen 24 uur contact op om een consultatie in te plannen.'
+                    : 'Ik reageer doorgaans binnen 24 uur tijdens werkdagen.'}
                 </p>
               </form>
             </div>
