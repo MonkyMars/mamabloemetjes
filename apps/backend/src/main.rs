@@ -3,35 +3,25 @@ pub mod middleware;
 pub mod pool;
 pub mod response;
 pub mod routes;
+pub mod secrets;
 pub mod services;
 pub mod structs;
 pub mod utils;
 pub mod validate;
 
 use axum::Router;
-use tokio::net::TcpListener;
-use tracing::{error, info};
+use shuttle_runtime::SecretStore;
+use tracing::info;
 
-use dotenv::dotenv;
-
-#[tokio::main]
-async fn main() {
-    // Initialize tracing with minimal formatting for console output
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .with_thread_ids(false)
-        .with_line_number(false)
-        .init();
-
-    // Initialize environment variables
-    match dotenv() {
-        Ok(_) => info!(".env file loaded successfully"),
-        Err(e) => {
-            error!("Failed to load .env file: {}", e);
-        }
-    }
-
+#[shuttle_runtime::main]
+async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_axum::ShuttleAxum {
     info!("Starting mamabloemetjes backend server...");
+
+    // Initialize secrets for global access
+    crate::secrets::initialize_secrets(secrets.clone());
+
+    // Initialize database pool with secrets
+    crate::pool::connect::initialize_pool_with_secrets(secrets);
 
     // Warm up the database connection pool
     warmup_database().await;
@@ -42,28 +32,10 @@ async fn main() {
     // Create the application router
     let app = create_router().layer(cors);
 
-    // Setup the TCP listener with better error handling
-    let listener = match TcpListener::bind("0.0.0.0:3001").await {
-        Ok(listener) => {
-            info!(
-                "Server successfully bound to {}",
-                listener.local_addr().unwrap()
-            );
-            listener
-        }
-        Err(e) => {
-            error!("Failed to bind server to 0.0.0.0:3001: {}", e);
-            std::process::exit(1);
-        }
-    };
+    info!("🚀 Server is ready to accept connections!");
 
-    info!("🚀 Server is running and ready to accept connections!");
-
-    // Start the server with graceful error handling
-    if let Err(e) = axum::serve(listener, app).await {
-        error!("Server error: {}", e);
-        std::process::exit(1);
-    }
+    // Return the Axum service for Shuttle to handle
+    Ok(app.into())
 }
 
 fn create_router() -> Router {
@@ -73,6 +45,10 @@ fn create_router() -> Router {
 }
 
 async fn warmup_database() {
-    let _ = actions::get::get_all_products().await;
-    tracing::info!("Database warmed up");
+    // Only attempt warmup if pool is properly initialized
+    if let Ok(_) = crate::actions::get::get_all_products().await {
+        tracing::info!("Database warmed up successfully");
+    } else {
+        tracing::warn!("Database warmup failed, but continuing startup");
+    }
 }

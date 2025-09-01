@@ -14,23 +14,23 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: 'Mama Bloemetjes - Handgemaakte Vilt Bloemen',
+  title: 'Mama Bloemetjes - Maatwerk Bruidsbouquets & Memorial Arrangementen',
   description:
-    'Prachtige op maat gemaakte vilt bloemenarrangementen en boeketten. Gemaakt met liefde voor jouw speciale momenten.',
+    'Ik maak handgemaakte vilt bruidsbouquets en memorial arrangementen, volledig op maat voor jullie belangrijkste momenten. Gratis consultatie.',
   keywords:
-    'vilt bloemen, handgemaakte boeketten, custom arrangementen, bloemenshop, boutique bloemen',
+    'bruidsbouquet, wedding bouquet, memorial arrangementen, vilt bloemen, maatwerk bloemen, handgemaakte boeketten, bruiloft decoratie, condoleance bloemen, custom wedding flowers',
   openGraph: {
-    title: 'Mama Bloemetjes - Handgemaakte Vilt Bloemen',
+    title: 'Mama Bloemetjes - Maatwerk Bruidsbouquets & Memorial Arrangementen',
     description:
-      'Prachtige op maat gemaakte vilt bloemenarrangementen en boeketten. Gemaakt met liefde voor jouw speciale momenten.',
+      'Ik maak handgemaakte vilt bruidsbouquets en memorial arrangementen, volledig op maat voor jullie belangrijkste momenten. Gratis consultatie.',
     type: 'website',
     locale: 'nl_NL',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mama Bloemetjes - Handgemaakte Vilt Bloemen',
+    title: 'Mama Bloemetjes - Maatwerk Bruidsbouquets & Memorial Arrangementen',
     description:
-      'Prachtige op maat gemaakte vilt bloemenarrangementen en boeketten. Gemaakt met liefde voor jouw speciale momenten.',
+      'Ik maak handgemaakte vilt bruidsbouquets en memorial arrangementen, volledig op maat voor jullie belangrijkste momenten. Gratis consultatie.',
   },
 };
 

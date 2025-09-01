@@ -74,7 +74,7 @@ export const useCartCalculations = () => {
       const productPromises = productIds.map(async (productId) => {
         try {
           const response = await api.get<ApiResponse<Product>>(
-            `${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`,
+            `/products/${productId}`,
           );
           if (response.data.success) {
             return { id: productId, data: response.data.data };

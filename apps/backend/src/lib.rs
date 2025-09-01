@@ -3,6 +3,7 @@ pub mod middleware;
 pub mod pool;
 pub mod response;
 pub mod routes;
+pub mod secrets;
 pub mod services;
 pub mod structs;
 pub mod utils;
